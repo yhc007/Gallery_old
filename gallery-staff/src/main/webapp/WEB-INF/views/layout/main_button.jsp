@@ -469,7 +469,7 @@ function galleryCummunity(){
 	var form = document.createElement("form");
 	
 	form.method = "post";
-	form.action = "http://jaguar.s4gallery.com/community/board/main.do";
+	form.action = "https://jaguar.s4g.kr/community/board/main.do";
 	
 	var input = document.createElement("input");
 	input.type = "hidden";
@@ -498,13 +498,13 @@ function galleryCummunity(){
 
 // function galleryManager(){
 // 	$.ajax({
-// 		url : 'http://jaguar.s4gallery.com/Manager/admin/login.do',
+// 		url : 'https://jaguar.s4g.kr/Manager/admin/login.do',
 // 		type : "post",
 // 		dataType : "text",
 // 		data : "id=" + "${shopVo.id}" + "&pwd=" + "${shopVo.pwd}" + "&shopTy="+"shop",
 // 		success : function(data){
 // 			if(data.trim()=="success"){
-// 				location.href="http://jaguar.s4gallery.com/Manager/chart/chart.do";
+// 				location.href="https://jaguar.s4g.kr/Manager/chart/chart.do";
 // 			}else if(data.trim()=="fail"){
 // 				alert("ID혹은 비밀번호를 확인해 주세요.");
 // 			}
@@ -604,7 +604,7 @@ function dlgSearchCstmr()
 						Gallery Eyewear</br> Cloud System
 					</div></td>
 				<td height="44"><img
-					src="http://jaguar.s4gallery.com/media${staff.imgPath}" width="135"
+					src="https://jaguar.s4g.kr/media${staff.imgPath}" width="135"
 					height="135" /></td>
 			</tr>
 			<tr class="c1" bgcolor="#FFFFFF">

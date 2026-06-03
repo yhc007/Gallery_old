@@ -15,7 +15,7 @@
 				<td>
 					&nbsp;
 					<%-- <input type='button' onclick="modifyCardDate('${card.jobId}');" value='날짜수정'> --%>
-					<%-- <img src="<c:url value="http://jaguar.s4gallery.com/GalleryStaff/images/content/edit.png" />" onclick="modifyCardDate('${card.jobId}');"  width="35px" height="35px" > --%>
+					<%-- <img src="<c:url value="https://jaguar.s4g.kr/GalleryStaff/images/content/edit.png" />" onclick="modifyCardDate('${card.jobId}');"  width="35px" height="35px" > --%>
 					<%-- <img src="${ctxPath}/GalleryStaff/images/content/edit.png" height='35px' width='35px' onclick="modifyCardDate('${card.jobId}');" > --%>
 				</td>
 			</tr>

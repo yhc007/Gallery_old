@@ -262,7 +262,7 @@
 		},1000); */
 		
 		console.log(shopId +"/" + prdctId + "/" + prdctName)
-		window.android2.callAndroid("http://jaguar.s4gallery.com/invn/NFC/find.do?shopId=" + "${shopId}" + "&prdctName=" + prdctName + "&prdctId=" + prdctId +"&sort=no");
+		window.android2.callAndroid("https://jaguar.s4g.kr/invn/NFC/find.do?shopId=" + "${shopId}" + "&prdctName=" + prdctName + "&prdctId=" + prdctId +"&sort=no");
 	}
 	
 	function getBrandByTy(){

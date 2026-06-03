@@ -132,8 +132,8 @@ public class SmsController {
 //			    String repeatNum = base64Encode("");
 ////			    String repeatTime = base64Encode(nullcheck(request.getParameter("repeatTime"), ""));
 //			    String repeatTime = base64Encode("");
-////			    String returnurl = nullcheck(request.getParameter("returnurl"), "jaguar.s4gallery.com/sms/smsTest.do");
-//			    String returnurl = "jaguar.s4gallery.com/sms/smsTest.do";
+////			    String returnurl = nullcheck(request.getParameter("returnurl"), "jaguar.s4g.kr/sms/smsTest.do");
+//			    String returnurl = "jaguar.s4g.kr/sms/smsTest.do";
 ////			    String nointeractive = nullcheck(request.getParameter("nointeractive"), "");
 //			    String nointeractive = base64Encode("");
 //

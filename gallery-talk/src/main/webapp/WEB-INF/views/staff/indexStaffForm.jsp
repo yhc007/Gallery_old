@@ -146,7 +146,7 @@
 						<td onclick="staffLogin('${staff.staffId}');return false;">
 							<a href='javascript:;'>
 							<%-- <img src="http://106.240.234.114:8080/media${staff.imgPath}" width=200 /></a> --%>
-							<img src="http://jaguar.s4gallery.com/media${staff.imgPath}" width="180px", height="180px" /></a>
+							<img src="https://jaguar.s4g.kr/media${staff.imgPath}" width="180px", height="180px" /></a>
 							<br/>${staff.staffName }
 						</td>
 						<c:if test="${0==((status.count)%4)}">

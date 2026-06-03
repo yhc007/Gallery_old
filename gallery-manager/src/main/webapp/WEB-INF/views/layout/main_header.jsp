@@ -14,7 +14,7 @@ var shopId = <%=shopId%>
 		var form = document.createElement("form");
 		
 		form.method = "post";
-		form.action = "http://jaguar.s4gallery.com/community/board/main.do";
+		form.action = "https://jaguar.s4g.kr/community/board/main.do";
 		
 		var input = document.createElement("input");
 		input.type = "hidden";
@@ -44,7 +44,7 @@ var shopId = <%=shopId%>
 
 		  form.method='post';
 
-		  form.action='http://jaguar.s4gallery.com/GalleryStaff/staff/indexStaffForm.do';  
+		  form.action='https://jaguar.s4g.kr/GalleryStaff/staff/indexStaffForm.do';  
 
 		 
 

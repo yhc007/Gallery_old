@@ -61,7 +61,7 @@ function galleryCummunity(){
 	var form = document.createElement("form");
 	
 	form.method = "post";
-	form.action = "http://jaguar.s4gallery.com/community/board/main.do";
+	form.action = "https://jaguar.s4g.kr/community/board/main.do";
 	
 	var input = document.createElement("input");
 	input.type = "hidden";

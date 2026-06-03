@@ -529,7 +529,7 @@ public class CstmrController {
 		return "tiles:prdct/indexPrdctProcessForm";
 	}
 	
-	@RequestMapping(value = "indexCstmrForm")
+	@RequestMapping(value = "indexCstmrProcessForm")
 	public String indexCstmrForm(ModelMap model,HttpServletRequest request,HttpSession session) {
 		logger.info("call indexPrdctForm ");
 				

@@ -9,25 +9,9 @@
     <appender-ref ref="STDOUT"/>
   </appender>
 
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${application.home:-.}/logs/application.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-      <fileNamePattern>application.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-      <maxFileSize>10MB</maxFileSize>
-      <maxHistory>30</maxHistory>
-      <totalSizeCap>2GB</totalSizeCap>
-    </rollingPolicy>
-    <encoder>
-      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %p %m%n</pattern>
-    </encoder>
-  </appender>
-
-  <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-    <appender-ref ref="FILE"/>
-  </appender>
-
+  <!-- 파일 appender 제거: 콘솔 출력은 systemd journald(journalctl -u tomcat9)로 수집됨.
+       Tomcat 작업디렉터리가 쓰기 불가라 파일 로깅은 사용하지 않는다. -->
   <root level="info">
     <appender-ref ref="ASYNCSTDOUT"/>
-    <appender-ref ref="ASYNCFILE"/>
   </root>
 </configuration>
