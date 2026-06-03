@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.gallery.secu.SecuMapper">
+  <select id="countReg" parameterType="SecuVo" resultType="Integer">
+    SELECT
+    COUNT(1)
+    FROM
+    shop_secu
+    WHERE
+    CONCAT(sn, seq) = #{sn}
+    AND mac IS NULL
+  </select>
+
+  <select id="countAuth" parameterType="SecuVo" resultType="Integer">
+    SELECT
+    COUNT(1)
+    FROM
+    shop_secu
+    WHERE
+    CONCAT(sn, seq) = #{sn}
+    AND mac = #{mac}
+  </select>
+
+  <select id="countDvc" parameterType="SecuVo" resultType="Integer">
+    SELECT
+    COUNT(1)
+    FROM
+    shop_secu_os
+    WHERE
+    sn = #{sn}
+  </select>
+
+  <update id="modifyMac" parameterType="SecuVo">
+    UPDATE
+    shop_secu
+    SET
+    mac = #{mac}
+    WHERE
+    CONCAT(sn, seq) = #{sn}
+  </update>
+</mapper>

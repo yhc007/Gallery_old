@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.payment">
+	<select id="getCardComInfo" resultType="paymentVo">
+    	SELECT
+    		card_com_id, card_com_name
+    	FROM card_com_info;
+    </select>
+    
+    <select id="checkInvn" parameterType="paymentVo" resultType="Integer">
+		SELECT
+			 count(*)
+		FROM
+			salePrdct_off
+		WHERE
+			sale_id=#{saleId}
+    </select>
+    
+    <select id="listSalePrdct" parameterType="paymentVo" resultType="paymentVo">
+		SELECT
+			prdct_id,
+			(case when itemTy =1 then (select prdct_name from prdct where prdct_id = P.prdct_id)
+			when itemty=2 then (select prdct_name from lens where prdct_id = P.prdct_id)
+			when itemty=3 then (select prdct_name from clens where prdct_id = P.prdct_id)
+			when itemty=4 then (select prdct_name from clens_acc where prdct_id = P.prdct_id)
+			else (select prdct_name from prdct where prdct_id = P.prdct_id) end) as prdct_name,
+			itemTy,
+			prdct_cnt,
+			(select shop_id from sale_off where sale_id=#{saleId}) as shop_id,
+			(select shop_name from shop where shop_id=(select shop_id from sale_off where sale_id=#{saleId})) as shop_name,
+			prc
+		FROM
+			salePrdct_off P
+		WHERE
+			sale_id = #{saleId}
+    </select>
+    
+    <select id="decCntInvn" parameterType="SalePrdctVo" >
+    	UPDATE
+    	<if test="itemTy == 1">
+    		invn
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn
+    	</if>
+    	SET
+    		cnt=cnt-(SELECT
+        				prdct_cnt
+        	  		FROM
+        	  			salePrdct_off
+        	  		WHERE
+        	  			itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+    	WHERE 
+    		prdct_id=#{prdctId}
+    		AND shop_id=#{shopId};
+    </select>
+    
+    <select id="incCntInvn" parameterType="SalePrdctVo" >
+    	UPDATE
+    	<if test="itemTy == 1">
+    		invn
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn
+    	</if>
+    	SET
+    		cnt=cnt+(SELECT
+        				prdct_cnt
+        	  		FROM
+        	  			salePrdct_off
+        	  		WHERE
+        	  			itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+    	WHERE 
+    		prdct_id=#{prdctId}
+    		AND shop_id=#{shopId};
+    </select>
+    
+    
+    <insert id="addInvnHist" parameterType="SalePrdctVo">
+    	INSERT INTO 
+    	<if test="itemTy == 1">
+    		invn_hist
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn_hist
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn_hist
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn_hist
+    	</if>
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+			,staff_id
+        	) 
+        VALUES (
+        	#{prdctId}
+        	,(SELECT
+        		prdct_cnt
+        	  FROM
+        	  	salePrdct_off
+        	  WHERE
+        	  	itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	,#{staffId}
+        	);
+    </insert>
+    
+
+
+    
+   
+   
+</mapper>

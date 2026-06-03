@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.comm.CommMapper">
+    <insert id="addRegist" parameterType="commVo">
+        INSERT INTO gcm_reg_map (MAC, REG_ID,ip_addr)
+        VALUES (#{mac}, #{regId},#{ipAddr})
+    </insert>
+    <update id="updateRegist" parameterType="commVo">
+        UPDATE gcm_reg_map SET
+        	REG_ID 	= #{regId},
+        	IP_ADDR	= #{ipAddr}
+        WHERE
+        	MAC = #{mac}
+    </update>
+    <update id="removeRegistremoveRegist" parameterType="commVo">
+        UPDATE gcm_reg_map SET
+        	REG_ID = '-1'
+        WHERE
+        	MAC = #{mac}
+    </update>
+    <select id="countRegist" parameterType="commVo" resultType="Integer">
+	    SELECT
+	    	COUNT(*)
+		FROM
+			gcm_reg_map
+		WHERE
+			MAC = #{mac}
+	</select>
+	<select id="listRegist" resultType="commVo">
+	    SELECT
+	    	REG_ID,
+	    	MAC
+		FROM
+			gcm_reg_map
+	</select>
+	<select id="getRegistByReg" parameterType="commVo" resultType="commVo">
+	    SELECT
+	    	mac
+	    	,reg_id
+		FROM
+			gcm_reg_map
+		WHERE
+			reg_id = #{regId}
+	</select>
+	<select id="getRegistInfo" parameterType="commVo" resultType="commVo">
+	    SELECT
+			mac
+			,reg_id
+		FROM gcm_reg_map
+		WHERE
+			mac = #{mac}
+	</select>
+	<select id="getUserListInShop" parameterType="commVo" resultType="commVo">
+	    SELECT
+			mac
+			,reg_id
+		FROM gcm_reg_map
+		WHERE
+			ip_addr = #{ipAddr}
+	</select>
+
+</mapper>

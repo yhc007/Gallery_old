@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.point.PointMapper">
+
+
+    <select id="listFamilyCd"  resultType="pointVo">
+    	SELECT DISTINCT fmly_cd from tb_point_earn UNION SELECT DISTINCT fmly_cd from tb_point_using;
+    </select>
+
+
+    <insert id="calcBalancePoint" parameterType="pointVo" >
+		INSERT INTO tb_point_balance(fmly_cd, total_point)
+			VALUES (#{fmlyCd} ,
+				round((select sum(earn_point) from tb_point_earn where fmly_cd=#{fmlyCd})
+					- (select sum(using_point) from tb_point_using where fmly_cd=#{fmlyCd}),1)
+					);
+    </insert>
+    <select id="selectFmlyCdbyPointCd" parameterType="pointVo" resultType="pointVo">
+    	SELECT IFNULL((select fmly_cd from point_hist where cstmr_cd = #{cstmrCd} order by date_time desc limit 1),#{cstmrCd}) fmly_cd;
+    </select>
+
+	<select id="pointByFmlyCd" parameterType="pointVo" resultType="pointVo" >
+		SELECT
+			IFNULL(cstmr.point,0) +
+			(IFNULL((SELECT sum(point_hist.point) FROM point_hist where point_hist.fmly_cd = #{fmlyCd} and point_hist.point_status='P'),0)
+			- IFNULL((SELECT sum(point_hist.point) FROM point_hist where point_hist.fmly_cd = #{fmlyCd} and point_hist.point_status='M'),0))
+			total_point
+			, (#{fmlyCd}) fmly_cd
+			, (select cstmr_name
+		FROM
+			cstmr
+		WHERE
+			cstmr_cd=#{fmlyCd}) fmly_name
+		FROM cstmr where cstmr.cstmr_cd=#{fmlyCd};
+    </select>
+
+    <select id="listPointHist" parameterType="pointVo" resultType="pointVo" >
+    	SELECT
+    		date_time
+    		,(select datetime from sale_off where sale_id= H.sale_id) as sale_date
+    		, fmly_cd
+    		, IF(H.cstmr_cd='expired','유효기간만료',(select cstmr_name from cstmr C where C.cstmr_cd = H.cstmr_cd)) cstmr_name
+    		, point
+    		, IF(point_status='M', '사용', '적립') point_status
+    	FROM
+    		point_hist H
+    	WHERE
+    		fmly_cd=#{fmlyCd}
+    		and point!=0
+    	order by date_time desc, point_id desc;
+    </select>
+
+    <select id="listPointHistMonth" parameterType="pointVo" resultType="pointVo" >
+	    SELECT
+			point_id
+			, sale_id
+			, cstmr_cd
+			, fmly_cd
+			, point
+			, shop_num
+			, date_time
+			, point_status
+			,(select shop_name from shop where shop_id = (select shop_id from sale_off where sale_id = P.sale_id)) as shop_name
+		FROM
+			point_hist P
+		WHERE
+			point_status='M' and left(date_time,7) = left(#{dateTime},7)
+			group by fmly_cd
+	</select>
+
+	<select id="listPointM" parameterType="pointVo" resultType="pointVo" >
+	    SELECT
+			point_id
+			, sale_id
+			, cstmr_cd
+			, fmly_cd
+			, point
+			, shop_num
+			, date_time
+			, total_point
+			, m_point
+			, cstmr_point
+		FROM
+			point_monthly
+	</select>
+
+	<select id="listPointUser" parameterType="pointVo" resultType="pointVo" >
+	    SELECT
+			point_id
+			, sale_id
+			, cstmr_cd
+			, fmly_cd
+			, point
+			, (select shop_id from sale_off where sale_id = P.sale_id) as shop_id
+			, date_time
+			, point_status
+		FROM
+			point_hist P
+		WHERE
+			fmly_cd=#{fmlyCd}
+			and left(date_time,7) &lt;= left(#{dateTime},7)
+		order by point_id desc;
+	</select>
+
+    <insert id="addPointHist" parameterType="pointVo" >
+		INSERT INTO
+			point_hist
+				(sale_id
+				, cstmr_cd
+				, fmly_cd
+				, point
+				, shop_num
+				, date_time
+				, point_status)
+			VALUES
+				(#{saleId}
+				,#{cstmrCd}
+				,#{fmlyCd}
+				,#{point}
+				,#{shopNum}
+				,#{dateTime}
+				,#{pointStatus});
+    </insert>
+
+    <delete id="removePointHist" parameterType="pointVo">
+    	DELETE
+    	FROM point_hist
+    	WHERE
+    		sale_id = #{saleId}
+    </delete>
+
+    <update id="modifyFmlyCdbyCstmrCd" parameterType="cstmrVo">
+		UPDATE
+			cstmr
+		SET
+			fmly_cd = #{fmlyCd}
+		WHERE
+			cstmr_cd = #{cstmrCd}
+	</update>
+
+
+	<insert id="tradePointShop" parameterType="java.util.HashMap">
+    	INSERT INTO
+    		point_trade
+	    	(using_shop_id
+	    	 ,earn_shop_id
+	    	 ,point)
+	    VALUES
+	   <foreach collection="listRecPoint" item="trade" separator=",">
+    		(#{trade.usingShopId}
+    		 ,#{trade.earnShopId}
+    		 ,#{trade.point}
+    		 )
+    	</foreach>
+    </insert>
+
+    <insert id="createCoupon" parameterType="java.util.HashMap">
+    	INSERT INTO
+    		coupon_birth
+    	(coupon_cd
+    	,cstmr_name
+    	,cstmr_cd
+    	,cstmr_mail)
+    	VALUES
+    	<foreach collection="coupon" item="item" separator=",">
+    		(#{item.couponCd}
+    		,#{item.cstmrName}
+    		,#{item.cstmrCd}
+    		,#{item.email}
+    		)
+    	</foreach>
+    </insert>
+    <select id='checkPoint' parameterType="pointVo" resultType="Integer">
+    	SELECT
+			count(*)
+		FROM
+			point_hist
+		WHERE
+			sale_id = #{saleId}
+			and fmly_cd = #{fmlyCd}
+			and point_status=#{pointStatus}
+    </select>
+
+    <select id='getPointCstmrHst' parameterType="pointVo" resultType="Integer">
+		SELECT
+			point_id
+		FROM
+			point_hist
+		WHERE
+			sale_id = #{saleId}
+			and fmly_cd = #{fmlyCd}
+			and point_status=#{pointStatus}
+		order by point_id desc limit 1;
+	</select>
+
+	<delete id='removePointCstmrHst' parameterType="pointVo" >
+		DELETE
+		FROM
+			point_hist
+		WHERE
+			sale_id = #{saleId}
+			and point_status=#{pointStatus}
+			and point_id != #{pointId}
+	</delete>
+	<delete id='removePointCstmrHstAllStat' parameterType="pointVo" >
+		DELETE
+		FROM
+			point_hist
+		WHERE
+			sale_id = #{saleId}
+			and point_id != #{pointId}
+	</delete>
+
+	<delete id='removePointAllSale' parameterType="pointVo" >
+		DELETE
+		FROM
+			point_hist
+		WHERE
+			sale_id = #{saleId}
+	</delete>
+
+	<update id="modifyPointCstmrHst" parameterType="pointVo">
+		UPDATE
+			point_hist
+		SET
+			sale_id = #{saleId}
+			,cstmr_cd = #{cstmrCd}
+			,fmly_cd = #{fmlyCd}
+			,point = #{point}
+			,shop_num = #{shopNum}
+			,date_time = #{dateTime}
+			,point_status = #{pointStatus}
+		where
+			point_id = #{pointId};
+	</update>
+
+	<update id="mergePoint2FmlyCd" parameterType="pointVo">
+		UPDATE
+			point_hist
+		SET
+			fmly_cd = #{afFmlyCd}
+		where
+			fmly_cd = #{cstmrCd}
+	</update>
+
+	<insert id="addPointCstmrHst" parameterType="pointVo" >
+		INSERT INTO
+		point_hist(
+			sale_id
+			, cstmr_cd
+			, fmly_cd
+			, point
+			, shop_num
+			, date_time
+			, point_status)
+		VALUES
+			(#{saleId}
+			,#{cstmrCd}
+			,#{fmlyCd}
+			,#{point}
+			,#{shopNum}
+			,#{dateTime}
+			,#{pointStatus}
+			);
+    </insert>
+
+</mapper>

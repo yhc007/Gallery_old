@@ -1,0 +1,312 @@
+<style type="text/css">
+
+@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanumbrushscript.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanummyeongjo.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanumpenscript.css);
+
+/* .nanum-g { font-family: 'Nanum Gothic'; }
+.nanum-b { font-family: 'Nanum Brush Script'; }
+.nanum-gc { font-family: 'Nanum Gothic Coding'; }
+.nanum-m { font-family: 'Nanum Myeongjo';  }
+.nanum-p { font-family: 'Nanum Pen Script'; }
+ */
+ 
+.pnt { cursor: pointer; }
+
+.box2 {
+
+	-webkit-border-radius: 7px;
+	padding: 10px 45px;
+	border-radius: 12px / 20px;
+	font-family: 'Nanum Gothic';
+	background-color: #1010F0;
+
+	color: #FFFFFF;
+	font-weight: bold;
+	font-size: 18px;
+	border:0px solid #004B23;
+	text-align: center;
+}
+.box1 {
+	-webkit-border-radius: 7px;
+	padding: 10px 45px;
+	border-radius: 12px / 20px;
+	font-family: 'Nanum Gothic';
+	background-color: #D0D0D0;
+
+	color: #FFFFFF;
+	font-weight: bold;
+	font-size: 18px;
+	border:0px solid #004B23;
+	text-align: center;
+}
+
+body {
+	
+	/* background: url("../images/bg_staff.jgp"); */
+	/* background: url("../images/content/bg_base.jpg"); */
+	background: url("../images/content/bg_base2.jpeg");
+	background-size:100%;
+	
+
+	font-family: 'Nanum Gothic';
+	 
+	/* background-color: #39F; */
+	/* background-color: #21610B; */
+	background-color: #000000;
+	margin-left: 3px;
+	margin-top: 10px;
+	margin-right: 3px;
+	margin-bottom: 10px;
+}
+input{
+   text-align:center;
+}
+
+
+.transBoxTile{
+	/* background-color: #000000; */
+	border: 1px solid black;
+	background: rgba(0, 0, 0, 0.8);
+	width:800px;
+	/* position: absolute;
+    top: 0; left: 22%;
+    height: 50%; width:800px; */
+} 
+
+  .transBoxTable{
+	border: 1px solid black;
+	background: rgba(0, 0, 0, 0.8);
+	width:800px;
+} 
+ .transStaffTable{
+	border: 1px solid black;
+	/* -webkit-text-stroke: 0.5px black; */
+	background: rgba(0, 0, 0, 0.8);
+	
+	width:800px;
+}
+
+
+.staffList {
+ 	color: #FFF;
+
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+.tbTile {
+	color: #00F;
+	font-weight: bold;
+	font-size: 20px;
+	text-align: center;
+}
+
+
+
+.btnTop {
+	color: #FFF;
+	font-family: "맑은 고딕 Bold";
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+
+.c1 {
+	text-align: center;
+	color: #00F;
+}
+.s1 {
+	text-align: center;
+	color: #00F;
+	font-family: "맑은 고딕 Bold";
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+
+#prdctSelect
+{
+	color: #FFF;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+.listCstmr
+{
+	color: #FFF;
+	font-family: 'Nanum Gothic';
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+.listShop
+{
+	color: #FFF;
+	font-family: 'Nanum Gothic';
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+
+
+a.checkproccess
+{
+	color: #FFF;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	text-decoration: none;
+}
+a.getPurchasedList
+{
+	color: #00F;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	text-decoration: none;
+}
+.listPurchased
+{
+	color: #ffffff;
+	text-align: center;
+	font-weight: bold;
+	font-size: 24px;
+	text-align: center;
+	
+}
+.head_title {
+	/* font-family: "Arial Black", Gadget, sans-serif; */
+	color: #FFF;
+	font-family: 'Nanum Pen Script';
+	font-size: 60px;
+	text-align: center;
+}
+.btnSave{
+	width:72px;
+	height:72px;
+	margin : 0 auto; 
+}
+
+
+
+.Screen_Enter {
+color: #009;
+}
+
+.btnFindCstrm {
+	-moz-box-shadow:inset 0px 1px 0px 0px #bee2f9;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #bee2f9;
+	box-shadow:inset 0px 1px 0px 0px #bee2f9;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #63b8ee), color-stop(1, #468ccf) );
+	background:-moz-linear-gradient( center top, #63b8ee 5%, #468ccf 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#63b8ee', endColorstr='#468ccf');
+	background-color:#63b8ee;
+	-webkit-border-top-left-radius:10px;
+	-moz-border-radius-topleft:10px;
+	border-top-left-radius:10px;
+	-webkit-border-top-right-radius:10px;
+	-moz-border-radius-topright:10px;
+	border-top-right-radius:10px;
+	-webkit-border-bottom-right-radius:10px;
+	-moz-border-radius-bottomright:10px;
+	border-bottom-right-radius:10px;
+	-webkit-border-bottom-left-radius:10px;
+	-moz-border-radius-bottomleft:10px;
+	border-bottom-left-radius:10px;
+	text-indent:0;
+	border:1px solid #3866a3;
+	display:inline-block;
+	color:#14396a;
+	font-family: 'Nanum Gothic';
+	font-size:30px;
+	font-weight:bold;
+	font-style:normal;
+	height:65px;
+	line-height:65px;
+	width:100%;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #7cacde;
+}
+.btnFindCstrm:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #468ccf), color-stop(1, #63b8ee) );
+	background:-moz-linear-gradient( center top, #468ccf 5%, #63b8ee 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#468ccf', endColorstr='#63b8ee');
+	background-color:#468ccf;
+}
+.btnFindCstrm:active {
+	position:relative;
+	top:1px;
+}
+
+#dscnt_type_txt,#etcDscntMemo_txt{
+	height: 40px;
+	width: 200px;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+#etcDscntMemo_txt2{
+	height: 20px;
+	width: 200px;
+	font-weight: bold;
+	font-size: 12px;
+	text-align: center;
+}
+#remainedPayment_txt{
+	height: 40px;
+	width: 110px;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: right;
+}
+.payment_number{
+	height: 40px;
+	width: 110px;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+.payment_number2{
+	height: 20px;
+	width: 110px;
+	font-weight: bold;
+	font-size: 12px;
+	text-align: center;
+}
+.prcnt_number{
+	height: 30px;
+	width: 50px;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	
+}.prcnt_number2{
+	height: 20px;
+	width: 50px;
+	font-weight: bold;
+	font-size: 12px;
+	text-align: center;
+	
+}
+#dscnt_txt{
+	height: 40px;
+	width: 160px;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+
+#dlgPurchased, #dlgPointHist, #dlgSaleOffHist{           
+	/* background-image: url("/GalleryStaff/images/content/bg_staff.jpg"); */
+	background-color: #21610B;
+	background-size : 100% 100%;
+}
+
+</style>

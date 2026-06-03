@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.staff">
+    <insert id="addStaff" parameterType="staffVo" useGeneratedKeys="true" keyProperty="histId">
+        INSERT INTO staff 
+        	(
+        	shop_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	) 
+        VALUES (
+        	#{shopId}
+        	,#{staffName}
+        	,#{position}
+        	,#{email}
+        	,#{phone}
+        	)    
+         <selectKey keyProperty="staffId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    <update id="updateImgPath" parameterType="staffVo">
+        UPDATE staff set 
+        	img_path=#{imgPath}
+        WHERE
+        	staff_id=#{staffId}    
+    </update>
+    
+    
+    <update id="removeImgPath" parameterType="staffVo">
+        UPDATE staff set 
+        	img_path=null
+        WHERE
+        	staff_id=#{staffId}    
+    </update>
+    
+    <select id="countStaff" parameterType="staffVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM staff
+    	WHERE staff_name=#{staffName}
+    </select>
+    <select id="pagedListStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		shop_id
+		    		,staff_id
+		    		,staff_name
+		    		,(select shop_name from shop where shop_id=staff.shop_id) shop_name
+		    		,position
+		    	FROM staff
+		    	<where>
+		    		<if test="shopId!=777">
+			    			shop_id = #{shopId}
+			    	</if>
+		    		<if test="staffName!=null">
+		    			<if test="!staffName.equals('')">
+		    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+		    			</if>
+		    		</if>
+		    		
+		    		
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY shop_name,staff_name
+    	) B
+    	
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    		
+    	</where>
+    	
+    </select>
+    <select id="pagedListStaffCount" parameterType="staffVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM staff
+    	<where>
+    		<if test="shopId!=777">
+			    	and ( shop_id = #{shopId})
+			</if>
+    		<if test="staffName!=null">
+    			<if test="!staffName.equals('')">
+    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT
+    		staff_id
+    		,shop_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+    	FROM staff
+    	ORDER BY staff_name
+    </select>
+    
+    <update id="modifyStaff" parameterType="staffVo">
+        UPDATE staff SET
+        	shop_id		= #{shopId}
+        	,staff_name	= #{staffName}
+        	,position	= #{position}
+        	,email		= #{email}
+        	,phone		= #{phone}
+        WHERE
+        	staff_id 			= #{staffId}
+    </update>
+    <select id="getStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT
+    		staff_id
+    		,shop_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	,(select server_url from file_server where isdefault='1') url_str
+        	,img_path
+    	FROM staff
+    	WHERE
+    		staff_id=#{staffId}
+    </select>
+    <delete id="removeStaff" parameterType="staffVo">
+    	DELETE 
+    	FROM staff
+    	WHERE
+    		staff_id 			= #{staffId}
+    </delete>
+    <select id="getShopId" parameterType="Integer" resultType="Integer">
+    	Select shop_id
+    	from adminMember
+    	where shop_id=#{shopId}
+    </select>
+</mapper>

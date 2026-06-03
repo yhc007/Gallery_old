@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.dlvr.DlvrMapper">
+    <insert id="addDlvr" parameterType="dlvrVo" useGeneratedKeys="true" keyProperty="ShopOrderNo">
+            INSERT INTO dlvr
+        	(
+        	sale_id
+        	,dlvr_stat_ty_cd
+			,bigo
+			,regtim
+        	)
+        VALUES (
+        	#{saleId}
+        	, #{dlvrStatTyCd}
+        	, #{bigo}
+        	, now()
+        	);
+        <selectKey keyProperty="ShopOrderNo" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <select id="listDlvr" parameterType="dlvrVo" resultType="dlvrVo">
+    	SELECT
+    		result
+    		,sale_id
+    		,cstmr_name
+    		,addr
+    		,phone
+    		,regtime
+    		,dlvr_stat_ty_cd
+    		,uptime
+    	 from(
+	    	SELECT
+	    		A.result
+	    		,A.sale_id
+	    		,(select cstmr_name from cstmr where cstmr_id=A.cstmr_id) cstmr_name
+	    		,addr
+	    		,phone
+	    		,A.regtime
+	    		,B.dlvr_stat_ty_cd
+	    		,B.regtime uptime
+	    	FROM sale A left outer join dlvr B
+	    		on A.sale_id=B.sale_id
+	    	WHERE
+	    		datetime between ${startTime} and ${endTime}
+    	) C
+    	<where>
+    		(result = '0000' or result='sucess' or result='0')
+	    	<if test="cstmrName!=null">
+	   			<if test="!cstmrName.equals('')">
+	   				and ( cstmr_name like CONCAT('%', #{cstmrName}, '%') )
+	   			</if>
+	   		</if>
+   		</where>
+   		ORDER BY
+	    	regtime desc
+    </select>
+
+    <update id="modifyDlvr" parameterType="dlvrVo">
+        UPDATE dlvr SET
+        	result		= #{CJSResultCode}
+        	,result_msg = #{CJSResultMessage}
+        	,pay_id		= #{CJSPayID}
+        	,trade_id	= #{CJSTradeID}
+        	,pay_date	= #{CJSPaydate}
+        	,pgctrl		= #{Crd_pgctrl_Cd_p}
+        WHERE
+        	dlvr_id 			= #{dlvrId}
+    </update>
+    <select id="getDlvr" parameterType="dlvrVo" resultType="dlvrVo">
+    	SELECT
+    		dlvr_id
+    		,bigo
+    	FROM dlvr
+    	WHERE
+    		dlvr_id=#{dlvrId}
+    </select>
+
+    <delete id="removeDlvr" parameterType="dlvrVo" >
+    	DELETE
+    	FROM dlvr
+    	WHERE
+    		dlvr_id 			= #{dlvrId}
+    </delete>
+
+</mapper>

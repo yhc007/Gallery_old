@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <settings>
+    <setting name="cacheEnabled" value="false"/>
+    <setting name="useGeneratedKeys" value="false"/>
+    <setting name="defaultExecutorType" value="REUSE"/>
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+  </settings>
+  <typeAliases>
+    <typeAlias alias="companyVo" type="com.gallery.company.CompanyVo"/>
+    <typeAlias alias="adminVo" type="com.gallery.admin.AdminVo"/>
+    <typeAlias alias="secuVo" type="com.gallery.secu.SecuVo"/>
+    <typeAlias alias="chartVo" type="com.gallery.chart.ChartVo"/>
+    <typeAlias alias="chartVo" type="com.gallery.chart.ChartVo"/>
+    <typeAlias alias="brandVo" type="com.gallery.brand.BrandVo"/>
+    <typeAlias alias="cartVo" type="com.gallery.cart.CartVo"/>
+    <typeAlias alias="cstmrVo" type="com.gallery.cstmr.CstmrVo"/>
+    <typeAlias alias="dlvrVo" type="com.gallery.dlvr.DlvrVo"/>
+    <typeAlias alias="eventVo" type="com.gallery.event.EventVo"/>
+    <typeAlias alias="eventPrdctVo" type="com.gallery.event.EventPrdctVo"/>
+    <typeAlias alias="fileServerVo" type="com.gallery.fileserver.FileServerVo"/>
+    <typeAlias alias="mailVo" type="com.gallery.mail.MailVo"/>
+    <typeAlias alias="mediaVo" type="com.gallery.media.MediaVo"/>
+    <typeAlias alias="prdctVo" type="com.gallery.prdct.PrdctVo"/>
+    <typeAlias alias="pointVo" type="com.gallery.point.PointVo"/>
+    <typeAlias alias="saleVo" type="com.gallery.sale.SaleVo"/>
+    <typeAlias alias="salesVo" type="com.gallery.sale.SalesVo"/>
+    <typeAlias alias="saleHistSearchVo" type="com.gallery.sale.SaleHistSearchVo"/>
+    <typeAlias alias="salePrdctVo" type="com.gallery.sale.SalePrdctVo"/>
+    <typeAlias alias="shopVo" type="com.gallery.shop.ShopVo"/>
+    <typeAlias alias="staffVo" type="com.gallery.staff.StaffVo"/>
+    <typeAlias alias="prdctTypeVo" type="com.gallery.prdctType.PrdctTypeVo"/>
+  </typeAliases>
+</configuration>

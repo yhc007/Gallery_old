@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.shop.ShopMapper">
+
+    <insert id="addShop" parameterType="shopVo"  useGeneratedKeys="true" keyProperty="shopId">
+        INSERT INTO shop
+        	(
+			shop_name
+			,shop_num
+			,telephone
+			,shop_stat_ty_cd
+			,lat
+			,lot
+			,c_name
+			,c_num
+			,fax
+			,addr
+        	)
+        VALUES (
+        	#{shopName}
+        	, #{shopNum}
+        	, #{telephone}
+        	, #{shopStatTyCd}
+        	, #{lat}
+        	, #{lot}
+        	,#{cName}
+        	,#{cNum}
+        	,#{fax}
+        	,#{addr}
+        	)
+        <selectKey keyProperty="shopId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    <select id="countShop" parameterType="shopVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM shop
+    	WHERE shop_name=#{shopName}
+    </select>
+
+    <select id="pagedListShopCount" parameterType="shopVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM shop
+    	<where>
+	   		<if test="shopName!=null">
+	   			<if test="!shopName.equals('')">
+	   				and ( shop_name like CONCAT('%', #{shopName}, '%') )
+	   			</if>
+	   		</if>
+	   	</where>
+    </select>
+    <select id="getshopName" parameterType="shopVo" resultType="String">
+		SELECT
+			shop_name
+		FROM
+			shop
+		WHERE
+			shop_id = #{shopId}
+
+    </select>
+    <select id="pagedListShop" parameterType="shopVo" resultType="shopVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		shop_id
+		    		,shop_name
+					,shop_num
+					,telephone
+					,shop_stat_ty_cd
+					,lat
+					,lot
+		    	FROM shop A
+		    	<where>
+		    		<if test="shopName!=null">
+			   			<if test="!shopName.equals('')">
+			   				and ( A.shop_name like CONCAT('%', #{shopName}, '%') )
+			   			</if>
+			   		</if>
+		    	</where>
+		    	ORDER BY shop_id desc
+	    	) B,(select @rownum:=0) R
+    	) C
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+
+    	</where>
+    </select>
+    <select id="listShop" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+    	FROM shop
+    	WHERE
+    		shop_stat_ty_cd = 00500001
+    	ORDER BY shop_name
+    </select>
+
+    <select id="mlistShop" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+    		,lat
+    		,lot
+    		,telephone
+    		,shop_stat_ty_cd
+    		<if test="lat!=null">
+	  			<if test="lot!=null">
+	  				,( (lat-#{lat})*(lat-#{lat})+(lot-#{lot})*(lot-#{lot}) ) dstns
+	  			</if>
+	  		</if>
+    	FROM shop
+    	<where>
+	    	lat is not null and lot is not null and lat!='' and lot!='' and lat!='0' and lot!='0'
+    	</where>
+    </select>
+    <update id="modifyShop" parameterType="shopVo">
+        UPDATE shop SET
+        	shop_name 	= #{shopName}
+			,telephone	= #{telephone}
+			,shop_stat_ty_cd	= #{shopStatTyCd}
+			,lat		= #{lat}
+			,lot		= #{lot}
+			,addr = #{addr}
+			,fax = #{fax}
+			,c_name = #{cName}
+			,c_num = #{cNum}
+        WHERE
+        	shop_id 			= #{shopId}
+    </update>
+    <select id="getShop" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+			,telephone
+			,shop_stat_ty_cd
+			,lat
+			,lot
+			,fax
+			,addr
+			,c_num
+			,c_name
+			,(select server_url from file_server where isdefault='1') url_str
+			,stamp_img_path
+    	FROM shop
+    	WHERE
+    		shop_id=#{shopId}
+    </select>
+    <select id="countShopJoin" parameterType="shopVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM
+    		shop_new_cstmr
+    	WHERE
+    		shop_id=#{shopId}
+    		and join_date=#{joinDate}
+    </select>
+    <insert id="addShopJoin" parameterType="shopVo">
+        INSERT INTO shop_new_cstmr
+        	(
+			shop_id
+			,join_date
+			,join_count
+        	)
+        VALUES (
+        	#{shopId}
+        	, #{joinDate}
+        	, #{joinCount}
+        	)
+    </insert>
+    <update id="modifyShopJoin" parameterType="shopVo">
+        UPDATE shop_new_cstmr SET
+        	join_count=#{joinCount}
+        WHERE
+        	shop_id 			= #{shopId}
+        	AND join_date		= #{joinDate}
+    </update>
+    <select id="getShopJoin" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id,
+    		join_date,
+    		join_count
+    	FROM
+    		shop_new_cstmr
+    	WHERE
+    		shop_id=#{shopId}
+    		and join_date=#{joinDate}
+    </select>
+
+
+    <delete id="removeShop" parameterType="shopVo">
+    	DELETE
+    	FROM shop
+    	WHERE
+    		shop_id 			= #{shopId}
+    </delete>
+    <select id="getShopName" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id,
+    		shop_name
+    	FROM
+    		shop
+   		WHERE
+    		shop_stat_ty_cd = 00500001
+    	ORDER BY shop_name
+
+    </select>
+
+    <select id="shopList" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+    	FROM
+    		shop
+    	WHERE
+    		shop_stat_ty_cd = 00500001
+    	order by shop_name ASC
+    </select>
+    <select id="taxShopList" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+    	FROM
+    		shop
+    	WHERE
+    		stamp_img_path is not null
+    	order by shop_name ASC
+    </select>
+
+    <select id="getPointShopList" resultType="shopVo">
+	    SELECT
+			shop_id
+			,shop_name
+		FROM
+			shop
+		WHERE
+			shop_stat_ty_cd = '00500001'
+			and c_num is not null
+		ORDER BY
+			shop_id ;
+	</select>
+
+	<select id="getComListBySrch" parameterType="shopVo" resultType="shopVo">
+		SELECT
+			i_num shopNum
+			,c_name shopName
+		FROM
+			com_info
+		WHERE
+			c_name like CONCAT(#{iNum}, '%')
+	</select>
+
+	<select id="chkManager" parameterType="shopVo" resultType="String">
+		SELECT
+			shop_id
+		FROM
+			shop_admin
+		WHERE
+			shop_id = #{shopId}
+		AND
+			pwd = #{pwd}
+
+	</select>
+
+	<select id="getComList" resultType="shopVo">
+		SELECT
+			i_num shopNum
+			,c_name shopName
+		FROM
+			com_info
+	</select>
+
+	<select id="getComListForTrade" parameterType="shopVo" resultType="shopVo">
+		SELECT
+			distinct((select c_name from com_info where i_num=O.i_num))shopName
+		FROM
+			orderlist O
+		WHERE
+			substr(replace(deliver_time,"-",""),1,8) between #{sdate} AND #{edate}
+		AND
+			O.cancel !=1
+		ANd
+			return_cd !=2
+		order by shopName asc
+	</select>
+
+	<select id="getShopInfo" parameterType="shopVo" resultType="shopVo">
+    	SELECT
+			shop_id
+			,c_name as taxName
+			,c_num as taxNum
+			,shop_name
+			,shop_num
+			,telephone
+			,fax
+			,addr
+			,stamp_img_path
+			,(select server_url from file_server where isdefault='1') url_str
+    	FROM
+    		shop
+   		WHERE
+    		shop_id = #{shopId}
+
+    </select>
+
+    <update id="updateImgPath" parameterType="shopVo">
+        UPDATE shop set
+        	stamp_img_path=#{stampImgPath}
+        WHERE
+        	shop_id=#{shopId}
+    </update>
+
+    <update id="removeImgPath" parameterType="shopVo">
+        UPDATE shop set
+        	stamp_img_path=null
+        WHERE
+        	shop_id=#{shopId}
+    </update>
+
+    <select id="getShopList" resultType="shopVo">
+        SELECT
+        	shop_id
+        	,shop_name
+        	,shop_num
+        FROm
+        	shop
+        WHERE
+        	shop_stat_ty_cd = '00500001'
+        ORDER BY
+        	shop_name ASC
+    </select>
+
+    <select id="getShopNum" parameterType="shopVo" resultType="Integer">
+        SELECT
+				shop_num
+			FROM
+				shop
+			ORDER BY shop_id desc
+			limit 1
+    </select>
+
+</mapper>

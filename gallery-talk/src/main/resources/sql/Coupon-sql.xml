@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.coupon">
+    
+    
+    <select id="listBirthCoupon"  parameterType="couponVo" resultType="couponVo">
+    	SELECT
+    		coupon_cd
+    		,cstmr_cd
+    		,cstmr_mail
+    		,shop_num
+    		,using_date
+    		,w_memo
+    	FROM
+    		coupon_birth
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+
+    	ORDER BY coupon_cd DESC
+    	LIMIT 1;
+    </select>
+    
+    <update id="modifyBirthCoupon" parameterType="couponVo">
+		UPDATE 
+			coupon_birth
+		SET
+			shop_num=#{shopNum}
+			,using_date=#{usingDate}
+			,w_memo=#{wMemo}
+		WHERE
+		coupon_cd = #{couponCd};
+	</update>
+	
+    <select id="checkBirthCoupon" parameterType="couponVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		coupon_birth
+    	WHERE cstmr_cd = #{cstmrCd}
+    	AND
+    		shop_num = 0;
+    </select>
+	
+	<select id="chkCoupon" parameterType="couponVo" resultType="String">
+		SELECT
+			coupon_cd
+		FROM
+			coupon_birth
+		WHERE
+			coupon_cd = #{couponCd}
+		AND
+			shop_num = 0
+	</select>
+	
+	<select id="getCoupon" parameterType="String" resultType="String" >
+		SELECT
+			coupon_cd
+		FROM
+			coupon_birth
+		WHERE
+			cstmr_cd = #{cstmrCd}
+		AND
+			shop_num = 0;
+	</select>
+</mapper>

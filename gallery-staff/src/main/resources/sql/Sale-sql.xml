@@ -1,0 +1,1083 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.sale.SaleMapper">
+    <insert id="addSale" parameterType="saleVo" useGeneratedKeys="true" keyProperty="ShopOrderNo">
+		INSERT INTO sale_off
+        	(
+        	cstmr_id
+        	,shop_id
+			,datetime
+			,regtime
+			,result
+        	)
+        VALUES (
+        	#{cstmrId}
+        	, #{shopId}
+        	, #{datetime}
+        	, NOW()
+        	, #{result}
+        	);
+        <selectKey keyProperty="ShopOrderNo" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <insert id="addSalePrdct" parameterType="salePrdctVo">
+            INSERT INTO salePrdct_off
+        	(
+        	sale_id
+        	,prdct_id
+			,prdct_cnt
+			,event_id
+			,dscnt_prcnt
+			,prc
+			,itemTy
+        	)
+        VALUES (
+        	#{saleId}
+        	, #{prdctId}
+        	, #{prdctCnt}
+        	, #{eventId}
+        	, #{dscnt}
+        	, #{prc}
+        	, #{itemTy}
+        	);
+    </insert>
+    <select id="countSalePrdct" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id = #{saleId} and
+    		prdct_id = #{prdctId}
+    </select>
+
+    <select id="countSalePrdctNew" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM new_prdct
+    	WHERE
+    		sale_id=#{saleId} and
+    		prdct_name=#{prdctName}
+    </select>
+
+    <select id="getSalePrdct" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT
+    		sale_id
+    		,prdct_id
+    		,prdct_cnt
+    		,event_id
+    		,prc
+
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id=#{saleId} and
+    		prdct_id=#{prdctId}
+    </select>
+
+    <select id="countSalePrdctSaleId" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+
+    <select id="countNewSalePrdctSaleId" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM new_prdct
+    	WHERE
+    		prdct_name=#{prdctName}
+    </select>
+
+    <select id="getSalePrdctOff" parameterType="salePrdctVo" resultType="salePrdctVo">
+    SELECT
+		sale_id
+		,prdct_id
+		,prdct_cnt
+		,event_id
+		,partner_dscnt
+		,partner_id
+		,prc
+		,asmbly
+		,dlvry
+	FROM
+		salePrdct_off
+	WHERE
+		sale_id=#{saleId}
+		and
+		prdct_id=#{prdctId}
+	</select>
+
+	<select id="getNewSalePrdctOff" parameterType="salePrdctVo" resultType="salePrdctVo">
+    SELECT
+		*
+	FROM
+		new_prdct
+	WHERE
+		sale_id=#{saleId}
+		and
+		prdct_name=#{prdctName}
+	</select>
+
+    <select id="countSale" parameterType="saleVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM sale_off
+    	WHERE sale_name=#{saleName}
+    </select>
+
+    <select id="countSaleCstmr" parameterType="saleVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM
+    		sale_off
+    	WHERE
+    		shop_id=#{shopId}
+    		AND cstmr_id=#{cstmrId}
+    		AND result!='11111'
+    		AND is_old!=1 and cancel=0;
+    </select>
+
+    <select id="listSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,sale_name
+    	FROM sale_off
+    	ORDER BY sale_name
+    </select>
+
+    <select id="listSalePrdct" parameterType="saleVo" resultType="salePrdctVo">
+    	SELECT
+    		sale_id
+    		,prdct_id
+    		,prdct_cnt
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+
+    <select id="listPastPurchasedFrame" parameterType="saleVo" resultType="salePrdctVo">
+    	SELECT
+			CONCAT((SELECT server_url from file_server WHERE server_name='unomic_server'), (SELECT img_path from still_img where prdct_id=SP.prdct_id)) img_path
+			,(SELECT prdct_name from prdct where prdct_id=SP.prdct_id) prdct_name
+			,(SELECT brand_name from brand where brand_id=(SELECT brand_id from prdct where prdct_id=SP.prdct_id)) brand_name
+			, prdct_id
+			, prdct_cnt
+			, SP.prc
+			, SO.datetime
+			, SP.sale_id
+		FROM salePrdct_off SP
+		INNER JOIN sale_off SO
+		ON SP.sale_id=SO.sale_id and SO.cstmr_id=#{cstmrId} and SO.result = '11111' and SP.itemTy=1;
+    </select>
+
+    <select id="listPastPurchasedLens" parameterType="saleVo" resultType="salePrdctVo">
+    SELECT
+		CONCAT((SELECT server_url from file_server WHERE server_name='unomic_server'), (SELECT img_path from still_img where prdct_id=SP.prdct_id)) img_path
+		,(SELECT prdct_name from lens where prdct_id=SP.prdct_id) prdct_name
+		,(SELECT brand_name from brand where brand_id=(SELECT brand_id from lens where prdct_id=SP.prdct_id)) brand_name
+		, prdct_id
+		, prdct_cnt
+		, SP.prc
+		, SO.datetime
+		, SP.sale_id
+	FROM salePrdct_off SP
+	INNER JOIN sale_off SO
+	ON SP.sale_id=SO.sale_id and SO.cstmr_id=#{cstmrId} and SO.result = '11111' and SP.itemTy=2;
+    </select>
+
+    <select id="listPastPurchasedClens" parameterType="saleVo" resultType="salePrdctVo">
+    SELECT
+		CONCAT((SELECT server_url from file_server WHERE server_name='unomic_server'), (SELECT img_path from still_img where prdct_id=SP.prdct_id)) img_path
+		,(SELECT prdct_name from clens where prdct_id=SP.prdct_id) prdct_name
+		,(SELECT brand_name from brand where brand_id=(SELECT brand_id from clens where prdct_id=SP.prdct_id)) brand_name
+		, prdct_id
+		, prdct_cnt
+		, SP.prc
+		, SO.datetime
+		, SP.sale_id
+	FROM salePrdct_off SP
+	INNER JOIN sale_off SO
+	ON SP.sale_id=SO.sale_id and SO.cstmr_id=#{cstmrId} and SO.result = '11111' and SP.itemTy=3;
+    </select>
+
+    <select id="listPastPurchasedOld" parameterType="saleVo" resultType="salePrdctVo">
+	SELECT
+		S.datetime, (SELECT SH.shop_name FROM shop SH where SH.shop_num = convert(S.shop_id ,char) ) shop_name,
+		S.damdang_name,S.gframe1,S.gframe2,S.gframe3,S.glens1,S.glens2,S.glens3,S.clensR,S.clensL,S.ogn_price
+	FROM
+		sale_off S
+	WHERE
+    	S.cstmr_cd=(SELECT C.cstmr_cd from cstmr C where C.cstmr_id=#{cstmrId})
+   	ORDER BY S.datetime desc;
+
+    </select>
+
+
+    <select id="listPastPurchasedNewPrdct" parameterType="saleVo" resultType="salePrdctVo">
+    SELECT
+		('N/A') img_path
+		, SP.prdct_name
+		,('N/A') brand_name
+		, prdct_id
+		, SP.prdct_cnt
+		, SP.prc
+		, SO.datetime
+		, SP.sale_id
+	FROM new_prdct SP
+	INNER JOIN sale_off SO
+	ON SP.sale_id=SO.sale_id and SO.cstmr_id=#{cstmrId} and SO.result = '11111'  ;
+	</select>
+
+    <select id="mlistSale" resultType="saleVo">
+    	SELECT * from(
+			SELECT (
+				SELECT
+					count(*) from prdct where sale_id=A.sale_id and prdct_stat_ty_cd='00100003') cnt
+					,sale_id
+					,sale_name
+				FROM sale_off A
+			) B
+		WHERE cnt>0;
+    </select>
+    <update id="modifySale" parameterType="saleVo">
+        UPDATE sale_off SET
+        	result		= #{CJSResultCode}
+        	,result_msg = #{CJSResultMessage}
+        	,pay_id		= #{CJSPayID}
+        	,trade_id	= #{CJSTradeID}
+        	,pay_date	= #{CJSPaydate}
+        	,pgctrl		= #{Crd_pgctrl_Cd_p}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <update id="modifySaleCancel" parameterType="paymentVo">
+        UPDATE sale_off SET
+        	cancel=#{cancel}
+        	,cancel_memo=#{cancelMemo}
+        	,cancel_cd=#{cancelCd}
+        	,cancel_date = DATE_FORMAT(now(),'%Y.%m.%d')
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+    <update id="modifyHistId" parameterType="saleVo">
+        UPDATE sale_off SET
+        	hist_id		= #{histId}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <update id="modifyResult" parameterType="saleVo">
+        UPDATE sale_off SET
+        	result				= #{result}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <update id="modifyResultOgnPrice" parameterType="saleVo">
+    	UPDATE sale_off SET
+        	result				= #{result}
+        	,ogn_price			= ogn_price+#{ognPrice}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <update id="modifyResultPayment" parameterType="saleVo">
+    	UPDATE sale_off SET
+        	result				= #{result}
+        	,pay_card			= pay_card + #{payCard}
+        	,pay_cash			= pay_cash + #{payCash}
+        	,card_ty			= #{cardTy}
+        	,card_date			= #{cardDate}
+        	,pay_point			= pay_point + #{payPoint}
+        	,partner_dscnt		= #{partnerDscnt}
+        	,partner_id			= #{partnerId}
+        	,dscnt_price		= #{dscntPrice}
+        	,etc_dscnt			= #{etcDscnt}
+        	,etc_dscnt_memo		= #{etcDscntMemo}
+        	,earn_prcnt			= #{earnPrcnt}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <update id="updateAsmblySalePrdctOff" parameterType="SalePrdctVo">
+        UPDATE salePrdct_off SET
+		asmbly=#{asmbly}
+        <where>
+    		<if test="saleId != null">
+		 	    <if test="!saleId.equals('')">
+		 	    	<if test="prdctId != null">
+				 	    <if test="!prdctId.equals('')">
+			 	    sale_id=#{saleId}
+				  	AND prdct_id=#{prdctId}
+	  				    </if>
+					</if>
+			    </if>
+			</if>
+    	</where>
+    </update>
+
+     <update id="updateInformSalePrdctOff" parameterType="SalePrdctVo">
+        UPDATE salePrdct_off SET
+			inform=#{inform}
+		WHERE
+	 	    sale_id=#{saleId}
+		  	AND prdct_id=#{prdctId}
+    </update>
+    <update id="updateInformSalePrdctOffNew" parameterType="SalePrdctVo">
+        UPDATE new_prdct SET
+			inform=#{inform}
+        WHERE
+        	sale_id=#{saleId}
+			AND prdct_id=#{prdctId};
+    </update>
+
+    <update id="updateAsmblyNewSalePrdctOff" parameterType="SalePrdctVo">
+        UPDATE new_prdct SET
+		asmbly=#{asmbly}
+        WHERE
+        	sale_id=#{saleId}
+			AND prdct_id=#{prdctId};
+    </update>
+
+    <update id="updateDlvrySalePrdctOff" parameterType="SalePrdctVo">
+        UPDATE salePrdct_off SET
+		dlvry=#{dlvry}
+        WHERE
+	 	    sale_id=#{saleId}
+		  	AND prdct_id=#{prdctId}
+		  	AND itemTy=#{itemTy}
+    </update>
+    <update id="updateDlvryNewSalePrdctOff" parameterType="SalePrdctVo">
+        UPDATE new_prdct SET
+		dlvry=#{dlvry}
+        WHERE
+        	sale_id=#{saleId}
+			AND prdct_id=#{prdctId};
+    </update>
+
+
+    <select id="countAsmbly" parameterType="SalePrdctVo" resultType="Integer">
+    SELECT
+		COUNT(*)
+	FROM
+		salePrdct_off
+	WHERE
+		sale_id=#{saleId}
+		and
+		asmbly=0
+    </select>
+
+    <select id="newcountAsmbly" parameterType="SalePrdctVo" resultType="Integer">
+    SELECT
+		COUNT(*)
+	FROM
+		new_prdct
+	WHERE
+		sale_id=#{saleId}
+		and
+		asmbly=0
+    </select>
+
+    <select id="countDlvry" parameterType="SalePrdctVo" resultType="Integer">
+    SELECT
+		COUNT(*)
+	FROM
+		salePrdct_off
+	WHERE
+		sale_id=#{saleId}
+		and
+		dlvry=0
+    </select>
+
+    <select id="newcountDlvry" parameterType="SalePrdctVo" resultType="Integer">
+    SELECT
+		COUNT(*)
+	FROM
+		new_prdct
+	WHERE
+		sale_id=#{saleId}
+		and
+		dlvry=0
+    </select>
+
+
+    <select id="getSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,cstmr_id
+        	,shop_id
+			,datetime
+			,result
+			,ogn_price
+			,pay_cash
+			,pay_card
+			,pay_point
+			,partner_dscnt
+			,partner_id
+			,dscnt_price
+			,etc_dscnt
+			,etc_dscnt_memo
+			,hist_id
+			,if(isnull(earn_prcnt),(select earn_prcnt from point_rule where using_rule=1),earn_prcnt) earn_prcnt
+			,card_date
+			,card_ty
+			,(select card_com_name from card_com_info where card_com_id=card_ty)card_name
+    	FROM sale_off
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+
+
+    <select id="getSaleForResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    	FROM sale_off
+    	WHERE
+    		sale_id=#{CJSShopOrderNo} and result is null
+    </select>
+
+    <select id="listSaleOffHist" parameterType="saleVo" resultType="saleVo">
+	    SELECT
+			sale_id
+			,datetime
+			,pay_cash
+			,pay_card
+			,pay_point
+			,pay_cash+pay_card+pay_point total_price
+			,shop_id
+			,(select shop_name from shop where shop_id=S.shop_id) shop_name
+			,cancel
+			,cancel_date
+		FROM
+			sale_off S
+		WHERE
+			cstmr_id=#{cstmrId} and (result='11111' and cancel != 1 )
+			and is_old!=1
+		ORDER BY datetime desc, sale_id desc;
+	</select>
+	    <select id="listSaleOffHistOld" parameterType="saleVo" resultType="saleVo">
+	    SELECT
+	    	(select shop_name from shop where shop_num=S.shop_id) shop_name,
+			datetime, gframe1,gframe2,gframe3, glens1,glens2,glens3,clensR,clensL,pay_cash,pay_card,pay_point,ogn_price
+			,(select old_digit from old_digit where id=1) as old_digit
+		FROM
+			sale_off S
+		WHERE
+			cstmr_cd=(select C.cstmr_cd from cstmr C where C.cstmr_id = #{cstmrId})
+			and is_old=1
+		ORDER BY S.datetime desc , S.hist_id desc;
+	</select>
+
+    <select id="getSaleForCstmrAndResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id,
+    		hist_id,
+    		datetime,
+    		ogn_price,
+    		pay_cash,
+    		pay_card,
+    		pay_point,
+    		result
+    	FROM sale_off
+    	WHERE
+    		cstmr_id=#{cstmrId}
+    		and result != '11111'
+    		and is_old != 1
+    		and cancel = 0
+    	order by sale_id desc limit 1;
+
+    </select>
+    <delete id="removeSalePrdct" parameterType="salePrdctVo">
+    	DELETE
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id 		= #{saleId} and
+    		prdct_id		= #{prdctId}
+    </delete>
+
+    <delete id="removeNewSalePrdct" parameterType="salePrdctVo">
+    	DELETE
+    	FROM new_prdct
+    	WHERE
+    		sale_id 		= #{saleId} and
+    		prdct_id		= #{prdctId}
+    </delete>
+
+    <delete id="removeSale" parameterType="saleVo">
+    	DELETE
+    	FROM sale_off
+    	WHERE
+    		sale_id 			= #{saleId}
+    </delete>
+
+    <update id="incCntSalePrdctOff" parameterType="salePrdctVo">
+        UPDATE salePrdct_off SET
+		prdct_cnt = #{prdctCnt}+1
+        <where>
+    		<if test="saleId != null">
+		 	    <if test="!saleId.equals('')">
+		 	    	<if test="prdctId != null">
+				 	    <if test="!prdctId.equals('')">
+			 	    sale_id=#{saleId}
+				  	AND prdct_id=#{prdctId}
+	  				    </if>
+					</if>
+			    </if>
+			</if>
+    	</where>
+    </update>
+
+    <update id="decCntSalePrdctOff" parameterType="salePrdctVo">
+            UPDATE salePrdct_off SET
+		prdct_cnt = #{prdctCnt}-1
+        <where>
+    		<if test="saleId != null">
+		 	    <if test="!saleId.equals('')">
+		 	    	<if test="prdctId != null">
+				 	    <if test="!prdctId.equals('')">
+			 	    sale_id=#{saleId}
+				  	AND prdct_id=#{prdctId}
+	  				    </if>
+					</if>
+			    </if>
+			</if>
+    	</where>
+    </update>
+
+    <update id="incCntSalePrdctOffNew" parameterType="salePrdctVo">
+        UPDATE new_prdct SET
+		prdct_cnt = #{prdctCnt}+1
+        <where>
+    		<if test="saleId != null">
+		 	    <if test="!saleId.equals('')">
+		 	    	<if test="prdctId != null">
+				 	    <if test="!prdctId.equals('')">
+			 	    sale_id=#{saleId}
+				  	AND prdct_id=#{prdctId}
+	  				    </if>
+					</if>
+			    </if>
+			</if>
+    	</where>
+    </update>
+
+    <update id="decCntSalePrdctOffNew" parameterType="salePrdctVo">
+            UPDATE new_prdct SET
+		prdct_cnt = #{prdctCnt}-1
+        <where>
+    		<if test="saleId != null">
+		 	    <if test="!saleId.equals('')">
+		 	    	<if test="prdctId != null">
+				 	    <if test="!prdctId.equals('')">
+			 	    sale_id=#{saleId}
+				  	AND prdct_id=#{prdctId}
+	  				    </if>
+					</if>
+			    </if>
+			</if>
+    	</where>
+    </update>
+
+    <update id="decCntFrameInvn" parameterType="salePrdctVo">
+    	update invn set cnt=cnt-#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+    <update id="decCntLensInvn" parameterType="salePrdctVo">
+    	update lens_invn set cnt=cnt-#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+	<update id="decCntCLensInvn" parameterType="salePrdctVo">
+    	update clens_invn set cnt=cnt-#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+	<update id="decCntAccInvn" parameterType="salePrdctVo">
+    	update clens_acc_invn set cnt=cnt-#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+    <select id="decCntInvn" parameterType="salePrdctVo" >
+    	UPDATE
+    	<if test="itemTy == 1">
+    		invn
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn
+    	</if>
+    	SET
+    		cnt=cnt-(SELECT
+        				prdct_cnt
+        	  		FROM
+        	  			salePrdct_off
+        	  		WHERE
+        	  			itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+    	WHERE
+    		prdct_id=#{prdctId}
+    		AND shop_id=#{shopId};
+    </select>
+
+    <update id="incCntAccInvn" parameterType="salePrdctVo">
+    	update clens_acc_invn set cnt=cnt+#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+    <update id="incCntCLensInvn" parameterType="salePrdctVo">
+    	update clens_invn set cnt=cnt+#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+    <update id="incCntFrameInvn" parameterType="salePrdctVo">
+    	update invn set cnt=cnt+#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+    <update id="incCntLensInvn" parameterType="salePrdctVo">
+    	update lens_invn set cnt=cnt+#{cnt} where prdct_id=#{prdctId} and shop_id=#{shopId};
+    </update>
+
+    <select id="incCntInvn" parameterType="salePrdctVo" >
+    	UPDATE
+    	<if test="itemTy == 1">
+    		invn
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn
+    	</if>
+    	SET
+    		cnt=cnt+(SELECT
+        				prdct_cnt
+        	  		FROM
+        	  			salePrdct_off
+        	  		WHERE
+        	  			itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+    	WHERE
+    		prdct_id=#{prdctId}
+    		AND shop_id=#{shopId};
+    </select>
+
+
+
+
+    <insert id="addFrameInvnHist" parameterType="salePrdctVo">
+    	INSERT INTO invn_hist
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+        	)
+        VALUES (
+        	#{prdctId}
+        	,#{cnt}
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	);
+    </insert>
+    <insert id="addLensInvnHist" parameterType="salePrdctVo">
+    	INSERT INTO lens_invn_hist
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+        	)
+        VALUES (
+        	#{prdctId}
+        	,#{cnt}
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	);
+    </insert>
+
+
+    <insert id="addCLensInvnHist" parameterType="SalePrdctVo">
+    	INSERT INTO clens_invn_hist
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+        	)
+        VALUES (
+        	#{prdctId}
+        	,#{cnt}
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	);
+    </insert>
+    <insert id="addAccInvnHist" parameterType="SalePrdctVo">
+    	INSERT INTO clens_acc_invn_hist
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+        	)
+        VALUES (
+        	#{prdctId}
+        	,#{cnt}
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	);
+    </insert>
+    <insert id="addInvnHist" parameterType="SalePrdctVo">
+    	INSERT INTO
+    	<if test="itemTy == 1">
+    		invn_hist
+    	</if>
+    	<if test="itemTy == 2">
+    		lens_invn_hist
+    	</if>
+    	<if test="itemTy == 3">
+    		clens_invn_hist
+    	</if>
+    	<if test="itemTy == 4">
+    		clens_acc_invn_hist
+    	</if>
+        	(
+        	prdct_id
+        	,cnt
+        	,invn_ty_cd
+			,cstmr_id
+			,shop_id
+			,datetime
+			,sale_id
+        	)
+        VALUES (
+        	#{prdctId}
+        	,(SELECT
+        		prdct_cnt
+        	  FROM
+        	  	salePrdct_off
+        	  WHERE
+        	  	itemTy = #{itemTy} AND prdct_id=#{prdctId} AND sale_id=#{saleId})
+        	,#{invnTyCd}
+        	,#{cstmrId}
+        	,#{shopId}
+        	,DATE_FORMAT(now(),'%Y%m%d')
+        	,#{saleId}
+        	);
+    </insert>
+    <select id="checkInvnHist" parameterType="SalePrdctVo" resultType="Integer">
+    	<if test="itemTy == 1">
+    	SELECT COUNT(*) FROM invn_hist
+    	</if>
+    	<if test="itemTy == 2">
+    	SELECT COUNT(*) FROM lens_invn_hist
+    	</if>
+    	<if test="itemTy == 3">
+    	SELECT COUNT(*) FROM clens_invn_hist
+    	</if>
+    	<if test="itemTy == 4">
+    	SELECT COUNT(*) FROM clens_acc_invn_hist
+    	</if>
+    		WHERE prdct_id=#{prdctId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId};
+    </select>
+
+    <select id="checkFrameInvnHist" parameterType="SalePrdctVo" resultType="Integer">
+    	SELECT COUNT(*) FROM invn_hist
+    		WHERE prdct_id=#{prdctId}
+    		and cstmr_id=#{cstmrId}
+    		and shop_id=#{shopId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId};
+    </select>
+
+    <select id="checkLensInvnHist" parameterType="SalePrdctVo" resultType="Integer">
+    	SELECT COUNT(*) FROM lens_invn_hist
+    		WHERE prdct_id=#{prdctId}
+    		and cstmr_id=#{cstmrId}
+    		and shop_id=#{shopId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId};
+    </select>
+
+    <select id="checkClensInvnHist" parameterType="SalePrdctVo" resultType="Integer">
+    	SELECT COUNT(*) FROM clens_invn_hist
+    		WHERE prdct_id=#{prdctId}
+    		and cstmr_id=#{cstmrId}
+    		and shop_id=#{shopId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId};
+    </select>
+
+    <select id="checkAccInvnHist" parameterType="SalePrdctVo" resultType="Integer">
+    	SELECT COUNT(*) FROM acc_invn_hist
+    		WHERE prdct_id=#{prdctId}
+    		and cstmr_id=#{cstmrId}
+    		and shop_id=#{shopId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId};
+    </select>
+
+    <delete id="removeInvnHist" parameterType="SalePrdctVo" >
+    	DELETE FROM invn_hist
+    		WHERE prdct_id=#{prdctId}
+    		and cstmr_id=#{cstmrId}
+    		and shop_id=#{shopId}
+    		and invn_ty_cd=#{invnTyCd}
+    		and cnt=#{cnt}
+    		and sale_id=#{saleId}
+    </delete>
+
+
+
+    <!--
+    <update id="/" parameterType="salePrdctVo">
+    	UPDATE new_prdct
+    		SET dscnt=1
+    		WHERE sale_id=#{saleId} and prdct_id =#{prdctId}
+    </update>
+    -->
+    <update id="modifySaleDate" parameterType="saleVo">
+        UPDATE sale_off SET
+        	<trim prefixOverrides=",">
+        	<if test="datetime != null">
+				<if test="!datetime.equals('')">
+        		datetime=#{datetime}
+        		</if>
+        	</if>
+        	</trim>
+        WHERE
+        	sale_id = #{saleId} ;
+    </update>
+
+    <select id="getPayCardInfo" resultType="saleVo" parameterType="saleVo">
+   			SELECT
+				(select card_com_name from card_com_info where card_com_id = S.card_ty)cardName
+				,pay_card payCard
+			FROm
+				sale_job_off S
+			where
+				sale_id = #{saleId}
+			AND
+				card_ty is not null
+			AND card_ty!=12
+    </select>
+
+    <select id="getBillInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+			pay_card + pay_cash + pay_point prc
+			,pay_card
+			,pay_cash
+			,pay_point
+			,etc_dscnt
+		FROM
+			sale_off
+		WHERE
+			sale_id = ${saleId}
+
+    </select>
+
+    <select id="getSaleMemo" parameterType="saleVo" resultType="String" >
+		SELECT
+			memo
+		FROM
+			sale_off
+		WHERE
+			sale_Id = #{saleId}
+	</select>
+
+	<update id="saleMemoUpdate" parameterType="saleVo">
+		UPDATE
+			sale_off
+		SET
+			memo = #{memo}
+		WHERE
+			sale_id = #{saleId}
+	</update>
+
+	<select id="getPaymentHist" parameterType="saleVo" resultType="saleVo">
+		SELECT
+			(select card_com_name from card_com_info where card_com_id = S.card_ty)cardCom
+			,pay_card
+			,job_id
+			,card_date
+		FROM
+			sale_job_off S
+		WHERE
+			sale_id = #{saleId}
+		AND
+			ty_cd = 01200004
+		AND
+			pay_card != 0
+	</select>
+	<select id="getPaymentList" parameterType="saleVo" resultType="saleVo">
+		SELECT
+			job_id
+			,sale_id
+			,staff_id
+			,pay_cash
+			,pay_card
+			,pay_point
+			,fmly_cd
+			,datetime
+			,card_ty
+			,(select card_com_name from card_com_info where card_com_id = S.card_ty)cardCom
+			,card_date
+			,cancel
+		FROM
+			sale_job_off S
+		WHERE
+			sale_id = #{saleId}
+		AND
+			ty_cd = 01200004
+	</select>
+
+	<update id="modifyCardPayDate" parameterType="saleVo">
+		UPDATE
+			sale_job_off
+		SET
+			card_date = #{cardDate}
+			,datetime = #{cardDate}
+			,card_ty = #{cardTy}
+		WHERE
+			job_id = #{jobId}
+	</update>
+
+    <update id="modifyCstmrHst" parameterType="saleVo">
+        UPDATE
+        	sale_off
+        SET
+        	sale_id = #{saleId}
+        	,cstmr_id = #{cstmrId}
+        	,shop_id = #{shopId}
+        	,ogn_price = #{ognPrice}
+        	,dscnt_price = #{dscntPrice}
+        	,pay_cash = #{payCash}
+        	,pay_card = #{payCard}
+        	,pay_point = #{payPoint}
+        	,partner_dscnt = #{partnerDscnt}
+        	,partner_id = #{partnerId}
+        	,etc_dscnt = #{etcDscnt}
+        	,etc_dscnt_memo = #{etcDscntMemo}
+			,result = #{result}
+			,datetime = #{datetime}
+			,hist_id = #{histId}
+			,earn_prcnt = #{earnPrcnt}
+			,coupon_birth = #{couponBirth}
+			,memo = #{memo}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+
+    <insert id="addCstmrHst" parameterType="saleVo" useGeneratedKeys="true" keyProperty="saleId">
+		INSERT INTO sale_off
+        	(
+        	cstmr_id
+        	,shop_id
+        	,ogn_price
+        	,dscnt_price
+        	,pay_cash
+        	,pay_card
+        	,pay_point
+        	,partner_dscnt
+        	,partner_id
+        	,etc_dscnt
+        	,etc_dscnt_memo
+			,result
+			,datetime
+			,hist_id
+			,earn_prcnt
+			,coupon_birth
+			,memo
+        	)
+        VALUES (
+        	#{cstmrId}
+        	,#{shopId}
+        	,#{ognPrice}
+        	,#{dscntPrice}
+        	,#{payCash}
+        	,#{payCard}
+        	,#{payPoint}
+        	,#{partnerDscnt}
+        	,#{partnerId}
+        	,#{etcDscnt}
+        	,#{etcDscntMemo}
+			,#{result}
+			,#{datetime}
+			,#{histId}
+			,#{earnPrcnt}
+			,#{couponBirth}
+			,#{memo}
+        	);
+        <selectKey keyProperty="saleId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+	<update id="delSaleId" parameterType="saleVo">
+		UPDATE
+			sale_off
+		SET
+			cancel = 1
+		WHERE
+			sale_id = #{saleId}
+	</update>
+	<update id="renewalTaxBigo" parameterType="saleVo">
+        UPDATE sale_off SET
+        	tax_bigo = #{taxBigo}
+        WHERE
+        	sale_id = #{saleId}
+    </update>
+    <update id="salepaymentUpdate" parameterType="saleVo">
+	  UPDATE
+			sale_off
+		SET
+			result = '11111'
+		WHERE
+			sale_id = #{saleId}
+	</update>
+
+      <update id="salejobpaymentUpdate" parameterType="saleVo">
+		UPDATE
+			sale_job_off
+		SET
+			action_ty = #{actionTy}
+		WHERE
+			sale_id = #{saleId}
+    </update>
+
+  <select id="getDlvryCheck" parameterType="SalePrdctVo" resultType="Integer">
+	    SELECT
+			dlvry
+		FROM
+			salePrdct_off
+		WHERE
+			sale_id=#{saleId}
+		AND
+			prdct_id=#{prdctId}
+		AND
+			itemTy = #{itemTy}
+	</select>
+</mapper>

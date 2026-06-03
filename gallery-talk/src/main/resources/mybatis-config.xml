@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<setting name="cacheEnabled" value="true" />
+		<setting name="useGeneratedKeys" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" />
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+	</settings>
+    <typeAliases>
+    	<typeAlias alias="brandVo" type="com.gallerytalk.mobile.brand.domain.BrandVo"/>
+    	<typeAlias alias="checkVo" type="com.gallerytalk.mobile.check.domain.CheckVo"/>
+        <typeAlias alias="cstmrVo" type="com.gallerytalk.mobile.cstmr.domain.CstmrVo"/>
+        <typeAlias alias="cstmrVoSecu" type="com.gallerytalk.mobile.cstmr.domain.CstmrVoSecu"/>
+        <typeAlias alias="cstmrHstryVo" type="com.gallerytalk.mobile.cstmrHstry.domain.CstmrHstryVo"/>
+        <typeAlias alias="commVo" type="com.gallerytalk.mobile.comm.domain.CommVo"/>
+        
+        <typeAlias alias="prdctVo" type="com.gallerytalk.mobile.prdct.domain.PrdctVo"/>
+        <typeAlias alias="paymentVo" type="com.gallerytalk.mobile.payment.domain.PaymentVo"/>
+        <typeAlias alias="partnerVo" type="com.gallerytalk.mobile.prdct.domain.PartnerVo"/>
+        <typeAlias alias="saleVo" type="com.gallerytalk.mobile.sale.domain.SaleVo"/>
+        <typeAlias alias="saleJobVo" type="com.gallerytalk.mobile.saleJob.domain.SaleJobVo"/>
+        
+        
+        <typeAlias alias="talkGroupVo" type="com.gallerytalk.mobile.talkgroup.domain.TalkGroupVo"/>
+        <typeAlias alias="shopVo" type="com.gallerytalk.mobile.shop.domain.ShopVo"/>
+        <typeAlias alias="staffVo" type="com.gallerytalk.mobile.staff.domain.StaffVo"/>
+        
+        <typeAlias alias="salePrdctVo" type="com.gallerytalk.mobile.sale.domain.SalePrdctVo"/>
+        <typeAlias alias="pointVo" type="com.gallerytalk.mobile.point.domain.PointVo"/>
+        <typeAlias alias="couponVo" type="com.gallerytalk.mobile.coupon.domain.CouponVo"/>
+        <typeAlias alias="secuVo" type="com.gallerytalk.mobile.secu.domain.SecuVo"/>
+        
+    </typeAliases>
+</configuration>

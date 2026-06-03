@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.staff.StaffMapper">
+    <insert id="addStaff" parameterType="staffVo" useGeneratedKeys="true" keyProperty="staffId">
+        INSERT INTO staff
+        	(
+        	shop_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	)
+        VALUES (
+        	#{shopId}
+        	,#{staffName}
+        	,#{position}
+        	,#{email}
+        	,#{phone}
+        	)
+         <selectKey keyProperty="staffId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <insert id="addComStaff" parameterType="staffVo" useGeneratedKeys="true" keyProperty="histId">
+        INSERT INTO staff
+        	(
+        	com_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	)
+        VALUES (
+        	#{iNum}
+        	,#{staffName}
+        	,#{position}
+        	,#{email}
+        	,#{phone}
+        	)
+         <selectKey keyProperty="staffId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    <update id="updateImgPath" parameterType="staffVo">
+        UPDATE staff set
+        	img_path=#{imgPath}
+        WHERE
+        	staff_id=#{staffId}
+    </update>
+
+
+    <update id="removeImgPath" parameterType="staffVo">
+        UPDATE staff set
+        	img_path=null
+        WHERE
+        	staff_id=#{staffId}
+    </update>
+
+    <select id="pagedListStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		shop_id
+		    		,staff_id
+		    		,staff_name
+		    		,(select shop_name from shop where shop_id=staff.shop_id) shop_name
+		    		,position
+		    		,phone
+		    	FROM staff
+		    	<where>
+		    		<if test="shopId != 777 and shopId != 778"  >
+			    			shop_id = #{shopId}
+			    	</if>
+		    		<if test="staffName!=null">
+		    			<if test="!staffName.equals('')">
+		    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+		    				and is_delete=0
+
+		    			</if>
+		    		</if>
+		    		<if test="shopId2!=-1">
+		    			<if test="!shopId2.equals('')">
+		    				and ( shop_id = #{shopId2} )
+		    			</if>
+		    		</if>
+		    		and com_id = 0
+		    		and is_delete = 0
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY shop_name,staff_name
+    	) B
+
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+
+
+    	</where>
+
+    </select>
+
+    <select id="pagedListComStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		shop_id
+		    		,staff_id
+		    		,staff_name
+		    		,(select c_name from com_info where i_num=staff.com_id) shop_name
+		    		,position
+		    		,phone
+		    	FROM staff
+		    	<where>
+		    		<if test="shopId != 777 and shopId != 778"  >
+			    			shop_id = #{shopId}
+			    	</if>
+		    		<if test="staffName!=null">
+		    			<if test="!staffName.equals('')">
+		    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+		    				and is_delete=0
+
+		    			</if>
+		    		</if>
+		    		<if test="iNum!=-1">
+		    			<if test="!iNum.equals('')">
+		    				and ( com_id = #{iNum} )
+		    			</if>
+		    		</if>
+		    		and shop_id = 0
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY shop_name,staff_name
+    	) B
+
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+
+
+    	</where>
+
+    </select>
+    <select id="pagedListStaffCount" parameterType="staffVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM staff
+    	<where>
+    		<if test="shopId != 777 and shopId != 778"  >
+			    	and ( shop_id = #{shopId})
+			</if>
+    		<if test="staffName!=null">
+    			<if test="!staffName.equals('')">
+    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+    			</if>
+    		</if>
+    		<if test="shopId2!=-1">
+    			<if test="!shopId2.equals('')">
+    				and ( shop_id = #{shopId2} )
+    			</if>
+    		</if>
+    		and is_delete=0
+    		and com_id=0;
+    	</where>
+    </select>
+
+    <select id="pagedListComStaffCount" parameterType="staffVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM staff
+    	<where>
+    		<if test="shopId != 777 and shopId != 778"  >
+			    	and ( shop_id = #{shopId})
+			</if>
+    		<if test="staffName!=null">
+    			<if test="!staffName.equals('')">
+    				and ( staff_name like CONCAT('%', #{staffName}, '%') )
+    			</if>
+    		</if>
+
+    		<if test="iNum!=-1">
+    			<if test="!iNum.equals('')">
+    				and ( com_id=#{iNum} )
+    			</if>
+    		</if>
+    		and is_delete=0
+    		and shop_id=0;
+    	</where>
+    </select>
+
+    <update id="modifyStaff" parameterType="staffVo">
+        UPDATE staff SET
+        	shop_id		= #{shopId}
+        	,staff_name	= #{staffName}
+        	,position	= #{position}
+        	,email		= #{email}
+        	,phone		= #{phone}
+        WHERE
+        	staff_id 			= #{staffId}
+    </update>
+
+    <update id="modifyComStaff" parameterType="staffVo">
+        UPDATE staff SET
+        	com_id		= #{iNum}
+        	,staff_name	= #{staffName}
+        	,position	= #{position}
+        	,email		= #{email}
+        	,phone		= #{phone}
+        WHERE
+        	staff_id 			= #{staffId}
+    </update>
+    <select id="getStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT
+    		staff_id
+    		,shop_id
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	,(select server_url from file_server where isdefault='1') url_str
+        	,img_path
+    	FROM staff
+    	WHERE
+    		staff_id=#{staffId}
+    		AND is_delete=0
+    		AND com_id = 0
+    </select>
+
+     <select id="getComStaff" parameterType="staffVo" resultType="staffVo">
+    	SELECT
+    		staff_id
+    		,com_id shopId
+        	,staff_name
+        	,position
+        	,email
+        	,phone
+        	,(select server_url from file_server where isdefault='1') url_str
+        	,img_path
+    	FROM staff
+    	WHERE
+    		staff_id=#{staffId}
+    		AND is_delete=0
+    		AND shop_id = 0
+    </select>
+
+    <update id="removeStaff" parameterType="staffVo">
+        UPDATE
+        	staff
+        SET
+        	is_delete	=	1
+        WHERE
+        	staff_id 			= #{staffId}
+    </update>
+
+    <select id="getShopId" parameterType="Integer" resultType="Integer">
+    	Select shop_id
+    	from adminMember
+    	where shop_id=#{shopId}
+    </select>
+
+    <select id="getStaffList" parameterType="staffVo" resultType="staffVo">
+    	SELECT
+    		staff_id
+    		,staff_name
+    	FROM
+    		staff
+    	WHERE
+    		shop_id = #{shopId}
+    	AND
+    		is_delete = 0
+    </select>
+</mapper>

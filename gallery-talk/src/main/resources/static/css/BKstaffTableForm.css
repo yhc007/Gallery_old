@@ -1,0 +1,103 @@
+<style type="text/css">
+
+
+
+a.header {
+	/* font-family: "Arial Black", Gadget, sans-serif; */
+	font-size: 50px;
+	text-align: center;
+}
+.box2 {
+
+	-webkit-border-radius: 7px;
+	padding: 10px 45px;
+	border-radius: 12px / 20px;
+	/* font-family: "맑은 고딕 Bold"; */
+	background-color: #1010F0;
+
+	color: #FFFFFF;
+	font-weight: bold;
+	font-size: 18px;
+	border:0px solid #004B23;
+	text-align: center;
+}
+.box1 {
+	-webkit-border-radius: 7px;
+	padding: 10px 45px;
+	border-radius: 12px / 20px;
+	/* font-family: "맑은 고딕 Bold"; */
+	background-color: #D0D0D0;
+
+	color: #FFFFFF;
+	font-weight: bold;
+	font-size: 18px;
+	border:0px solid #004B23;
+	text-align: center;
+}
+
+body {
+	background-color: #39F;
+	margin-left: 3px;
+	margin-top: 10px;
+	margin-right: 3px;
+	margin-bottom: 10px;
+}
+body,td,th {
+	color: #FFF;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+.title {
+	font-size: 36px;
+}
+.title2 {
+	font-size: 30px;
+}
+.tb {
+	color: #666;
+}
+
+
+.c1 {
+	text-align: center;
+	color: #00F;
+}
+
+#prdctSelect
+{
+	color: #FFF;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+}
+a.checkproccess
+{
+	color: #FFF;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	text-decoration: none;
+}
+a.getPurchasedList
+{
+	color: #00F;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	text-decoration: none;
+}
+.listPurchased
+{
+	color: #00F;
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	text-align: center;
+	
+}
+
+</style>

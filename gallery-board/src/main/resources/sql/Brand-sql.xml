@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.brand">
+    <insert id="addBrand" parameterType="brandVo">
+        INSERT INTO brand 
+        	(
+        	brand_name
+        	,bigo
+        	) 
+        VALUES (
+        	#{brandName}
+        	, #{bigo}
+        	)    
+        <selectKey keyProperty="brandId" resultType="Integer" order="AFTER">
+             SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    <select id="countBrand" parameterType="brandVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM brand
+    	WHERE brand_name=#{brandName}
+    </select>
+    <select id="pagedListBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		brand_id
+		    		,brand_name
+		    	FROM brand
+		    	<where>
+		    		<if test="brandName!=null">
+		    			<if test="!brandName.equals('')">
+		    				and ( brand_name like CONCAT('%', #{brandName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY brand_name desc
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListBrandCount" parameterType="brandVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM brand
+    	<where>
+    		<if test="brandName!=null">
+    			<if test="!brandName.equals('')">
+    				and ( brand_name like CONCAT('%', #{brandName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    	FROM brand
+    	ORDER BY brand_name
+    </select>
+    
+     <select id="listBrandByTy" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		B.brand_id
+    		, B.brand_name
+    		
+    	FROM brand B, 
+    		<if test="prdctTyCd.equals('00300001')">
+    			com_frame P
+    		</if>
+    		<if test="prdctTyCd.equals('00300002')">
+    			com_lens P
+    		</if>
+    		<if test="prdctTyCd.equals('00300003')">
+    			com_clens P
+    		</if>
+    		<if test="prdctTyCd.equals('00300004')">
+    			com_clens_acc P
+    		</if>
+    		<if test="prdctTyCd.equals('00300005')">
+    			com_etc P
+    		</if>
+    	WHERE
+    		B.brand_id = P.brand_id
+    	<if test="prdctTyCd.equals('00300001')">
+    			AND
+    		P.prdct_ty_cd = #{prdctTyCd}
+   		</if>
+    	
+    	GROUP BY brand_name
+    </select>
+    
+    <select id="mlistBrand" resultType="brandVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where brand_id=A.brand_id and prdct_stat_ty_cd='00100003' and prdct_visible_cd='00500001' and prdct_ty_cd=#{prdctTyCd} ) cnt
+					,brand_id
+					,brand_name 
+				FROM brand A 
+			) B
+		WHERE cnt>0;
+    </select>
+    
+    <select id="mlistBrandForDsply" resultType="brandVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where brand_id=A.brand_id and prdct_stat_ty_cd='00100003' and prdct_visible_cd='00500001' and (prdct_ty_cd='00300003' or prdct_ty_cd='00300004' )) cnt
+					,brand_id
+					,brand_name 
+				FROM brand A 
+			) B
+		WHERE cnt>0;
+    </select>
+    <update id="modifyBrand" parameterType="brandVo">
+        UPDATE brand SET
+        	brand_name 	= #{brandName},
+        	bigo		= #{bigo}
+        WHERE
+        	brand_id 			= #{brandId}
+    </update>
+    <select id="getBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    		,bigo
+    	FROM brand
+    	WHERE
+    		brand_id=#{brandId}
+    </select>
+    <delete id="removeBrand" parameterType="brandVo">
+    	DELETE 
+    	FROM brand
+    	WHERE
+    		brand_id 			= #{brandId}
+    </delete>
+    
+    <select id="srchBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id,
+    		brand_name
+    	FROM
+    		brand
+    	WHERE
+    		brand_name like CONCAT(#{brandName}, '%') 
+    	ORDER BY brand_name ASC
+    </select>
+    
+    <insert id="addNewBrand" parameterType="brandVo">
+    	INSERT INTO
+    		brand
+    	(brand_name)
+    	VALUES
+    	(#{brandName})
+    	
+    	 <selectKey keyProperty="brandId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    
+    <update id="changeBrandName" parameterType="brandVo">
+    	UPDATE
+    		brand
+    	SET
+    		brand_name = #{brandName}
+    	WHERE
+    		brand_id = #{brandId}	
+    </update>
+</mapper>

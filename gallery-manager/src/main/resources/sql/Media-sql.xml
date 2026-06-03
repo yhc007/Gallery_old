@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.media.MediaMapper">
+    <insert id="addMedia" parameterType="mediaVo">
+        INSERT INTO rotate_img
+        	(
+        	media_ty_cd
+        	,media_name
+			,prdct_id
+			,media_path
+        	)
+        VALUES (
+        	#{mediaTyCd}
+        	,#{mediaName}
+        	, #{prdctId}
+        	, #{mediaPath}
+        	)
+    </insert>
+
+    <select id="getStillCount" parameterType="mediaVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM still_img
+    	WHERE
+    		prdct_id=#{prdctId} and
+    		color=#{color} and
+    		prdct_type = #{prdctType}
+    </select>
+    <insert id="addStill" parameterType="mediaVo">
+    	 INSERT INTO still_img
+        	(
+        	prdct_id
+        	,img_name
+			,img_path
+			,color
+			,prdct_type
+        	)
+        VALUES (
+        	#{prdctId}
+        	,#{mediaName}
+        	,#{mediaPath}
+        	,#{color}
+        	,#{prdctType}
+        	)
+    </insert>
+    <update id="updateStill" parameterType="mediaVo">
+    	update still_img set
+    		img_name	=	#{mediaName}
+    		,img_path	=	#{mediaPath}
+    	WHERE
+    		prdct_id	=	#{prdctId} and
+    		color		=	#{color} and
+    		prdct_type = #{prdctType}
+    </update>
+    <update id="removeStill" parameterType="mediaVo">
+    	update still_img set
+    		img_name	=	null
+    		,img_path	=	null
+    	WHERE
+    		prdct_id	=	#{prdctId} and
+    		color		=	#{color}
+    		prdct_type = #{prdctType}
+    </update>
+
+    <select id="countMedia" parameterType="mediaVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	From rotate_img
+    	WHERE media_name=#{mediaName}
+    </select>
+    <select id="listMedia" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		media_id
+    		,media_name
+    		,media_ty_cd
+			,prdct_id
+			,media_path
+    	From rotate_img
+    	WHERE
+    		prdct_id=#{prdctId} AND
+    		media_ty_cd=#{mediaTyCd}
+    </select>
+
+    <select id="listStill" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		img_name media_name
+    		,img_path media_path
+    		,'00200001' media_ty_cd
+    		,color
+			,prdct_id
+    	FROM still_img
+    	WHERE
+    		prdct_id=#{prdctId} 	AND
+    		color=#{color}		AND
+    		prdct_type = #{prdctType} AND
+    		img_path is not null AND
+    		img_path != ''
+    </select>
+
+
+    <select id="mListMedia" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		media_id
+			,prdct_id
+			,media_path
+			,(select server_url from file_server where isdefault='1') url_str
+    	FROM rotate_img
+    	WHERE
+    		prdct_id=#{prdctId} AND
+    		media_ty_cd=#{mediaTyCd}
+    </select>
+
+    <update id="modifyMediaCode" parameterType="mediaVo">
+        UPDATE rotate_img SET
+        	media_path		= #{mediaPath}
+        WHERE
+        	media_id 		= #{mediaId} and
+        	prdct_id		= #{prdctId} and
+        	media_ty_cd		= #{mediaTyCd}
+    </update>
+
+    <update id="modifyMedia" parameterType="mediaVo">
+        UPDATE rotate_img SET
+        	media_name		= #{mediaName},
+        	media_ty_cd		= #{mediaTyCd},
+        	prdct_id		= #{prdctId},
+        	media_path		= #{mediaPath}
+        WHERE
+        	media_id 			= #{mediaId}
+    </update>
+    <select id="getMedia" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		media_id
+    		,media_name
+    		,media_ty_cd
+    		,prdct_id
+    		,media_path
+    	FROM rotate_img
+    	WHERE
+    		media_id=#{mediaId}
+    </select>
+
+    <select id="getMediaLensSelectorPath" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		*,(select server_url from file_server where isdefault='1') url_str
+    	from(
+    	SELECT
+    		media_path,
+    		media_ty_cd
+    	FROM rotate_img
+    	WHERE
+    		prdct_id=#{prdctId} and
+    		media_ty_cd=#{mediaTyCd}
+    	) A
+    	GROUP BY media_ty_cd
+    </select>
+
+
+
+    <select id="getMediaRotate" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		*,(select server_url from file_server where isdefault='1') url_str
+    	from(
+    	SELECT
+    		media_path,
+    		media_ty_cd
+    	FROM rotate_img
+    	WHERE
+    		prdct_id=#{prdctId} and
+    		media_ty_cd=#{mediaTyCd}
+    	) A
+    	GROUP BY media_ty_cd
+    </select>
+    <select id="getMediaCode" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		media_id
+    		,media_name
+    		,media_ty_cd
+    		,prdct_id
+    		,media_path
+    	FROM rotate_img
+    	WHERE
+    		prdct_id=#{prdctId} AND
+    		media_ty_cd='00200003'
+    </select>
+
+    <select id="getVideoCd" parameterType="mediaVo" resultType="mediaVo">
+    	SELECT
+    		prdct_id
+    		,video_cd
+    	FROM video A
+    	WHERE
+    		prdct_id=#{prdctId}
+    </select>
+
+    <select id="getVideoCount" parameterType="mediaVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM video
+    	WHERE
+    		prdct_id=#{prdctId}
+    </select>
+    <insert id="addVideoCode" parameterType="mediaVo">
+        INSERT INTO video(
+        	prdct_id
+        	,video_cd
+        )
+        VALUES (
+        	#{prdctId}
+        	,#{videoCd}
+        )
+    </insert>
+    <update id="modifyVideoCode" parameterType="mediaVo">
+        UPDATE video SET
+        	video_cd		= #{videoCd}
+        WHERE
+        	prdct_id 			= #{prdctId}
+    </update>
+
+
+    <delete id="removeMedia" parameterType="mediaVo">
+    	DELETE
+    	FROM rotate_img
+    	WHERE
+    		media_id 			= #{mediaId}
+    </delete>
+
+</mapper>

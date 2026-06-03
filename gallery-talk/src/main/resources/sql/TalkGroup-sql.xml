@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.talkgroup">
+    
+    <select id="listShop" resultType="talkGroupVo">
+    	SELECT
+    		shop_id
+    		,shop_name
+    	FROM shop
+    	WHERE shop_stat_ty_cd='00500001'
+    	ORDER BY shop_name
+    </select>
+    
+    <select id="listComp" resultType="talkGroupVo">
+    	SELECT
+    		i_num
+    		,c_name
+    	FROM com_info
+    	WHERE is_delete=0
+    	ORDER BY c_name
+    </select>
+    
+    <insert id="addMsgLog" parameterType="commVo">
+    	INSERT INTO gallery_talk
+    		(
+    		send_gid
+    		,rcv_gid
+    		,msg
+    		,result
+    		)
+    	VALUES(
+    		#{sendGid},
+    		#{rcvGid},
+    		#{msg}
+    		#{result}
+    		)
+    </insert>
+    <select id="listStaffByShop" parameterType ="talkGroupVo" resultType="talkGroupVo">
+    	SELECT
+			staff_id
+			,shop_id
+			,com_id
+			,reg_id
+			,phone
+		FROM
+			staff
+		WHERE
+			shop_id=#{shopId}
+			and is_delete=0
+			and reg_id is not null
+    </select>
+    <select id="cntStaffByShop" parameterType ="talkGroupVo" resultType="Integer">
+    	SELECT
+			count(*)
+		FROM
+			staff
+		WHERE
+			shop_id=#{shopId}
+			and is_delete=0
+			and reg_id is not null
+    </select>
+	<select id="listStaffByComp" parameterType ="talkGroupVo" resultType="talkGroupVo">
+    	SELECT
+    		staff_id
+			,shop_id
+			,com_id
+			,reg_id
+			,phone
+		FROM
+			staff
+		WHERE
+			com_id=#{comId}
+			and is_delete=0
+			and reg_id is not null 
+    </select>
+    
+    <select id="cntStaffByComp" parameterType ="talkGroupVo" resultType="Integer">
+    	SELECT
+			count(*)
+		FROM
+			staff
+		WHERE
+			com_id=#{comId}
+			and is_delete=0
+			and reg_id is not null
+    </select>
+    
+    
+    
+</mapper>

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.salejob">
+<!--     <insert id="addSaleJob" parameterType="saleJobVo" useGeneratedKeys="true" keyProperty="SaleJobNo">
+		INSERT INTO sale_job_off (
+        	sale_id
+        	,staff_id
+			,prdct_id
+			,ty_cd
+        	) 
+        VALUES (
+        	#{saleId}
+        	, #{staffId}
+        	, #{prdctId}
+        	, #{tyCd}
+        	);
+        <selectKey keyProperty="SaleJobNo" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+ -->
+     <insert id="addSaleJob" parameterType="saleJobVo">
+		INSERT INTO sale_job_off (
+        	sale_id
+        	,staff_id	
+			,prdct_id
+			,prdct_name
+			,ty_cd
+			,action_ty
+			,pay_card
+			,pay_cash
+			,pay_point
+			,fmly_cd
+			,add_point
+			,cancel
+			,card_ty
+			,card_date
+			,datetime
+        	) 
+        VALUES (
+        	#{saleId}
+        	, #{staffId}
+        	, #{prdctId}
+        	, #{prdctName}
+        	, #{tyCd}
+        	, #{actionTy}
+        	, #{payCard}
+        	, #{payCash}
+        	, #{payPoint}
+        	, #{fmlyCd}
+        	, #{addPoint}
+        	, #{cancel}
+        	, #{cardTy}
+        	, #{cardDate}
+        	, #{datetime}
+        	);
+    </insert>
+    
+    <select id="listVisitingCstmrOffShop" resultType="saleJobVo"> 
+    SELECT DISTINCT D.start_time, D.cstmr_name, D.cstmr_id, D.ty_cd, D.staff_name, D.saleId, D.result, D.dlvry_cnt
+		FROM ( SELECT
+		CAST(DATE_FORMAT((select max(start_time) from sale_job_off where sale_id = S.sale_id),'%y-%m-%d(%a) %H:%i' ) AS CHAR(20) ) start_time
+		, (select cstmr_name from cstmr where cstmr_id=S.cstmr_id) cstmr_name
+		, cstmr_id
+		, S.result
+		, (select count(*) from salePrdct_off where sale_id=S.sale_id and dlvry=1) dlvry_cnt
+		, CASE J.ty_cd
+			WHEN '01200001' THEN '선택'
+			WHEN '01200002' THEN '검안'
+			WHEN '01200003' THEN '조립'
+			WHEN '01200004' THEN '결제'
+			WHEN '01200005' THEN '전달'
+			END AS ty_cd
+		,(select staff_name from staff where staff_id = J.staff_id) staff_name
+		,(select distinct(sale_id) from sale_off where sale_id = J.sale_id ORDER BY sale_id DESC)saleId
+	FROM
+		sale_job_off J
+	INNER JOIN
+		sale_off S
+	ON
+		J.sale_id = S.sale_id and S.result != '11111' and S.shop_id=#{shopId}
+	GROUP BY
+		J.start_time DESC) D
+ GROUP BY 
+D.start_time DESC , D.cstmr_id DESC
+	</select>
+     
+    <insert id="addSalePrdct" parameterType="salePrdctVo">
+            INSERT INTO salePrdct_off 
+        	(
+        	sale_id
+        	,prdct_id
+			,prdct_cnt
+			,event_id
+			,dscnt
+			,prc
+        	) 
+        VALUES (
+        	#{saleId}
+        	, #{prdctId}
+        	, #{prdctCnt}
+        	, #{eventId}
+        	, #{dscnt}
+        	, #{prc}
+        	);
+    </insert>
+    <select id="countSalePrdct" parameterType="salePrdctVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id=#{saleId} and
+    		prdct_id=#{prdctId}
+    </select>
+    
+    <select id="countSale" parameterType="saleVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM sale_off
+    	WHERE sale_name=#{saleName}
+    </select>
+    
+    <select id="countSaleCstmr" parameterType="saleVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM sale_off
+    	WHERE cstmr_id=#{cstmrId} and result!='11111'
+    </select>
+    
+    <select id="listSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,sale_name
+    	FROM sale_off
+    	ORDER BY sale_name
+    </select>
+        
+    <select id="listSalePrdct" parameterType="saleVo" resultType="salePrdctVo">
+    	SELECT
+    		sale_id
+    		,prdct_id
+    		,prdct_cnt
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+    
+    <select id="mlistSale" resultType="saleVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where sale_id=A.sale_id and prdct_stat_ty_cd='00100003') cnt
+					,sale_id
+					,sale_name 
+				FROM sale_off A 
+			) B
+		WHERE cnt>0;
+    </select>
+
+    <update id="modifyHistId" parameterType="saleVo">
+        UPDATE sale_off SET
+        	hist_id		= #{histId}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+    
+    <select id="getSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,bigo
+    	FROM sale_off
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+    
+    <!--만들다 말았음..ㅠ -->
+    <select id="getSaleCstmr" parameterType="saleVo" resultType="Integer">
+    	SELECT
+    		sale_id,
+    		hist_id,
+    		datetime,
+    		ogn_price,
+    		pay_cash,
+    		pay_card,
+    		result
+    	FROM
+    		sale_off
+    	WHERE
+    		cstmr_id=#{cstmrId} and result!='11111'
+    </select>
+    
+    <select id="getSaleForResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    	FROM sale_off
+    	WHERE
+    		sale_id=#{CJSShopOrderNo} and result is null
+    </select>
+    
+    <select id="getSaleForCstmrAndResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id,
+    		hist_id,
+    		datetime,
+    		ogn_price,
+    		pay_cash,
+    		pay_card,
+    		result
+    	FROM sale_off
+    	WHERE
+    		cstmr_id=#{cstmrId} and
+    		result != '11111'
+    </select>
+    
+    <delete id="removeSalePrdct" parameterType="saleVo">
+    	DELETE 
+    	FROM salePrdct_off
+    	WHERE
+    		sale_id 		= #{saleId} and
+    		prdct_id		= #{prdctId}
+    </delete>
+    
+    <delete id="removeSale" parameterType="saleVo">
+    	DELETE 
+    	FROM sale_off
+    	WHERE
+    		sale_id 			= #{saleId}
+    </delete>
+    
+    <delete id="delVisitData" parameterType="saleJobVo">
+    	DELETE
+    	FROM
+    		sale_off
+    	WHERE
+    		sale_id = #{saleId}
+    </delete>
+    
+    <delete id="delSalePrdct" parameterType="saleJobVo">
+    	DELETE
+    	FROM
+    		salePrdct_off
+    	WHERE
+    		sale_id = #{saleId}
+    </delete>
+   <delete id="delNewSalePrdct" parameterType="saleJobVo">
+    	DELETE
+    	FROM
+    		new_prdct
+    	WHERE
+    		sale_id = #{saleId}
+    </delete>
+    
+    <select id="chkPayment" parameterType="saleJobVo" resultType="String">
+    	SELECT
+    		sale_id
+    	FROM
+    		sale_off
+    	 	WHERE
+    		sale_id=#{saleId}
+    	AND
+    		(pay_cash !=0 ||
+    		pay_card !=0 ||
+    	
+    		pay_point !=0)
+   
+    </select>
+    
+    
+    <select id="listJobPayment" parameterType="saleJobVo" resultType="saleJobVo">
+		SELECT
+			 sale_id
+			 , ty_cd
+			 , pay_cash
+			 , pay_card
+			 , pay_point
+			 , add_point
+			 , fmly_cd
+			 , cancel
+			 , card_ty
+			 , card_date
+		FROM
+			sale_job_off
+		WHERE
+			sale_id = #{saleId}
+			AND ty_cd = '01200004'
+    </select>
+    
+    
+    
+    <update id="cancelPayment" parameterType="saleJobVo">
+    	UPDATE
+    		sale_off
+    	SET
+    		cancel = 1
+    	WHERE
+    		sale_id = #{saleId}
+    </update>
+    
+    <update id="modifyResult" parameterType="saleJobVo">
+    	UPDATE
+    		sale_off
+    	SET
+    		result = 11111
+    	WHERE
+    	sale_id = #{saleId}
+    </update>
+    <delete id="delPointHist" parameterType="saleJobVo">
+    	DELETE
+    	FROM
+    		point_hist
+    	WHERE
+    		sale_id = #{saleId}
+    </delete>
+</mapper>

@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.gallerystaff.cstmr">
+	<update id="cstmrMemoUpdate" parameterType="cstmrVo">
+		UPDATE 
+			cstmr
+		SET
+			memo = #{memo}
+		WHERE
+			cstmr_id = #{cstmrId}
+	</update>
+	
+	<update id="cstmrBigoUpdate" parameterType="cstmrVo">
+		UPDATE 
+			cstmr
+		SET
+			bigo = #{bigo}
+		WHERE
+			cstmr_id = #{cstmrId}
+	</update>
+	
+	<update id="modifyCstmrFmlyCd" parameterType="cstmrVo">	
+		UPDATE 
+			cstmr
+		SET
+			fmly_cd = #{fmlyCd}
+		WHERE
+			cstmr_id = #{cstmrId}
+	</update>
+	
+	<update id="modifyFmlyCdbyCstmrCd" parameterType="cstmrVo">
+		UPDATE 
+			cstmr
+		SET
+			fmly_cd = #{fmlyCd}
+		WHERE
+			cstmr_cd = #{cstmrCd}
+	</update>
+	
+	<select id="getCstmrMemo" parameterType="cstmrVo" resultType="String" >
+		SELECT 
+			memo
+		FROM
+			cstmr
+		WHERE
+			cstmr_Id = #{cstmrId}
+	</select>
+
+    <insert id="addCstmr" parameterType="cstmrVo" useGeneratedKeys="true" keyProperty="cstmrId">
+        INSERT INTO cstmr
+        	(
+				cstmr_login_id
+				,cstmr_login_pw
+				,cstmr_cd
+				,cstmr_name
+				,reg_shop_id
+				,reg_date
+				,telephone
+				,cellphone
+				,sex_cd
+				,birth_day
+				,birth_day_ty_cd
+				,zip_cd
+				,email
+				,addr
+				,facebook
+				,twitter
+				,instagram
+				,bigo
+				,get_sms_yn
+        	) 
+        VALUES (
+        		#{cstmrLoginId}
+				,#{cstmrLoginPw}
+				,#{cstmrCd}
+				,#{cstmrName}
+				,#{regShopId}
+				,#{regDate}
+				,#{telephone}
+				,#{cellphone}
+				,#{sexCd}
+				,#{birthDay}
+				,#{birthDayTyCd}
+				,#{zipCd}
+				,#{email}
+				,#{addr}
+				,#{facebook}
+				,#{twitter}
+				,#{instagram}
+				,#{bigo}
+				,#{getSmsYn}
+        	)
+        	<selectKey keyProperty="cstmrId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>    
+    </insert>
+    
+    
+
+    <insert id="addCstmrMrgeHist" parameterType="cstmrVo">
+        INSERT INTO cstmr_mrge_hist
+        	(
+        		cstmr_id
+        		,pcstmr_id
+        		,mrge_ty_cd
+				,cstmr_login_id
+				,cstmr_login_pw
+				,cstmr_cd
+				,cstmr_name
+				,reg_shop_id
+				,reg_date
+				,telephone
+				,cellphone
+				,sex_cd
+				,birth_day
+				,birth_day_ty_cd
+				,zip_cd
+				,email
+				,addr
+				,facebook
+				,twitter
+				,instagram
+				,bigo
+				,get_sms_yn
+				,mrge_time
+        	) 
+        VALUES (
+        		#{cstmrId}
+        		,#{pcstmrId}
+        		,#{mrgeTyCd}
+        		,#{cstmrLoginId}
+				,#{cstmrLoginPw}
+				,#{cstmrCd}
+				,#{cstmrName}
+				,#{regShopId}
+				,#{regDate}
+				,#{telephone}
+				,#{cellphone}
+				,#{sexCd}
+				,#{birthDay}
+				,#{birthDayTyCd}
+				,#{zipCd}
+				,#{email}
+				,#{addr}
+				,#{facebook}
+				,#{twitter}
+				,#{instagram}
+				,#{bigo}
+				,#{getSmsYn}
+				,#{mrgeTime}
+        	)    
+    </insert>
+    
+    <select id="countCstmrById" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId}
+    </select>
+    <select id="login" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId} and cstmr_login_pw=#{cstmrLoginPw}
+    </select>
+    
+
+	
+	
+    <select id="listCstmr" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+    		,cstmr_login_id
+			,cstmr_login_pw
+			,cstmr_cd
+			,cstmr_name
+			,reg_shop_id
+			,reg_date
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,facebook
+			,twitter
+			,instagram
+			,bigo
+			,get_sms_yn
+    	FROM cstmr
+    	<where>
+    		<if test="cstmrName != null">
+		 	    <if test="!cstmrName.equals('')">
+			  		cstmr_name like CONCAT('%', #{cstmrName}, '%')
+			    </if>
+			 </if>
+			 <if test="cstmrCd != null">
+		 	    <if test="!cstmrCd.equals('')">
+			  		AND cstmr_cd like CONCAT('%', #{cstmrCd}, '%')
+			    </if>
+			 </if>
+			 <if test="addr != null">
+		 	    <if test="!addr.equals('')">
+			  		AND addr like CONCAT('%', #{addr}, '%')
+			    </if>
+			 </if>
+			 <if test="cellphone != null">
+		 	    <if test="!cellphone.equals('')">
+			  		ANd cellphone like CONCAT('%', #{cellphone}, '%')
+			    </if>
+			 </if>
+			 <if test="birthDay != null">
+		 	    <if test="!birthDay.equals('')">
+			  		AND birth_day like CONCAT('%', #{birthDay}, '%')
+			    </if>
+			 </if>
+			 <if test="telephone != null">
+		 	    <if test="!telephone.equals('')">
+			  		AND telephone like CONCAT('%', #{telephone}, '%')
+			    </if>
+			 </if>
+			 
+    	</where>
+    	order by cstmr_name	
+    </select>
+    
+    
+    
+    <select id="getCstmrCd" parameterType="cstmrVo" resultType="String">
+    	SELECT
+			cstmr_cd
+    	FROM 
+    		cstmr
+    	<where>
+    		<if test="cstmrName != null">
+		 	    <if test="!cstmrName.equals('')">
+			  		cstmr_name like CONCAT('%', #{cstmrName}, '%')
+			    </if>
+			 </if>
+			 <if test="cellphone != null">
+		 	    <if test="!cellphone.equals('undefined')">
+			  		ANd cellphone like CONCAT('%', #{cellphone}, '%')
+			    </if>
+			 </if>
+			 <if test="telephone != null">
+		 	    <if test="!telephone.equals('undefined')">
+			  		AND telephone like CONCAT('%', #{telephone}, '%')
+			    </if>
+			 </if>
+			 
+    	</where>
+    </select>
+    
+    
+    <select id="listCstmrSecu" parameterType="cstmrVo" resultType="cstmrVoSecu">
+    	SELECT
+    		cstmr_id
+    		,cstmr_login_id
+			,cstmr_login_pw
+			,cstmr_cd
+			,cstmr_name
+			,reg_shop_id
+			,reg_date
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,facebook
+			,twitter
+			,instagram
+			,bigo
+			,get_sms_yn
+    	FROM cstmr
+    	<where>
+    		<if test="cstmrName != null">
+		 	    <if test="!cstmrName.equals('')">
+			  		cstmr_name like CONCAT('%', #{cstmrName}, '%')
+			    </if>
+			 </if>
+			 <if test="cstmrCd != null">
+		 	    <if test="!cstmrCd.equals('')">
+			  		AND cstmr_cd like CONCAT('%', #{cstmrCd}, '%')
+			    </if>
+			 </if>
+			 
+			 <if test="fmlyCd != null">
+		 	    <if test="!fmlyCd.equals('')">
+			  		AND fmly_cd like CONCAT('%', #{fmlyCd}, '%')
+			    </if>
+			 </if>
+			 <if test="addr != null">
+		 	    <if test="!addr.equals('')">
+			  		AND addr like CONCAT('%', #{addr}, '%')
+			    </if>
+			 </if>
+			 <if test="cellphone != null">
+		 	    <if test="!cellphone.equals('')">
+			  		AND cellphone like CONCAT('%', #{cellphone}, '%')
+			    </if>
+			 </if>
+			 <if test="birthDay != null">
+		 	    <if test="!birthDay.equals('')">
+			  		AND birth_day like CONCAT('%', #{birthDay}, '%')
+			    </if>
+			 </if>
+			 <if test="telephone != null">
+		 	    <if test="!telephone.equals('')">
+			  		AND telephone like CONCAT('%', #{telephone}, '%')
+			    </if>
+			 </if>
+    	</where>
+    	order by cstmr_name	
+    </select>
+    
+    
+    <select id="getCstmrByLoginId" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+    		,cstmr_login_id
+			,cstmr_login_pw
+			,cstmr_cd
+			,cstmr_name
+			,reg_shop_id
+			,reg_date
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,facebook
+			,twitter
+			,instagram
+			,bigo
+			,get_sms_yn
+    	FROM cstmr
+    	<where>
+			cstmr_login_id = #{cstmrLoginId}
+    	</where>
+    </select>
+    
+    <select id="getCstmr" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+    		,cstmr_login_id
+			,cstmr_login_pw
+			,cstmr_cd
+			,fmly_cd
+			,cstmr_name
+			,reg_shop_id
+			,(select shop_name from shop where shop_num = reg_shop_id) AS str_reg_shop
+			,reg_date
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,facebook
+			,twitter
+			,instagram
+			,bigo
+			,get_sms_yn
+			,point
+    	FROM cstmr
+    	<where>
+			cstmr_id = #{cstmrId}
+    	</where>
+    </select>
+    
+    <update id="modifyCstmr" parameterType="cstmrVo">
+        UPDATE cstmr SET
+        	cstmr_login_id 		= #{cstmrLoginId}
+			,cstmr_login_pw 	= #{cstmrLoginPw}
+			,cstmr_cd			= #{cstmrCd}
+			,cstmr_name			= #{cstmrName}
+			,reg_shop_id		= #{regShopId}
+			,reg_date			= #{regDate}
+			,telephone			= #{telephone}
+			,cellphone			= #{cellphone}
+			,sex_cd				= #{sexCd}
+			,birth_day			= #{birthDay}
+			,birth_day_ty_cd	= #{birthDayTyCd}
+			,zip_cd				= #{zipCd}
+			,email				= #{email}
+			,addr				= #{addr}
+			,facebook			= #{facebook}
+			,twitter			= #{twitter}
+			,instagram			= #{instagram}
+			,bigo				= #{bigo}
+			,get_sms_yn			= #{getSmsYn}
+        <where>
+    		<if test="cstmrId != null">
+		 	    <if test="!cstmrId.equals('')">
+			  		cstmr_id = #{cstmrId}
+			    </if>
+			 </if>
+    	</where>
+    </update>
+    <delete id="removeCstmr" parameterType="cstmrVo">
+    	delete from cstmr
+    	<where>
+			cstmr_id = #{cstmrId}
+    	</where>
+    </delete>
+    
+    <select id="listCstmrHstry" parameterType="cstmrVo" resultType="Integer">
+    SELECT
+    	 *
+   	FROM
+   		sale_off SO
+   	INNER JOIN
+   		visit_history VHC
+   	ON
+   		SO.cstmr_id=VHC.cstmr_id
+   		AND SO.datetime=VHC.datetime
+	WHERE
+		SO.cstmr_id=#{cstmrId}
+	GROUP BY sale_id ORDER BY SO.datetime asc;
+	</select>
+    
+    <update id="modifyCstmrInfo" parameterType="cstmrVo">
+    	UPDATE
+    		cstmr
+    	SET
+    		telephone = #{telephone}
+    		,cellphone = #{cellphone}
+    		,email = #{email}
+    		,sex_cd = #{sexCd}
+    		,birth_day = #{birthDay}
+    		,birth_day_ty_cd = #{birthDayTyCd}
+    		,addr = #{addr}
+    		,cstmr_name = #{cstmrName}
+    	WHERE
+    	 cstmr_id = #{cstmrId}
+    </update>
+    
+    <select id="getCstmrInfo" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_name
+    		,cstmr_cd
+    		,addr
+    		,telephone
+    		,cellphone
+    		,email
+    		,sex_cd
+    		,birth_day
+    		,birth_day_ty_cd
+    	FROM
+    		cstmr
+    	WHERE
+    		cstmr_id = #{cstmrId}
+    </select>
+    
+    <select id="getCoupon" parameterType="String" resultType="String">
+    	SELECT
+    		coupon_cd
+    	WHERE
+    		coupon_cd
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+    	AND
+    		shop_num = 0
+    </select>
+    
+    <select id="getCstmrVIsitInfo" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+			Y.oldPrc + Y.newPrc totalPrc
+			,Y.visitCnt
+		FROM(
+			select 
+		    		count(sale_id) visitCnt
+		    		,(select IFNULL(sum(pay_card + pay_cash),0)*100 from sale_off where cstmr_id = #{cstmrId} AND is_old=1) oldPrc
+					,(select IFNULL(sum(pay_card + pay_cash),0) from sale_off where cstmr_id = #{cstmrId} AND is_old=0) newPrc
+		    	from 
+		    		sale_off S
+		    	where 
+					cstmr_id = ${cstmrId}
+			)Y
+    </select>
+    
+    
+    
+    <select id="listFmly" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id, cstmr_name
+    	FROM
+    		cstmr
+    	WHERE
+    		fmly_cd = #{fmlyCd};
+    </select>
+    
+</mapper>

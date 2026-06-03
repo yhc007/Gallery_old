@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.shop.ShopMapper">
+
+
+	<insert id="addShop" parameterType="shopVo">
+		INSERT INTO shop
+		(
+		shop_name
+		,shop_num
+		,telephone
+		,shop_stat_ty_cd
+		,lat
+		,lot
+		)
+		VALUES (
+		#{shopName}
+		, #{shopNum}
+		, #{telephone}
+		, #{shopStatTyCd}
+		, #{lat}
+		, #{lot}
+		)
+	</insert>
+	<select id="countShop" parameterType="shopVo"
+		resultType="Integer">
+		SELECT COUNT(*)
+		FROM shop
+		WHERE shop_name=#{shopName}
+	</select>
+
+	<select id="pagedListShopCount" parameterType="shopVo"
+		resultType="Integer">
+		SELECT
+		COUNT(*)
+		FROM shop
+		<where>
+			<if test="shopName!=null">
+				<if test="!shopName.equals('')">
+					and ( shop_name like CONCAT('%', #{shopName}, '%') )
+				</if>
+			</if>
+		</where>
+	</select>
+	<select id="pagedListShop" parameterType="shopVo"
+		resultType="shopVo">
+		SELECT *
+		FROM(
+		SELECT *,@rownum:=@rownum+1 as rownum
+		FROM(
+		SELECT
+		shop_id
+		,shop_name
+		,shop_num
+		,telephone
+		,shop_stat_ty_cd
+		,lat
+		,lot
+		FROM shop A
+		<where>
+			<if test="shopName!=null">
+				<if test="!shopName.equals('')">
+					and ( A.shop_name like CONCAT('%', #{shopName}, '%') )
+				</if>
+			</if>
+		</where>
+		ORDER BY shop_id desc
+		) B,(select @rownum:=0) R
+		) C
+		<where>
+			rownum > (#{pageSize}*(#{currentPage}-1)) and
+			(#{pageSize}*(#{currentPage})) >= rownum
+
+		</where>
+	</select>
+	<select id="listShop" parameterType="shopVo" resultType="shopVo">
+		SELECT
+		shop_id
+		,shop_name
+		FROM shop
+		WHERE shop_stat_ty_cd='00500001'
+		ORDER BY shop_name
+	</select>
+	<select id="mlistShop" parameterType="shopVo"
+		resultType="shopVo">
+		SELECT
+		shop_id
+		,shop_name
+		,lat
+		,lot
+		,telephone
+		,shop_stat_ty_cd
+		<if test="lat!=null">
+			<if test="lot!=null">
+				,( (lat-#{lat})*(lat-#{lat})+(lot-#{lot})*(lot-#{lot}) ) dstns
+			</if>
+		</if>
+		FROM shop
+		<where>
+			lat is not null and lot is not null and lat!='' and lot!='' and lat!='0'
+			and lot!='0'
+		</where>
+	</select>
+	<update id="modifyShop" parameterType="shopVo">
+		UPDATE shop SET
+		shop_name = #{shopName}
+		,telephone = #{telephone}
+		,shop_stat_ty_cd = #{shopStatTyCd}
+		,lat = #{lat}
+		,lot = #{lot}
+		WHERE
+		shop_id = #{shopId}
+	</update>
+	<select id="getShop" parameterType="shopVo" resultType="shopVo">
+		SELECT
+		shop_id
+		,id
+		,pwd
+		,shop_name
+		,telephone
+		,shop_stat_ty_cd
+		,shop_num
+		,lat
+		,lot
+		FROM shop
+		WHERE
+		shop_id=#{shopId}
+	</select>
+	<delete id="removeShop" parameterType="shopVo">
+		DELETE
+		FROM shop
+		WHERE
+		shop_id = #{shopId}
+	</delete>
+
+	<select id="countCstmrShopHstry" parameterType="shopVo"
+		resultType="Integer">
+		SELECT
+		COUNT(*)
+		FROM
+		cstmr_shop_hstry
+		WHERE
+		shop_id=#{shopId}
+		and cstmr_id=#{cstmrId}
+		and date(visit_time)=date(now());
+	</select>
+
+	<insert id="addCstmrHstry" parameterType="shopVo">
+		INSERT INTO cstmr_shop_hstry
+		(
+		cstmr_id
+		, shop_id
+		, staff_id
+		)
+		VALUES (
+		#{cstmrId}
+		, #{shopId}
+		, #{staffId}
+		)
+	</insert>
+
+	<select id="listCstmrShopHstry" parameterType="shopVo"
+		resultType="cstmrVo">
+		SELECT
+		DATE_FORMAT(visit_time,'%d일 %H:%i %p') as date_time
+		,cstmr_id
+		,shop_id
+		,(select staff_name from staff where staff_id = H.staff_id)staff_name
+		,(select cstmr_cd from cstmr where cstmr_id=H.cstmr_id)cstmr_cd
+		,(select cstmr_name from cstmr where cstmr_id=H.cstmr_id)cstmr_name
+		,(select birth_day from cstmr where cstmr_id=H.cstmr_id)birth_day
+		,(select telephone from cstmr where cstmr_id=H.cstmr_id)telephone
+		,(select cellphone from cstmr where cstmr_id=H.cstmr_id)cellphone
+		,(select addr from cstmr where cstmr_id=H.cstmr_id)addr
+		FROM
+		cstmr_shop_hstry H
+		WHERE
+		shop_id = #{shopId}
+		<if test="today == 1 ">
+			and date(visit_time) = date(current_date)
+		</if>
+		<if test="today == 2 ">
+			and date(visit_time) = subdate(current_date,1)
+		</if>
+		order by visit_time desc
+	</select>
+
+	<delete id="removeCstmrShopHstry" parameterType="shopVo">
+		DELETE
+		FROM
+		cstmr_shop_hstry
+		WHERE
+		shop_id = #{shopId}
+		and date(visit_time) &lt;= subdate(current_date,2);
+	</delete>
+
+	<select id="countShopJoin" parameterType="shopVo"
+		resultType="Integer">
+		SELECT COUNT(*)
+		FROM
+		shop_new_cstmr
+		WHERE
+		shop_id=#{shopId}
+		and join_date=#{joinDate}
+	</select>
+	<insert id="addShopJoin" parameterType="shopVo">
+		INSERT INTO shop_new_cstmr
+		(
+		shop_id
+		,join_date
+		,join_count
+		)
+		VALUES (
+		#{shopId}
+		, #{joinDate}
+		, #{joinCount}
+		)
+	</insert>
+	<update id="modifyShopJoin" parameterType="shopVo">
+		UPDATE shop_new_cstmr SET
+		join_count=#{joinCount}
+		WHERE
+		shop_id = #{shopId}
+		AND join_date = #{joinDate}
+	</update>
+	<select id="getShopJoin" parameterType="shopVo"
+		resultType="shopVo">
+		SELECT
+		shop_id,
+		join_date,
+		join_count
+		FROM
+		shop_new_cstmr
+		WHERE
+		shop_id=#{shopId}
+		and join_date=#{joinDate}
+	</select>
+
+	<select id="shopLogin" parameterType="shopVo"
+		resultType="String">
+		SELECT
+		shop_id
+		FROM
+		shop
+		WHERE
+		shop_id = #{shopId}
+		AND
+		pwd = #{pwd}
+	</select>
+
+	<insert id="recIP" parameterType="String">
+		INSERT INTO
+		AccIP
+		(ip
+		,last_acc)
+		VALUES
+		(#{IPaddr}
+		,now())
+	</insert>
+	<insert id="recIP_Shop" parameterType="String">
+		INSERT INTO
+		AccIP
+		(ip
+		,last_acc)
+		VALUES
+		(#{IPaddr}
+		,now())
+	</insert>
+
+	<select id="getAddr" parameterType="String" resultType="String">
+		SELECT
+		IP
+		FROM
+		AccIP
+		WHERE
+		IP = #{IPaddr}
+	</select>
+
+	<update id="addCntIP" parameterType="String">
+		UPDATE
+		AccIP
+		SET
+		cnt = cnt + 1
+		,last_acc = now()
+		WHERE
+		IP = #{IPaddr}
+	</update>
+	<select id="getShopInfo" parameterType="shopVo"
+		resultType="shopVo">
+		SELECT
+		shop_id
+		,c_name as taxName
+		,c_num as taxNum
+		,shop_name
+		,shop_num
+		,telephone
+		,fax
+		,addr
+		,stamp_img_path
+		,(select server_url from file_server where isdefault='1') url_str
+		FROM
+		shop
+		WHERE
+		shop_id = #{shopId}
+
+	</select>
+	<!-- <insert id="clientIp" parameterType="adminVo"> INSERT INTO client_ip
+		(shop_id, ip, connect_time) VALUES (#{shopId},#{ip},now()) </insert> -->
+	<select id="connectIp" parameterType="shopVo"
+		resultType="Integer">
+		SELECT
+			count
+		FROM
+			connect_ip
+		WHERE
+			ip=#{ip}
+	</select>
+
+	<insert id="addConnectIp" parameterType="shopVo">
+		INSERT INTO
+		connect_ip(shop_id, ip, count, connect_time)
+		VALUES
+		(#{shopId},#{ip},1,now())
+	</insert>
+
+	<update id="updateConnectIp" parameterType="shopVo">
+		UPDATE
+			connect_ip
+		SET
+			count=count+1,
+			connect_time=now()
+		WHERE
+			ip=#{ip}
+	</update>
+
+	<!-- <select id="clientIp" parameterType="shopVo" resultType="Integer">
+		SELECT COUNT(*) FROM client_ip WHERE shop_id=#{shopId} AND ip=#{ip} </select> -->
+	<!-- <update id="setIpConnectTime" parameterType="shopVo"> UPDATE client_ip
+		SET connect_time=now() WHERE shop_id=#{shopId} </update> -->
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.comm">
+
+    
+    <insert id="addMsgLog" parameterType="commVo">
+    	INSERT INTO gallery_talk
+    		(
+    		send_gid
+    		,rcv_gid
+    		,msg
+    		,result
+    		)
+    	VALUES(
+    		#{sendGid}
+    		,#{rcvGid}
+    		,#{msg}
+    		,#{result}
+    		)
+    </insert>
+    
+    <select id="cntTalkingGroup" parameterType ="commVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		gallery_talk
+    	WHERE
+    		rcv_gid = #{rcvGid};
+    </select>
+    
+    
+    <select id="listTalkingGroup" parameterType ="commVo" resultType="commVo">
+	SELECT talk_id, rcv_gid, name, datetime FROM
+	(SELECT
+			MAX(talk_id) as talk_id
+			,if(send_gid=#{rcvGid},rcv_gid,send_gid) as rcv_gid
+    		, if(send_gid=#{rcvGid},if(substr(rcv_gid,1,1)='S',(select shop_name from shop where shop_id=replace(rcv_gid,'S','')),(select c_name from com_info where i_num=replace(rcv_gid,'C',''))), if(substr(send_gid,1,1)='S',(select shop_name from shop where shop_id=replace(send_gid,'S','')),(select c_name from com_info where i_num=replace(send_gid,'C','')))) as name
+    		, datetime
+    	FROM
+    		gallery_talk
+		WHERE
+			send_gid= #{rcvGid} or rcv_gid=#{rcvGid}
+		GROUP BY
+			rcv_gid,  send_gid
+		ORDER BY (MAX(talk_id)) DESC) as TMP
+		GROUP BY TMP.rcv_gid
+		ORDER BY talk_id desc;
+		
+    </select>
+    
+    <select id="cntTalkingUser" parameterType ="commVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		staff
+    	WHERE
+    		staff_id = #{staffId}
+    		and is_delete=0
+    		and reg_id is not null;
+    </select>
+    
+    <select id="getRegIdByStaff" parameterType ="commVo" resultType="commVo">
+    	SELECT
+			reg_id
+		FROM
+			staff
+		WHERE
+			staff_id=#{staffId}
+			and is_delete=0
+			and reg_id is not null
+    </select>
+    
+</mapper>

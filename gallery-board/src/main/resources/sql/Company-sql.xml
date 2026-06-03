@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.company">
+    <insert id="addCompany" parameterType="companyVo">
+        INSERT INTO com_info 
+        	(
+        	e_name
+        	,c_name
+        	,c_memo
+        	,p_num1
+        	,p_num2
+        	,c_Type
+        	,c_state
+        	) 
+        VALUES (
+        	#{eName}
+        	,#{cName}
+        	,#{cMemo}
+        	,#{pNum1}
+        	,#{pNum2}
+        	,#{cType}
+        	,#{cState}
+        	)    
+    </insert>
+    <select id="countCompany" parameterType="companyVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM com_info
+    	WHERE e_name=#{eName}
+    </select>
+    <select id="pagedListCompany" parameterType="companyVo" resultType="companyVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		i_num
+		    		,c_type
+		    		,c_name
+		    		,e_name
+		    		,p_num1
+		    		,p_num2
+		    		,c_memo
+		    		,c_state
+		    	FROM com_info
+		    	<where>
+		    		<if test="cName!=null">
+		    			<if test="!cName.equals('')">
+		    				and ( c_name like CONCAT('%', #{cName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="cType!=null">
+		    			<if test="!cType.equals('all')">
+		    				and c_type=#{cType}
+		    			</if>
+		    		</if>
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY c_name asc
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListCompanyCount" parameterType="companyVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM com_info
+    	<where>
+    		<if test="cName!=null">
+    			<if test="!cName.equals('')">
+    				and ( c_name like CONCAT('%', #{cName}, '%') )
+    			</if>
+    		</if>
+    		<if test="cType!=null">
+		    				<if test="!cType.equals('all')">
+		    				and c_type=#{cType}
+		    			</if>
+			</if>
+    	</where>
+    </select>
+    <select id="companyList" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		A.i_num,
+    		A.c_name
+    	FROM 
+    		com_info A
+    	INNER JOIN 
+    		com_ty B
+    	ON
+    		A.i_num = B.i_num
+    	AND
+    		B.ty = #{comTy}
+    	ORDER BY A.c_name ASC
+    </select>
+    <select id="listBrand" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    	FROM brand
+    	ORDER BY brand_name
+    </select>
+    <select id="mlistBrand" resultType="companyVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where brand_id=A.brand_id and prdct_stat_ty_cd='00100003' and prdct_visible_cd='00500001' and prdct_ty_cd=#{prdctTyCd} ) cnt
+					,brand_id
+					,brand_name 
+				FROM brand A 
+			) B
+		WHERE cnt>0;
+    </select>
+    
+    <select id="mlistBrandForDsply" resultType="companyVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where brand_id=A.brand_id and prdct_stat_ty_cd='00100003' and prdct_visible_cd='00500001' and (prdct_ty_cd='00300003' or prdct_ty_cd='00300004' )) cnt
+					,brand_id
+					,brand_name 
+				FROM brand A 
+			) B
+		WHERE cnt>0;
+    </select>
+    <update id="modifyCompany" parameterType="companyVo">
+        UPDATE com_info SET
+        	c_type 	= #{cType},
+        	c_name		= #{cName},
+        	e_name		= #{eName},
+        	p_num1		= #{pNum1},
+        	p_num2		= #{pNum2},
+        	c_memo		= #{cMemo},
+        	c_state		= #{cState}
+        WHERE
+        	i_num 			= #{iNum}
+    </update>
+    <select id="getCompany" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		i_num
+    		,c_type
+    		,c_name
+    		,e_name
+    		,p_num1
+    		,p_num2
+    		,c_memo
+    		,c_state
+    	FROM com_info
+    	WHERE
+    		i_num=#{iNum}
+    </select>
+    <delete id="removeCompany" parameterType="companyVo">
+    	DELETE 
+    	FROM com_info
+    	WHERE
+    		i_num 			= #{iNum}
+    </delete>
+    
+    
+    <select id="selectComList" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		C.i_num
+    		,C.c_name eName
+    	FROM
+    		com_info C, com_ty T
+    	WHERE
+    		C.i_num = T.i_num
+    </select>
+    
+    <select id="selectCom" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		C.i_num iNum
+    		,C.c_name cName
+    	FROM
+    		com_info C, com_ty T
+    	WHERE
+    		C.i_num = T.i_num
+    	AND
+    		T.ty = #{comTy}
+    		
+    </select>
+    
+    <select id="listAllComData" resultType="prdctVo">
+    	SELECT
+    		i_num test1
+    		,c_name test2
+    	FROM
+    		com_info
+    </select>
+    
+</mapper>

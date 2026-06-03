@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <settings>
+    <setting name="cacheEnabled" value="false"/>
+    <setting name="useGeneratedKeys" value="false"/>
+    <setting name="defaultExecutorType" value="REUSE"/>
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+  </settings>
+  <typeAliases>
+    <typeAlias alias="brandVo" type="com.gallery.brand.BrandVo"/>
+    <typeAlias alias="checkVo" type="com.gallery.check.CheckVo"/>
+    <typeAlias alias="cstmrVo" type="com.gallery.cstmr.CstmrVo"/>
+    <typeAlias alias="cstmrVoSecu" type="com.gallery.cstmr.CstmrVoSecu"/>
+    <typeAlias alias="cstmrHstryVo" type="com.gallery.cstmrHstry.CstmrHstryVo"/>
+    <typeAlias alias="commVo" type="com.gallery.comm.CommVo"/>
+
+    <typeAlias alias="prdctVo" type="com.gallery.prdct.PrdctVo"/>
+    <typeAlias alias="paymentVo" type="com.gallery.payment.PaymentVo"/>
+    <typeAlias alias="partnerVo" type="com.gallery.prdct.PartnerVo"/>
+    <typeAlias alias="saleVo" type="com.gallery.sale.SaleVo"/>
+    <typeAlias alias="saleJobVo" type="com.gallery.saleJob.SaleJobVo"/>
+    <typeAlias alias="shopVo" type="com.gallery.shop.ShopVo"/>
+    <typeAlias alias="staffVo" type="com.gallery.staff.StaffVo"/>
+    <typeAlias alias="salePrdctVo" type="com.gallery.sale.SalePrdctVo"/>
+    <typeAlias alias="pointVo" type="com.gallery.point.PointVo"/>
+    <typeAlias alias="couponVo" type="com.gallery.coupon.CouponVo"/>
+    <typeAlias alias="secuVo" type="com.gallery.secu.SecuVo"/>
+    <typeAlias alias="boardVo" type="com.gallery.board.BoardVo"/>
+
+  </typeAliases>
+</configuration>

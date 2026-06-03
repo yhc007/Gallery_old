@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.chart.ChartMapper">
+	    <select id="getYstDaySales" parameterType="chartVo" resultType="Integer">
+	    	SELECT
+				SUM(pay_cash + pay_card + pay_point) ystdsales
+		 	FROM
+		 		sale_off S
+		 	WHERE
+		 		shop_id = #{shopId}
+		 	AND
+		 		is_old !=1
+		 	AND
+		 		cancel = 0
+		 	AND
+		 		(select replace(datetime ,".","")from sale_off where sale_id = S.sale_id)=#{yesterDay}
+			AND (result='11111'
+			  OR result='11110'
+			  OR result='11010'
+			  OR result='11011'
+			  OR result='10010'
+			  OR result='10111'
+			  OR result='10011')
+	    </select>
+	    <select id="getTDaySales" parameterType="chartVo" resultType="Integer">
+	    	SELECT
+				SUM(pay_cash + pay_card + pay_point) tsales
+		 	FROM
+		 		sale_off S
+		 	WHERE
+		 		shop_id = #{shopId}
+		 	AND
+		 		is_old !=1
+		 	AND
+		 		cancel = 0
+		 	AND
+		 		(select replace(datetime ,".","")from sale_off where sale_id = S.sale_id)=#{toDay}
+			AND (result='11111'
+			  OR result='11110'
+			  OR result='11010'
+			  OR result='11011'
+			  OR result='10010'
+			  OR result='10111'
+			  OR result='10011')
+	    </select>
+
+   	 	<select id="getShopSales" parameterType="chartVo" resultType="chartVo">
+			SELECT
+
+					sale_id
+					,(select shop_name from shop where shop_id = Z.shop_id)shop_name
+					,sum(pay_point + pay_card + pay_cash) toDay
+					,sum(pay_point + pay_card + pay_cash) ystDay
+				FROm
+				sale_off Z
+
+				WHERE
+
+		 		is_old !=1
+		 	AND
+		 		cancel = 0
+		 	AND
+		 		(select replace(datetime ,".","")from sale_off where sale_id = Z.sale_id) =#{toDay}
+			AND (result='11111'
+			  OR result='11110'
+			  OR result='11010'
+			  OR result='11011'
+			  OR result='10010'
+			  OR result='10111'
+			  OR result='10011')
+
+			  group by shop_name
+			  order by toDay DESC
+    	</select>
+
+
+    	<select id="getPrdctRank" parameterType="chartVo" resultType="chartVo">
+	    	SELECT
+				distinct(P.prdct_id)
+				,(select prdct_name from prdct where prdct_id = P.prdct_id)prdctName
+				,sum(P.prdct_cnt)prdctCount
+				,sum(P.prc * P.prdct_cnt)prc
+
+			FROM
+				salePrdct_off P,
+				sale_off S
+			WHERE
+				S.shop_id = #{shopId}
+			AND
+				replace(S.datetime,".","")between #{sdate} AND #{edate}
+			AND
+				P.sale_id = S.sale_id
+			AND
+				P.itemTy=#{prdctTy}
+			group by prdctName
+			ORDER BY prdctCount DESC
+			LIMIT 10
+
+    	</select>
+
+    	<select id="getProfit" parameterType="chartVo" resultType="chartVo">
+    			SELECT
+    			datetime,
+    			sum(trdePrc)trdePrc,
+    			sum(puchasPrc)puchasPrc,
+    			shopName
+    		FROM(
+    			select
+    				(select datetime from sale_off where sale_id = S.sale_id)datetime,
+    				(select shop_name from shop A, sale_off B where A.shop_id = B.shop_id AND B.sale_id = S.sale_id)shopName,
+    				sale_id,
+    				prdct_id,
+    				(select sum(trde_prc * S.prdct_cnt) from prdct where prdct_id = S.prdct_id) trdePrc,
+    				(select sum(puchas_prc * S.prdct_cnt) from prdct where prdct_id = S.prdct_id) puchasPrc
+    			from
+    				salePrdct_off S
+    			)y
+    		<if test="toDay!=0">
+    			<if test="yesterDay==0">
+    				<if test="month==null">
+    					WHERE datetime = #{toDay}
+    				</if>
+    			</if>
+
+    		</if>
+    		<if test="yesterDay!=0">
+    			WHERE
+	    				datetime <![CDATA[ >= ]]> #{yesterDay}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+    		</if>
+    		<if test="month!=null">
+    		WHERE
+	    				datetime <![CDATA[ >= ]]> #{month}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+    		</if>
+    		GROUP BY shopName
+    		ORDER BY trdePrc
+    		limit 10
+    	</select>
+
+
+
+    	<select id="getStaffChart" resultType="chartVo" parameterType="chartVo">
+    		SELECT
+    			(select staff_name from staff where staff_id = y.staff_id)staff_name,
+    			staff_id,
+
+    			datetime ,
+    			sum(prc) prc,
+				avg(prc)staffSalesAvg
+    		FROM(
+    			select
+    				(select shop_id from staff where staff_id = S.staff_id)shop_id,
+    				(select staff_id from staff where staff_id = S.staff_id)staff_id ,
+    				(select datetime from sale_off where sale_id = S.sale_id)datetime,
+    				(select prc from salePrdct_off where sale_id = S.sale_id GROUP BY sale_id)prc
+    			from
+    				sale_job_off S
+    			)y
+    		WHERE
+	    		y.shop_id = #{shopId}
+	    	<if test="toDay!=0">
+    				<if test="yesterDay==0">
+    					<if test="month==null">
+							AND
+    						datetime = #{toDay}
+    					</if>
+    				</if>
+    			</if>
+    			 <if test="yesterDay!=0">
+    				AND
+	    				datetime <![CDATA[ >= ]]> #{yesterDay}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+    			</if>
+    			<if test="month!=null">
+    				AND
+	    				datetime <![CDATA[ >= ]]> #{month}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+    			</if>
+    			GROUP BY staff_name
+    			ORDER BY prc DESC
+    	</select>
+
+
+    	<select id="getStaffJob" parameterType="chartVo" resultType="chartVo">
+    		SELECT
+    			y.start_time,
+    			y.staff_id,
+    			y.datetime,
+    			y.staff_name,
+    			(select count(Distinct start_time) from sale_job_off where ty_cd="01200001" AND datetime = y.datetime AND staff_id = #{staffId} group by datetime)selectPrdct,
+    			(select count(Distinct start_time) from sale_job_off where ty_cd="01200002" AND datetime = y.datetime AND staff_id = #{staffId} group by datetime)chkeyes,
+    			(select count(Distinct start_time) from sale_job_off where ty_cd="01200003" AND datetime = y.datetime AND staff_id = #{staffId} group by datetime)asmbly,
+    			(select count(Distinct start_time) from sale_job_off where ty_cd="01200004" AND datetime = y.datetime AND staff_id = #{staffId} group by datetime)payment,
+    			(select count(Distinct start_time) from sale_job_off where ty_cd="01200005" AND datetime = y.datetime AND staff_id = #{staffId} group by datetime)dlvl
+    		from(
+	    		select
+	    			start_time,
+	    			datetime,
+	    			(select staff_id from staff where staff_id = S.staff_id) staff_id,
+	    			(select staff_name from staff where staff_id = S.staff_id) staff_name
+	    		from
+	    			sale_job_off S
+
+	    		<if test="toDay!=0">
+    				<if test="yesterDay==0">
+    					<if test="month==null">
+							WHERE
+    						datetime = #{toDay}
+    					</if>
+    				</if>
+    			</if>
+    			 <if test="yesterDay!=0">
+    				WHERE
+	    				datetime <![CDATA[ >= ]]> #{yesterDay}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+    			</if>
+    			<if test="month!=null">
+    				WHERE
+	    				datetime <![CDATA[ >= ]]> #{month}
+    				AND
+    					datetime <![CDATA[ <= ]]> #{toDay}
+
+    			</if>
+
+    				group by staff_id
+    			)y
+    			WHERE
+    				staff_id = #{staffId}
+
+    	</select>
+
+
+    	<select id="getStaffList" parameterType="chartVo" resultType="chartVo">
+    		SELECT
+    			*
+    		FROM
+    			staff
+    		WHERE
+    			shop_id = #{shopId}
+    	</select>
+</mapper>

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.sale">
+    <insert id="addSale" parameterType="saleVo" useGeneratedKeys="true" keyProperty="ShopOrderNo">
+            INSERT INTO sale 
+        	(
+        	cstmr_id
+        	,shop_id
+			,coupon_id
+			,ogn_price
+			,pay_cash
+			,pay_card
+			,email
+			,phone
+			,addr
+			,datetime
+			,regtime
+        	) 
+        VALUES (
+        	(select cstmr_id from cstmr where cstmr_login_id = #{UserID})
+        	, #{shopNumber}
+        	, #{couponId}
+        	, #{ognPrice}
+        	, #{payCash}
+        	, #{payCard}
+        	, #{UserEmail}
+        	, #{UserPhone}
+        	, #{userAddr}
+        	, DATE_FORMAT(now(),'%Y%m%d')
+        	, now()
+        	);
+        <selectKey keyProperty="ShopOrderNo" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    
+    <insert id="addSalePrdct" parameterType="salePrdctVo">
+            INSERT INTO salePrdct 
+        	(
+        	sale_id
+        	,prdct_id
+			,prdct_cnt
+			,event_id
+			,dscnt
+			,prc
+        	) 
+        VALUES (
+        	#{saleId}
+        	, #{prdctId}
+        	, #{prdctCnt}
+        	, #{eventId}
+        	, #{dscnt}
+        	, #{prc}
+        	);
+    </insert>
+    
+    
+    <select id="selectSaleTimeExceed" resultType="saleVo">
+    	select sale_id from sale
+    	where
+    		result is null and
+    		now()-regtime > 300
+    </select>
+    <select id="countSale" parameterType="saleVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM sale
+    	WHERE sale_name=#{saleName}
+    </select>
+    <select id="pagedListSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		sale_id
+		    		,sale_name
+		    	FROM sale
+		    	<where>
+		    		<if test="saleName!=null">
+		    			<if test="!saleName.equals('')">
+		    				and ( sale_name like CONCAT('%', #{saleName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY sale_id desc
+	    	) A,(select @rownum:=0) R
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListSaleCount" parameterType="saleVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM sale
+    	<where>
+    		<if test="saleName!=null">
+    			<if test="!saleName.equals('')">
+    				and ( sale_name like CONCAT('%', #{saleName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,sale_name
+    	FROM sale
+    	ORDER BY sale_name
+    </select>
+    
+    <select id="listSaleHist" parameterType="saleHistSearchVo" resultType="saleVo">
+    	SELECT * FROM(
+    	SELECT
+    		A.sale_id
+    		,(select shop_name from shop where shop_id=A.shop_id) shop_name
+    		,(select cstmr_name from cstmr where cstmr_id=A.cstmr_id) userName 
+    		,addr userAddr
+    		,phone userPhone
+    		,datetime
+    		,regtime
+    		,result
+    		,(select sum(prc) from salePrdct where sale_id=A.sale_id) price
+    	FROM sale A
+    	WHERE
+    		datetime between ${startTime} and ${endTime}
+    		<if test="result!=-1">
+    			<if test="result==0000">
+    				and (result = '0000' or result = '0' or result='sucess')
+    			</if>
+    			<if test="result!=0000">
+    				and (result = #{result})
+    			</if>
+   			</if>
+   		) B
+   		<where>
+   			<if test="cstmrName!=null">
+    			<if test="cstmrName!=''">
+    				and ( userName = #{cstmrName})
+    			</if>
+    		</if>
+   		</where>
+    	order by datetime desc,regtime desc
+    	
+    </select>
+    
+    
+    <select id="listSalesHist" parameterType="saleHistSearchVo" resultType="salesVo">
+    	 select  
+    	 	datetime
+			,(select shop_name from shop where shop_id=Y.shop_id) shop_name
+			,sum(pay_cash) pay_cash
+			,sum(pay_card) pay_card
+			,sum(price) total
+			,sum(frame_prc) frame_prc
+			,sum(lens_prc) lens_prc
+		from(
+			SELECT
+				Z.sale_id
+				,pay_cash
+				,pay_card
+				,shop_id
+				,result
+				,(select sum(prc) from salePrdct where sale_id=Z.sale_id) price
+				,(select sum(prc) from salePrdct A, prdct B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id and B.prdct_ty_cd = '00300001') frame_prc
+				,(select sum(prc) from salePrdct A, prdct B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id and B.prdct_ty_cd = '00300002') lens_prc
+				,datetime
+			FROM sale Z
+			WHERE
+					datetime between ${startTime} and ${endTime}
+				<if test="shopId!='all'">
+						AND shop_id = #{shopId}
+				</if>
+		) Y
+		<if test="shopId!='all'">
+			group by datetime
+		</if>
+		<if test="shopId=='all'">
+			group by shop_name
+		</if>
+		 
+    </select>
+    
+    <select id="listPrdctSaleHist" parameterType="saleHistSearchVo" resultType="saleVo">
+    	SELECT
+    		A.sale_id
+    		,(select shop_name from shop where shop_id=A.shop_id) shop_name
+    		,(select prdct_name from prdct where prdct_id=B.prdct_id) prdct_name
+    		,prdct_cnt
+    		,datetime
+    		,result
+    		,B.prc price
+    	FROM sale A left outer join salePrdct B
+    	on A.sale_id=B.sale_id
+    	WHERE
+    		datetime between ${startTime} and ${endTime}
+    		
+    	order by datetime desc,regtime desc
+    	
+    </select>
+    
+    <select id="listSalePrdct" parameterType="saleVo" resultType="salePrdctVo">
+    	SELECT
+    		datetime
+    		,sale_id
+    		,prdct_id
+    		,prdct_cnt
+    	FROM salePrdct
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+    
+    <select id="mlistSale" resultType="saleVo">
+    	SELECT * from(
+			SELECT (
+				SELECT 
+					count(*) from prdct where sale_id=A.sale_id and prdct_stat_ty_cd='00100003') cnt
+					,sale_id
+					,sale_name 
+				FROM sale A 
+			) B
+		WHERE cnt>0;
+    </select>
+    <update id="modifySale" parameterType="saleVo">
+        UPDATE sale SET
+        	result		= #{CJSResultCode}
+        	,result_msg = #{CJSResultMessage}
+        	,pay_id		= #{CJSPayID}
+        	,trade_id	= #{CJSTradeID}
+        	,pay_date	= #{CJSPaydate}
+        	,pgctrl		= #{Crd_pgctrl_Cd_p}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+    <select id="getSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,bigo
+    	FROM sale
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+    <select id="getSaleForResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    	FROM sale
+    	WHERE
+    		sale_id=#{CJSShopOrderNo} and result is null
+    </select>
+    <delete id="removeSale" parameterType="saleVo">
+    	DELETE 
+    	FROM sale
+    	WHERE
+    		sale_id 			= #{saleId}
+    </delete>
+    <select id="findShopName" parameterType="salesVo" resultType="salesVo">
+    	SELECT
+    		shop_name, shop_id
+    		
+    	FROM shop
+    		ORDER BY shop_name ASC
+    	
+    	<if test="shopId!=777">
+    		where shop_id = #{shopId}
+    	</if>
+		   	
+    </select>
+    
+    <select id="getShopId" parameterType="Integer" resultType="salesVo">
+    	Select *
+    	from adminMember
+    	where shop_id=#{shopId}
+    </select>
+</mapper>

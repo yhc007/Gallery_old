@@ -1,0 +1,14 @@
+spring:
+  profiles.active: development
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${env.DB_URL}
+    hikari:
+      username: ${env.DB_USERNAME}
+      password: ${env.DB_PASSWORD}
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+mybatis:
+  type-aliases-package: com.gallery

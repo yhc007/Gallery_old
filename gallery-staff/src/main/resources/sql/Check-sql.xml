@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.check.CheckMapper">
+    <insert id="addVisit" parameterType="checkVo" useGeneratedKeys="true" keyProperty="histId">
+            INSERT INTO visit_history
+        	(
+    		cstmr_id,
+    		cstmr_cd,
+    		staff_id,
+    		visit_shop_id,
+    		gsph_right,
+    		gsph_left,
+  			gcyl_right,
+  			gcyl_left,
+  			gaxis_right,
+  			gaxis_left,
+  			add_right,
+  			add_left,
+  			npc_right,
+  			npc_left,
+  			npa_right,
+  			npa_left,
+  			pd_right,
+  			pd_left,
+  			lsph_right,
+  			lsph_left,
+  			lcyl_right,
+  			lcyl_left,
+  			laxis_right,
+  			laxis_left,
+  			prism_right,
+  			prism_left,
+  			base_right,
+  			base_left,
+  			bc_right,
+  			bc_left,
+  			dia_right,
+  			dia_left,
+  			datetime,
+  			dom_eye
+        	)
+        VALUES (
+        	#{cstmrId},
+        	(select cstmr_cd from cstmr where cstmr_id=#{cstmrId}),
+        	#{staffId},
+        	#{visitShopId},
+    		#{gsphRight},
+    		#{gsphLeft},
+  			#{gcylRight},
+  			#{gcylLeft},
+  			#{gaxisRight},
+  			#{gaxisLeft},
+  			#{addRight},
+  			#{addLeft},
+  			#{npcRight},
+  			#{npcLeft},
+  			#{npaRight},
+  			#{npaLeft},
+  			#{pdRight},
+  			#{pdLeft},
+  			#{lsphRight},
+  			#{lsphLeft},
+  			#{lcylRight},
+  			#{lcylLeft},
+  			#{laxisRight},
+  			#{laxisLeft},
+  			#{prismRight},
+  			#{prismLeft},
+  			#{baseRight},
+  			#{baseLeft},
+  			#{bcRight},
+  			#{bcLeft},
+  			#{diaRight},
+  			#{diaLeft},
+  			#{datetime},
+  			#{domEye}
+        	);
+        <selectKey keyProperty="histId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+    <update id="updateVisit" parameterType="checkVo">
+            update visit_history set
+	    		cstmr_id	=#{cstmrId},
+	    		cstmr_cd = (select cstmr_cd from cstmr where cstmr_id = #{cstmrId}),
+	    		staff_id	=#{staffId},
+	    		gsph_right	=#{gsphRight},
+	    		gsph_left	=#{gsphLeft},
+	  			gcyl_right	=#{gcylRight},
+	  			gcyl_left	=#{gcylLeft},
+	  			gaxis_right	=#{gaxisRight},
+	  			gaxis_left	=#{gaxisLeft},
+	  			add_right	=#{addRight},
+	  			add_left	=#{addLeft},
+	  			npc_right	=#{npcRight},
+	  			npc_left	=#{npcLeft},
+	  			npa_right	=#{npaRight},
+	  			npa_left	=#{npaLeft},
+	  			pd_right	=#{pdRight},
+	  			pd_left		=#{pdLeft},
+	  			lsph_right	=#{lsphRight},
+	  			lsph_left	=#{lsphLeft},
+	  			lcyl_right	=#{lcylRight},
+	  			lcyl_left	=#{lcylLeft},
+	  			laxis_right	=#{laxisRight},
+	  			laxis_left	=#{laxisLeft},
+	  			prism_right	=#{prismRight},
+	  			prism_left	=#{prismLeft},
+	  			base_right	=#{baseRight},
+	  			base_left	=#{baseLeft},
+	  			bc_right	=#{bcRight},
+	  			bc_left		=#{bcLeft},
+	  			dia_right	=#{diaRight},
+	  			dia_left	=#{diaLeft},
+	  			dom_eye		=#{domEye}
+  			WHERE
+    			hist_id 	=#{histId}
+    </update>
+    <select id="countVisit" parameterType="checkVo" resultType="Integer">
+     	SELECT
+    		count(*)
+    	FROM visit_history
+    	WHERE
+    		hist_id=#{histId}
+    </select>
+    <select id="listVisit" parameterType="checkVo" resultType="checkVo">
+    	SELECT
+    		hist_id,
+    		cstmr_cd,
+    		gsph_right,
+    		gsph_left,
+  			gcyl_right,
+  			gcyl_left,
+  			gaxis_right,
+  			gaxis_left,
+  			add_right,
+  			add_left,
+  			npc_right,
+  			npc_left,
+  			npa_right,
+  			npa_left,
+  			pd_right,
+  			pd_left,
+  			lsph_right,
+  			lsph_left,
+  			lcyl_right,
+  			lcyl_left,
+  			laxis_right,
+  			laxis_left,
+  			prism_right,
+  			prism_left,
+  			base_right,
+  			base_left,
+  			bc_right,
+  			bc_left,
+  			dia_right,
+  			dia_left,
+  			datetime,
+  			dom_eye,
+  			(if(is_old=1,(damdang_name),(SELECT S.staff_name from staff S where S.staff_id = V.staff_id))) staff_name,
+  			(if(is_old=1,(select shop_name from shop where shop_num=visit_shop_id),(SELECT shop_name from shop where shop_id = visit_shop_id))) shop_name
+    	FROM visit_history V
+    	WHERE
+    		cstmr_cd=(select cstmr_cd from cstmr where cstmr_id=#{cstmrId})
+    	ORDER BY datetime DESC , hist_id DESC
+    </select>
+     <select id="getVisitInfo" parameterType="checkVo" resultType="checkVo">
+     	SELECT
+    		hist_id,
+    		cstmr_id,
+    		(if(is_old=1,(select shop_name from shop where shop_num=visit_shop_id),(SELECT shop_name from shop where shop_id = visit_shop_id))) shop_name,
+			(if(is_old=1,(damdang_name),(SELECT S.staff_name from staff S where S.staff_id = V.staff_id))) staff_name,
+			staff_id,
+    		gsph_right,
+    		gsph_left,
+  			gcyl_right,
+  			gcyl_left,
+  			gaxis_right,
+  			gaxis_left,
+  			add_right,
+  			add_left,
+  			npc_right,
+  			npc_left,
+  			npa_right,
+  			npa_left,
+  			pd_right,
+  			pd_left,
+  			lsph_right,
+  			lsph_left,
+  			lcyl_right,
+  			lcyl_left,
+  			laxis_right,
+  			laxis_left,
+  			prism_right,
+  			prism_left,
+  			base_right,
+  			base_left,
+  			bc_right,
+  			bc_left,
+  			dia_right,
+  			dia_left,
+  			datetime,
+  			dom_eye
+    	FROM visit_history V
+    	WHERE
+    		hist_id=#{histId}
+    	ORDER BY datetime DESC , hist_id DESC
+    </select>
+
+    <select id="getVisitInfoForSale" parameterType="cstmrVo" resultType="checkVo">
+    	SELECT
+    		hist_id,
+			cstmr_cd,
+    		gsph_right,
+    		gsph_left,
+  			gcyl_right,
+  			gcyl_left,
+  			gaxis_right,
+  			gaxis_left,
+  			add_right,
+  			add_left,
+  			npc_right,
+  			npc_left,
+  			npa_right,
+  			npa_left,
+  			pd_right,
+  			pd_left,
+  			lsph_right,
+  			lsph_left,
+  			lcyl_right,
+  			lcyl_left,
+  			laxis_right,
+  			laxis_left,
+  			prism_right,
+  			prism_left,
+  			base_right,
+  			base_left,
+  			bc_right,
+  			bc_left,
+  			dia_right,
+  			dia_left,
+  			datetime,
+  			dom_eye,
+  			(if(is_old=1,(damdang_name),(SELECT S.staff_name from staff S where S.staff_id = V.staff_id))) staff_name,
+  			(if(is_old=1,(select shop_name from shop where shop_num=visit_shop_id),(SELECT shop_name from shop where shop_id = visit_shop_id))) shop_name
+    	FROM visit_history V
+    	WHERE
+    		cstmr_cd=(select cstmr_cd from cstmr where cstmr_id=#{cstmrId})
+    	ORDER BY datetime DESC , hist_id DESC
+  		LIMIT 1;
+    </select>
+
+    <update id="modifyCheckDate" parameterType="checkVo">
+        UPDATE visit_history SET
+        	<if test="datetime != null">
+				<if test="!datetime.equals('')">
+        		datetime=#{datetime}
+        		</if>
+        	</if>
+        WHERE
+        	hist_id = #{histId}
+    </update>
+
+    <update id="editCheckInfo" parameterType="checkVo">
+		UPDATE
+			visit_history
+	    <set>
+	    	<if test="gsphRight != null">gsph_right=#{gsphRight},</if>
+	    	<if test="gsphLeft != null">gsph_left=#{gsphLeft},</if>
+	    	<if test="gcylRight != null">gcyl_right=#{gcylRight},</if>
+	    	<if test="gcylLeft != null">gcyl_left=#{gcylLeft},</if>
+	    	<if test="gaxisRight != null">gaxis_right=#{gaxisRight},</if>
+	    	<if test="gaxisLeft != null">gaxis_left=#{gaxisLeft},</if>
+	    	<if test="pdRight != null">pd_right=#{pdRight},</if>
+	    	<if test="pdLeft != null">pd_left=#{pdLeft},</if>
+	    	<if test="addRight != null">add_right=#{addRight},</if>
+	    	<if test="addLeft != null">add_left=#{addLeft},</if>
+	    	<if test="prismRight != null">prism_right=#{prismRight},</if>
+	    	<if test="prismLeft != null">prism_left=#{prismLeft},</if>
+	    	<if test="baseRight != null">base_right=#{baseRight},</if>
+	    	<if test="baseLeft != null">base_left=#{baseLeft},</if>
+	    	<if test="npcRight != null">npc_right=#{npcRight},</if>
+	    	<if test="npcLeft != null">npc_left=#{npcLeft},</if>
+	    	<if test="npaRight != null">npa_right=#{npaRight},</if>
+	    	<if test="npaLeft != null">npa_left=#{npaLeft},</if>
+	    	<if test="domEye != null">dom_eye=#{domEye},</if>
+	    	<if test="lsphRight != null">lsph_right=#{lsphRight},</if>
+	    	<if test="lsphLeft != null">lsph_left=#{lsphLeft},</if>
+	    	<if test="lcylRight != null">lcyl_right=#{lcylRight},</if>
+	    	<if test="lcylLeft != null">lcyl_left=#{lcylLeft},</if>
+	    	<if test="laxisRight != null">laxis_right=#{laxisRight},</if>
+	    	<if test="laxisLeft != null">laxis_left=#{laxisLeft},</if>
+	    	<if test="bcRight != null">bc_right=#{bcRight},</if>
+	    	<if test="bcLeft != null">bc_left=#{bcLeft},</if>
+	    	<if test="diaRight != null">dia_right=#{diaRight},</if>
+	    	<if test="diaLeft != null">dia_left=#{diaLeft},</if>
+	    </set>
+		WHERE
+			hist_id = #{histId}
+	</update>
+
+</mapper>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+					
+<mapper namespace="com.gallery.admin">
+	    <select id="getPwd" parameterType="adminVo" resultType="adminVo">
+	    	Select 
+	    		id,
+	    		pwd
+	    	FROM 
+    			super_admin A
+	    	WHERE
+	    		id=#{id}
+	    </select>
+	    
+	      <select id="comLogin" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		id
+	    	FROM
+	    		super_admin
+	    	WHERE
+	    		id = #{id}
+	    	AND
+	    		pwd = #{pwd}
+	    </select>
+	    <select id="getShopName" parameterType="adminVo" resultType="shopVo">
+	    	SELECT
+	    		lv,
+	    		c_name shopName,
+	    		i_num shopId
+	    	FROM
+	    		com_info
+	    	WHERE
+	    		id = #{id}
+	    </select>
+	    
+	    <select id="frameShop" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		ty
+	    	FROM
+	    		com_ty
+	    	WHERE
+	    		i_num = #{iNum}
+	    	AND
+	    		ty = 'F'
+	    </select>
+	    <select id="LensShop" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		ty
+	    	FROM
+	    		com_ty
+	    	WHERE
+	    		i_num = #{iNum}
+	    	AND
+	    		ty = 'L'
+	    </select>
+	    <select id="ClensShop" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		ty
+	    	FROM
+	    		com_ty
+	    	WHERE
+	    		i_num = #{iNum}
+	    	AND
+	    		ty = 'C'
+	    </select>
+	    <select id="AccShop" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		ty
+	    	FROM
+	    		com_ty
+	    	WHERE
+	    		i_num = #{iNum}
+	    	AND
+	    		ty = 'A'
+	    </select>
+	    
+	    <select id="etcShop" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		ty
+	    	FROM
+	    		com_ty
+	    	WHERE
+	    		i_num = #{iNum}
+	    	AND
+	    		ty = 'E'
+	    </select>
+	    
+	    <select id="CheckShopPwd" parameterType="adminVo" resultType="String">
+	    	SELECT
+	    		i_num
+	    	FROM
+	    		com_info
+	    	WHERE
+	    		i_num = #{shopId}
+	    	AND
+	    		pwd = #{oldPwd}
+	    </select>
+	    
+	    <update id="modifyPwdAction" parameterType="adminVo">
+	    	UPDATE
+	    		com_info
+	    	SET
+	    		pwd = #{newPwd}
+	    	WHERE
+	    		i_num = #{shopId}
+	    	AND
+	    		pwd = #{oldPwd}
+	    		
+	    </update>
+</mapper>

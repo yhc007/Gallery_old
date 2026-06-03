@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.prdctType">
+    
+    <select id="getListPrdctType"  resultType="prdctTypeVo">
+	    SELECT type_id, type_name
+	    FROM prdct_type;
+    </select>
+    <select id="getPrdctTypeFrame" parameterType ="prdctTypeVo" resultType="prdctTypeVo">
+    	SELECT T.type_id, F.prdct_id from prdct_type T
+    	JOIN prdct_type_frame F
+    	ON
+    	T.type_id=F.type_id where T.type_id=#{prdctId}
+    </select>
+</mapper>

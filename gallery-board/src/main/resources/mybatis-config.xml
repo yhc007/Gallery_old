@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="useGeneratedKeys" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" />
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+	</settings>
+    <typeAliases>
+    <typeAlias alias="boardVo" type="com.gallery.web.board.domain.BoardVo"/>
+    <typeAlias alias="fileVo" type="com.gallery.web.fileUpload.domain.FileVo"/>
+    	<typeAlias alias="companyVo" type="com.gallery.web.company.domain.CompanyVo"/>
+    	<typeAlias alias="adminVo" type="com.gallery.web.admin.domain.AdminVo"/>
+    	<typeAlias alias="chartVo" type="com.gallery.web.chart.domain.ChartVo"/>
+        <typeAlias alias="brandVo" type="com.gallery.web.brand.domain.BrandVo"/>
+        <typeAlias alias="cartVo" type="com.gallery.web.cart.domain.CartVo"/>
+        <typeAlias alias="cstmrVo" type="com.gallery.app.cstmr.domain.CstmrVo"/>
+        <typeAlias alias="dlvrVo" type="com.gallery.web.dlvr.domain.DlvrVo"/>
+        <typeAlias alias="eventVo" type="com.gallery.web.event.domain.EventVo"/>
+        <typeAlias alias="eventPrdctVo" type="com.gallery.web.event.domain.EventPrdctVo"/>
+        <typeAlias alias="fileServerVo" type="com.gallery.web.fileserver.domain.FileServerVo"/>
+        <typeAlias alias="mailVo" type="com.gallery.web.mail.domain.MailVo"/>
+        <typeAlias alias="mediaVo" type="com.gallery.web.media.domain.MediaVo"/>
+        <typeAlias alias="prdctVo" type="com.gallery.web.prdct.domain.PrdctVo"/>
+        <typeAlias alias="saleVo" type="com.gallery.web.sale.domain.SaleVo"/>
+        <typeAlias alias="salesVo" type="com.gallery.web.sale.domain.SalesVo"/>
+        <typeAlias alias="saleHistSearchVo" type="com.gallery.web.sale.domain.SaleHistSearchVo"/>
+        <typeAlias alias="salePrdctVo" type="com.gallery.web.sale.domain.SalePrdctVo"/>
+        <typeAlias alias="shopVo" type="com.gallery.web.shop.domain.ShopVo"/>
+        <typeAlias alias="staffVo" type="com.gallery.web.staff.domain.StaffVo"/>
+        <typeAlias alias="prdctTypeVo" type="com.gallery.web.prdctType.domain.PrdctTypeVo"/>
+    </typeAliases>
+</configuration>

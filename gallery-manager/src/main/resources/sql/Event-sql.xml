@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.event.EventMapper">
+    <insert id="addEvent" parameterType="eventVo">
+        INSERT INTO event
+        	(
+        	event_name
+        	,event_stat_ty_cd
+        	,event_ty_cd
+        	,dscnt
+        	,start_time
+        	,end_time
+        	)
+        VALUES (
+        	#{eventName}
+        	, #{eventStatTyCd}
+        	, #{eventTyCd}
+        	, #{dscnt}
+        	, #{startTime}
+        	, #{endTime}
+        	)
+    </insert>
+
+
+    <insert id="addEventPrdct" parameterType="eventPrdctVo">
+        INSERT INTO event_prdct
+        	(
+        	event_id
+        	,prdct_id
+        	)
+        VALUES (
+        	#{eventId}
+        	, #{prdctId}
+        	)
+    </insert>
+
+    <select id="countEvent" parameterType="eventVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM event
+    	WHERE event_name=#{eventName}
+    </select>
+    <select id="pagedListEvent" parameterType="eventVo" resultType="eventVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		event_id
+		    		,event_name
+		        	,event_stat_ty_cd
+		        	,event_ty_cd
+		        	,dscnt
+		        	,(select count(*) from event_prdct where event_id=Z.event_id) prdctCnt
+		        	,start_time
+       				,end_time
+		    	FROM event Z
+		    	<where>
+		    		<if test="eventName!=null">
+		    			<if test="!eventName.equals('')">
+		    				and ( event_name like CONCAT('%', #{eventName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY event_id desc
+	    	) A,(select @rownum:=0) R
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListEventCount" parameterType="eventVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM event
+    	<where>
+    		<if test="eventName!=null">
+    			<if test="!eventName.equals('')">
+    				and ( event_name like CONCAT('%', #{eventName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+
+    <select id="listEventPrdct" parameterType="eventVo" resultType="eventPrdctVo">
+    	SELECT *,@rownum:=@rownum+1 as rownum
+    	FROM(
+	    	SELECT
+	    		event_id
+	    		,(select event_name from event where event_id=A.event_id) event_name
+	    		,prdct_id
+	    		,(select prdct_name from prdct where prdct_id=A.prdct_id) prdct_name
+	    	FROM event_prdct A,(select @rownum:=0) R
+	    	WHERE event_id=#{eventId}
+	    	ORDER BY event_name
+    	) B
+    </select>
+
+    <update id="modifyEvent" parameterType="eventVo">
+        UPDATE event SET
+        	event_name 			= #{eventName}
+        	,event_stat_ty_cd 	= #{eventStatTyCd}
+        	,event_ty_cd	 	= #{eventTyCd}
+        	,dscnt 				= #{dscnt}
+        	,start_time 		= #{startTime}
+        	,end_time 			= #{endTime}
+        WHERE
+        	event_id 			= #{eventId}
+    </update>
+    <select id="getEvent" parameterType="eventVo" resultType="eventVo">
+    	SELECT
+    		event_id
+    		,event_name
+        	,event_stat_ty_cd
+        	,event_ty_cd
+        	,dscnt
+        	,start_time
+        	,end_time
+    	FROM event
+    	WHERE
+    		event_id=#{eventId}
+    </select>
+
+    <select id="getEventForPrdct" parameterType="salePrdctVo" resultType="eventVo">
+    	SELECT
+    		A.event_id
+    		,event_name
+        	,event_stat_ty_cd
+        	,event_ty_cd
+        	,dscnt
+        	,start_time
+        	,end_time
+    	FROM event A, event_prdct B
+    	WHERE
+    		A.event_id = B.event_id and
+    		A.event_id=#{eventId} and
+    		B.prdct_id=#{prdctId} and
+    		DATE_FORMAT(now(), '%Y%m%d') between start_time and end_time
+    </select>
+
+    <delete id="removeEvent" parameterType="eventVo" >
+    	DELETE
+    	FROM event
+    	WHERE
+    		event_id 			= #{eventId}
+    </delete>
+
+</mapper>

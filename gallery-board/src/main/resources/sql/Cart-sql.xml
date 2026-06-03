@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.cart">
+    <insert id="addCart" parameterType="cartVo">
+        INSERT INTO cart 
+        	(
+        	cstmr_id
+        	,prdct_id
+        	) 
+        VALUES (
+        	#{cstmrId}
+        	, #{prdctId}
+        	)    
+    </insert>
+    <select id="countCart" parameterType="cartVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM cart
+    	WHERE
+    		cstmr_id=#{cstmrId} and
+    		prdct_id=#{prdctId}
+    </select>
+    <select id="mListCart" parameterType="cartVo" resultType="prdctVo">
+    	<!-- 
+    	SELECT * FROM(
+    	 -->
+		SELECT
+			Z.prdct_id
+			,prdct_name
+			,trde_prc
+			,(select server_url from file_server where isdefault='1') url_str
+			,(select count(*) from rotate_img where prdct_id=Z.prdct_id AND
+			media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where prdct_id=Z.prdct_id) video_cd
+			,Y.img_path
+			,Y.color
+			,X.event_id
+			,X.event_name
+			,X.dscnt
+			,B.brand_name
+		FROM prdct Z
+		INNER JOIN cart C
+		ON 	Z.prdct_id=C.prdct_id AND
+			C.cstmr_id=#{cstmrId}
+		LEFT OUTER JOIN still_img Y
+		on Z.prdct_id=Y.prdct_id
+		LEFT OUTER JOIN
+		(
+			select * from(
+				select Z.event_id,event_name,dscnt,ifnull(prdct_id,-1) prdct_id
+				from event Z left outer join event_prdct X
+				on Z.event_id = X.event_id
+				where DATE_FORMAT(now(), '%Y%m%d') between start_time and end_time and
+				event_stat_ty_cd='00500001'
+				order by dscnt desc
+			)A
+			GROUP BY prdct_id
+		) X
+		ON Z.prdct_id = X.prdct_id or X.prdct_id=-1
+
+		INNER JOIN  
+			brand B
+		ON
+			Z.brand_id = B.brand_id
+
+		WHERE
+			prdct_stat_ty_cd="00100003" and
+			prdct_visible_cd="00500001" and
+			Y.img_path is not null
+		ORDER BY
+			dscnt desc
+	
+		<!-- 
+		)B GROUP BY prdct_id
+		-->
+    </select>
+    <select id="mlistCart" resultType="cartVo">
+    	SELECT
+    		*
+    	FROM(
+			SELECT
+			(
+				SELECT 
+					count(*)
+				FROM
+					prdct 
+				WHERE
+					cart_id=A.cart_id
+					and prdct_stat_ty_cd='00100003' 
+					and prdct_visible_cd='00500001' 
+					and prdct_ty_cd=#{prdctTyCd}
+			)
+				cnt
+				,cart_id
+				,cart_name 
+				FROM cart A 
+			)B
+		WHERE cnt>0;
+    </select>
+    
+    <update id="modifyCart" parameterType="cartVo">
+        UPDATE cart SET
+        	cart_name 	= #{cartName},
+        	bigo		= #{bigo}
+        WHERE
+        	cart_id 			= #{cartId}
+    </update>
+    <select id="getCart" parameterType="cartVo" resultType="cartVo">
+    	SELECT
+    		cart_id
+    		,cart_name
+    		,bigo
+    	FROM cart
+    	WHERE
+    		cart_id=#{cartId}
+    </select>
+    <delete id="removeCart" parameterType="cartVo">
+    	DELETE 
+    	FROM cart
+    	WHERE
+    		cart_id 			= #{cartId}
+    </delete>
+    
+     <delete id="removeCartCstmrPrdct" parameterType="cartVo">
+    	DELETE 
+    	FROM cart
+    	WHERE
+			cstmr_id = #{cstmrId} and prdct_id = #{prdctId};
+    </delete>
+</mapper>

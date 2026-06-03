@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.prdct">
+    
+    <select id="listPrdct" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		A.prdct_id
+    		,prdct_name
+    		,V.cnt prdctCnt
+    		<if test="itemTy==1">
+    		,trde_prc
+    		</if>
+    		<if test="itemTy==2">
+    		,sale_prc trde_prc
+    		</if>
+    		<if test="itemTy==3">
+    		,sale_prc trde_prc
+    		</if>
+    		<if test="itemTy==4">
+    		,sale_prc trde_prc
+    		</if>
+    		,(select brand_name from brand where brand_id=A.brand_id) brand_name
+    		<if test="itemTy==1">
+    		,(select color_name from prdct_color C WHERE C.color_id = A.color_id) ty1
+    		,(select color_name from prdct_color C WHERE C.color_id = A.color_id2) ty2
+    		,prdct_ty_cd
+    		,(select img_path from still_img S where S.prdct_id=A.prdct_id limit 1) img_path
+    		</if>
+    		<if test="itemTy==2">
+    		,(select name from lens_mtrl where ty_id = A.mtrl)ty1
+    		,(select name from lens_ty where ty_id = A.ty_id)ty2
+    		</if>
+    		<if test="itemTy==3">
+			,(select name from clens_ty1 where ty1_id = A.ty1_id)ty1
+    		,(select name from clens_ty2 where ty2_id = A.ty2_id)ty2
+	    	</if>
+   		 	<if test="itemTy==4">
+   		 	,unit_ AS ty1
+   	 		</if>
+    	FROM 
+    	<if test="itemTy==1">
+    		prdct A 
+    	</if>
+    	<if test="itemTy==2">
+    		lens A
+    	</if>
+    	<if test="itemTy==3">
+    		clens A
+    	</if>
+    	<if test="itemTy==4">
+    		clens_acc A
+    	</if>
+    	inner join
+	    	<if test="itemTy==1">
+	    		invn V 
+	    	</if>
+	    	<if test="itemTy==2">
+	    		lens_invn V
+	    	</if>
+	    	<if test="itemTy==3">
+	    		clens_invn V
+	    	</if>
+	    	<if test="itemTy==4">
+	    		clens_acc_invn V
+	    	</if>
+	    ON A.prdct_id = V.prdct_id
+    	
+    	<where>
+    		V.shop_id = #{shopId}
+    		
+    		<if test="brandId!=null">
+    			<if test="brandId!=-1">
+    				and (brand_id = #{brandId})
+    			</if>
+    		</if>
+    		<if test="prdctName!=null">
+    			<if test="!prdctName.equals('')">
+    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+    			</if>
+    		</if>
+    		<if test="prdctTyCd!=null">
+    			<if test="prdctTyCd!=-1">
+    				and (prdct_ty_cd = #{prdctTyCd})
+    			</if>
+    		</if>
+    		<if test="prdctStatTyCd!=null">
+    			<if test="prdctStatTyCd!=-1">
+    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+    			</if>
+    		</if>
+    		
+    	</where>
+    	
+    </select>
+    
+    
+    <select id="listSelectPrdct" parameterType="prdctVo" resultType="salePrdctVo">
+ 
+    	SELECT
+    		Y.sale_id
+    		,X.prdct_id
+    		,(select prdct_name from prdct where prdct_id=X.prdct_id) prdct_name
+			,(select color_name from prdct_color C WHERE C.color_id = (select color_id from prdct where prdct_id= X.prdct_id)) color_name
+    		,X.prdct_cnt
+    		,X.prc
+    		,X.asmbly
+    		,X.dlvry
+    		,X.dscnt_prcnt
+    		,X.earn_prcnt
+    		,X.using_point
+    		,X.inform
+    	FROM 
+	    	sale_off Y
+		inner join salePrdct_off X
+    			on Y.sale_id = X.sale_id
+    			where X.itemTy=1 and Y.cstmr_id=#{cstmrId} and Y.sale_id=#{saleId}
+    	
+    	
+    </select>
+    
+    <select id="listSelectPrdctLens" parameterType="prdctVo" resultType="salePrdctVo">
+    	SELECT
+    		Y.sale_id
+    		,X.prdct_id
+    		,(select prdct_name from lens where prdct_id=X.prdct_id) prdct_name
+			,(select color_name from prdct_color C WHERE C.color_id = (select color_id from prdct where prdct_id= X.prdct_id)) color_name
+    		,X.prdct_cnt
+    		,X.prc
+    		,X.asmbly
+    		,X.dlvry
+    		,X.dscnt_prcnt
+    		,X.earn_prcnt
+    		,X.using_point
+    		,X.inform		
+    	FROM
+	    	sale_off Y
+		inner join salePrdct_off X
+    			on Y.sale_id = X.sale_id
+    			where X.itemTy=2 and Y.cstmr_id=#{cstmrId} and Y.sale_id=#{saleId}
+    </select>
+    
+    <select id="listSelectPrdctClens" parameterType="prdctVo" resultType="salePrdctVo">
+   		SELECT
+    		Y.sale_id
+    		,X.prdct_id
+    		,(select prdct_name from clens where prdct_id=X.prdct_id) prdct_name
+			,(select color_name from prdct_color C WHERE C.color_id = (select color_id from prdct where prdct_id= X.prdct_id)) color_name
+    		,X.prdct_cnt
+    		,X.prc
+    		,X.asmbly
+    		,X.dlvry
+    		,X.dscnt_prcnt
+    		,X.earn_prcnt
+    		,X.using_point
+    		,X.inform		
+    	FROM
+	    	sale_off Y
+		inner join salePrdct_off X
+    			on Y.sale_id = X.sale_id
+    			where X.itemTy=3 and Y.cstmr_id=#{cstmrId} and Y.sale_id=#{saleId}
+    </select>
+    
+    <select id="listSelectPrdctAcc" parameterType="prdctVo" resultType="salePrdctVo">
+
+		SELECT
+    		Y.sale_id
+    		,X.prdct_id
+    		,(select prdct_name from clens_acc where prdct_id=X.prdct_id) prdct_name
+			,(select color_name from prdct_color C WHERE C.color_id = (select color_id from prdct where prdct_id= X.prdct_id)) color_name
+    		,X.prdct_cnt
+    		,X.prc
+    		,X.asmbly
+    		,X.dlvry
+    		,X.dscnt_prcnt
+    		,X.earn_prcnt
+    		,X.using_point
+    		,X.inform		
+    	FROM
+	    	sale_off Y
+		inner join salePrdct_off X
+    			on Y.sale_id = X.sale_id
+    			where X.itemTy=4 and Y.cstmr_id=#{cstmrId} and Y.sale_id=#{saleId}
+    </select>
+    
+    <select id="getNewPrdct" parameterType="prdctVo" resultType="salePrdctVo">
+    	SELECT
+    		Y.sale_id
+    		,X.prdct_id
+    		,X.prdct_name
+    		,X.prdct_cnt
+    		,X.prc
+    		,X.asmbly
+    		,X.dlvry
+    		,X.dscnt_prcnt
+    		,X.earn_prcnt
+    		,X.using_point
+    		,X.inform
+    	FROM
+    		sale_off Y
+    	INNER JOIN
+    		new_prdct X
+    	ON
+    		Y.sale_id = X.sale_id
+    	WHERE
+    		Y.cstmr_id=#{cstmrId} and Y.sale_id=#{saleId}		
+    </select>
+    
+    <update id="modifyDscntNewPrdct" parameterType="salePrdctVo">
+    	UPDATE new_prdct
+    		SET dscnt=1
+    		WHERE sale_id=#{saleId} and prdct_id =#{prdctId}
+    </update>
+    
+    <update id="modifyDscntEarnNewPrdct" parameterType="salePrdctVo">
+    	UPDATE new_prdct
+    		SET dscnt_prcnt=#{dscntPrcnt}
+    			,earn_prcnt=#{earnPrcnt}
+    			,using_point=#{usingPoint}
+    		WHERE
+    			sale_id=#{saleId}
+    			and prdct_id =#{prdctId}
+    </update>
+    <update id="modifyDscntEarnSalePrdctOff" parameterType="salePrdctVo">
+    	UPDATE salePrdct_off
+    		SET dscnt_prcnt=#{dscntPrcnt}
+    		,earn_prcnt=#{earnPrcnt}
+    		,using_point=#{usingPoint}
+    		WHERE
+    			sale_id=#{saleId}
+    			and prdct_id =#{prdctId}
+    			and itemTy=#{itemTy}
+    </update>
+    
+    
+<!--     <update id="modifyDscntNewPrdct" parameterType="salePrdctVo">
+    	UPDATE new_prdct
+    		SET dscnt=#{dscnt}
+    		WHERE sale_id=#{saleId} and prdct_id IN
+			<iterate property="listDscntPrdctId" open="(" close=")" conjunction=","> 
+			       #listDscntPrdctId[]# 
+			</iterate>  
+    </update> -->
+    
+    <!-- <update id="modifyPointRuleNewPrdct" parameterType="salePrdctVo">
+    	UPDATE new_prdct
+    		SET dscnt=#{dscnt}, point_rule=(select earn_prcnt from point_rule where using_rule=1)
+    		WHERE sale_id=#{saleId} and prdct_id IN
+    		<foreach item="listPrdctId" index="index" collection="list"
+      		open="(" separator="," close=")">
+        	#{listPrdctId}
+  			</foreach>
+    </update>
+ -->    
+    
+    <select id="getPrdct" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		prdct_id
+    		,prdct_name
+        	,brand_id
+        	,(select brand_name from brand where brand_id=A.brand_id) brand_name
+        	,(select server_url from file_server where isdefault='1') url_str
+        	,(select img_path from still_img where prdct_id=A.prdct_id limit 1) img_path
+        	,(select count(*) from rotate_img where prdct_id=A.prdct_id AND media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where model_name=A.prdct_name) video_cd
+        	,mnf_country
+        	,wh_date
+        	,prdct_ty_cd
+        	,prdct_stat_ty_cd
+        	,prdct_visible_cd
+        	,puchas_prc
+        	,trde_prc
+        	,reg_time
+        	,upd_time
+    	FROM prdct A
+    	WHERE
+    		prdct_id=#{prdctId}
+    </select>
+       
+    <insert id="addPrdct" parameterType="salePrdctVo">
+    	INSERT INTO new_prdct
+    		(sale_id,
+    		prdct_name,
+    		prdct_cnt,
+    		prc,
+    		item_ty)
+    	VALUES(
+    		#{saleId},
+    		#{prdctName},
+    		#{prdctCnt},
+    		#{prc},
+    		#{itemTy}
+    		)
+    </insert>
+    
+    <select id="getSalePrdct" parameterType="salePrdctVo" resultType="salePrdctVo">
+    	SELECT
+			sale_id
+			,prdct_id
+			,prdct_cnt
+			,event_id
+			,dscnt_prcnt
+			,prc
+			,asmbly
+			,dlvry
+			,inform
+		FROM
+			salePrdct_off
+		WHERE
+			sale_id=#{saleId} and prdct_id=#{prdctId}
+    </select>
+    <select id="getSalePrdctNew" parameterType="salePrdctVo" resultType="salePrdctVo">
+    	SELECT
+			sale_id
+			,prdct_name
+			,prdct_cnt
+			,prc
+			,asmbly
+			,dlvry
+			,inform
+			,item_ty
+		FROM
+			new_prdct
+		WHERE
+			sale_id=#{saleId} and prdct_name=#{prdctName}
+    </select>
+    
+    <select id="listSalePrdctOff" parameterType="saleVo" resultType="prdctVo">
+    	select sale_id, prdct_id,prdct_cnt,itemTy,dlvry  from salePrdct_off where sale_id=#{saleId}
+    </select>
+    
+    <select id="getNewPaymentInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		prdct_id
+    		,prdct_name
+    		,prdct_cnt cnt
+    		,prc
+    		,dscnt_prcnt
+    	FROM
+    		new_prdct
+    	WHERE
+    		sale_id = #{saleId}
+    </select>
+    
+    
+    <select id="getFramePaymentInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		P.prdct_id
+    		,(select prdct_name from prdct where prdct_id = P.prdct_id)prdctName
+    		,P.prdct_cnt cnt
+    		,P.prc
+    		,dscnt_prcnt
+    	FROM
+    		salePrdct_off P, sale_off S
+    	WHERE
+    		S.sale_id = #{saleId}
+    	AND
+    		S.sale_id=  P.sale_id
+    	AND
+    		P.itemTy=1
+    </select>
+    <select id="getLensPaymentInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		P.prdct_id
+    		,(select prdct_name from lens where prdct_id = P.prdct_id)prdctName
+    		,P.prdct_cnt cnt
+    		,P.prc
+    		,dscnt_prcnt
+    	FROM
+    		salePrdct_off P, sale_off S
+    	WHERE
+    		S.sale_id = #{saleId}
+    	AND
+    		S.sale_id=  P.sale_id
+    	AND
+    		P.itemTy=2
+    </select>
+    <select id="getClensPaymentInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		P.prdct_id
+    		,(select prdct_name from clens where prdct_id = P.prdct_id)prdctName
+    		,P.prdct_cnt cnt
+    		,P.prc
+    		,dscnt_prcnt
+    	FROM
+    		salePrdct_off P, sale_off S
+    	WHERE
+    		S.sale_id = #{saleId}
+    	AND
+    		S.sale_id=  P.sale_id
+    	AND
+    		P.itemTy=3
+    </select>
+    <select id="getAccPaymentInfo" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		P.prdct_id
+    		,(select prdct_name from clens_acc where prdct_id = P.prdct_id)prdctName
+    		,P.prdct_cnt cnt
+    		,P.prc
+    		,dscnt_prcnt
+    	FROM
+    		salePrdct_off P, sale_off S
+    	WHERE
+    		S.sale_id = #{saleId}
+    	AND
+    		S.sale_id=  P.sale_id
+    	AND
+    		P.itemTy=4
+    </select>
+</mapper>

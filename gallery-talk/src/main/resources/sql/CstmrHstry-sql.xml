@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.gallerystaff.cstmrHstry">
+    
+    <select id="listCstmrHstry" parameterType="cstmrHstryVo" resultType="cstmrHstryVo">
+    SELECT
+		SO.sale_id
+		,if(SO.is_old=0, (select shop_name from shop where shop_id = SO.shop_id), (select shop_name from shop where shop_num = SO.shop_id) )shop_name
+		,(if(SO.is_old=1,(SO.damdang_name),if((SELECT S.staff_name from staff S where S.staff_id = VHC.staff_id) is null,VHC.staff_id,(SELECT S.staff_name from staff S where S.staff_id = VHC.staff_id)))) staff_name
+		,SO.cstmr_id
+		,SO.shop_id
+		,SO.datetime
+		,SO.result
+		,SO.ogn_price
+		,SO.pay_cash
+		,SO.pay_card
+		,SO.pay_point
+		,SO.card_date
+		,SO.card_ty
+		,(select card_com_name from card_com_info where card_com_id=SO.card_ty)cname
+		,SO.partner_dscnt
+		,SO.partner_id
+		,SO.dscnt_price
+		,SO.etc_dscnt
+		,SO.etc_dscnt_memo
+		,SO.damdang_name
+		,SO.gframe1
+		,SO.gframe2
+		,SO.gframe3
+		,SO.glens1
+		,SO.glens2
+		,SO.glens3
+		,SO.clensR
+		,SO.clensL
+		,SO.is_old
+		,SO.ogn_price
+    	,VHC.cstmr_cd
+    	,VHC.staff_id
+    	,VHC.visit_shop_id
+    	,VHC.gsph_right
+    	,VHC.gsph_left
+    	,VHC.gcyl_right
+    	,VHC.gcyl_left
+    	,VHC.gaxis_right
+    	,VHC.gaxis_left
+    	,VHC.add_right
+    	,VHC.add_left
+    	,VHC.npc_right
+    	,VHC.npc_left
+    	,VHC.npa_right
+    	,VHC.npa_left
+    	,VHC.pd_right
+    	,VHC.pd_left
+    	,VHC.lsph_right
+    	,VHC.lsph_left
+    	,VHC.lcyl_right
+    	,VHC.lcyl_left
+    	,VHC.laxis_right
+    	,VHC.laxis_left
+    	,VHC.prism_right
+    	,VHC.prism_left
+    	,VHC.base_right
+    	,VHC.base_left
+    	,VHC.bc_right
+    	,VHC.bc_left
+    	,VHC.dia_right
+    	,VHC.dia_left
+    	,VHC.dom_eye
+    	,(select old_digit from old_digit where id=1) as old_digit
+    	
+   	FROM
+   		sale_off SO
+   	INNER JOIN
+   		visit_history VHC
+   	ON
+   		SO.cstmr_id=VHC.cstmr_id
+   		AND
+   			SO.hist_id = VHC.hist_id
+	WHERE
+		SO.cstmr_id=#{cstmrId}
+		and SO.result='11111'
+		and SO.cancel=0
+	ORDER BY SO.datetime desc , SO.hist_id desc;
+	</select>
+	
+	<select id="getVisitInfo" parameterType="cstmrHstryVo" resultType="cstmrHstryVo">
+    SELECT
+		SO.sale_id
+		,SO.cstmr_id
+		,SO.shop_id
+		,(if(SO.is_old=1,(select shop_name from shop where shop_num=VHC.visit_shop_id),(SELECT S.shop_name from shop S where S.shop_id = VHC.visit_shop_id))) shop_name
+		,(if(SO.is_old=1,(SO.damdang_name),if((SELECT S.staff_name from staff S where S.staff_id = VHC.staff_id) is null,VHC.staff_id,(SELECT S.staff_name from staff S where S.staff_id = VHC.staff_id)))) staff_name
+		,SO.datetime
+		,SO.result
+		,SO.ogn_price
+		,SO.pay_cash
+		,SO.pay_card
+		,SO.pay_point
+		,SO.card_date
+		,SO.card_ty
+		,(select card_com_name from card_com_info where card_com_id=SO.card_ty)cname
+		,SO.partner_dscnt
+		,SO.partner_id
+		,SO.dscnt_price
+		,SO.etc_dscnt
+		,SO.etc_dscnt_memo
+		,SO.damdang_name
+		,SO.gpayment
+		,SO.clpayment
+		,SO.gframe1
+		,SO.gframe2
+		,SO.gframe3
+		,SO.glens1
+		,SO.glens2
+		,SO.glens3
+		,SO.clensR
+		,SO.clensL
+		,SO.ogn_price
+		,SO.is_old
+		,VHC.hist_id
+    	,VHC.cstmr_cd
+    	,VHC.staff_id
+    	,VHC.visit_shop_id
+    	,VHC.gsph_right
+    	,VHC.gsph_left
+    	,VHC.gcyl_right
+    	,VHC.gcyl_left
+    	,VHC.gaxis_right
+    	,VHC.gaxis_left
+    	,VHC.add_right
+    	,VHC.add_left
+    	,VHC.npc_right
+    	,VHC.npc_left
+    	,VHC.npa_right
+    	,VHC.npa_left
+    	,VHC.pd_right
+    	,VHC.pd_left
+    	,VHC.lsph_right
+    	,VHC.lsph_left
+    	,VHC.lcyl_right
+    	,VHC.lcyl_left
+    	,VHC.laxis_right
+    	,VHC.laxis_left
+    	,VHC.prism_right
+    	,VHC.prism_left
+    	,VHC.base_right
+    	,VHC.base_left
+    	,VHC.bc_right
+    	,VHC.bc_left
+    	,VHC.dia_right
+    	,VHC.dia_left
+    	,VHC.dom_eye
+    	,(select old_digit from old_digit where id=1) as old_digit
+    	,(select memo from sale_off where cstmr_id = VHC.cstmr_id AND is_old=1 AND memo!="" AND sale_id = #{saleId})cstmrMemo 
+   	FROM
+   		sale_off SO
+   	INNER JOIN
+   		visit_history VHC
+   	ON
+   		SO.cstmr_id=VHC.cstmr_id
+   		AND
+   			SO.hist_id = VHC.hist_id
+	WHERE
+		SO.cstmr_id=#{cstmrId}
+		and SO.sale_id = #{saleId}
+		and SO.result='11111'
+		and SO.cancel=0
+	ORDER BY SO.datetime desc , SO.hist_id desc;
+	</select>
+
+	<select id="cstmrhstry" parameterType="cstmrHstryVo" resultType="cstmrHstryVo">
+		SELECT
+			VHC.hist_id
+    	,VHC.gsph_right
+    	,VHC.gsph_left
+    	,VHC.gcyl_right
+    	,VHC.gcyl_left
+    	,VHC.gaxis_right
+    	,VHC.gaxis_left
+    	,VHC.add_right
+    	,VHC.add_left
+    	,VHC.npc_right
+    	,VHC.npc_left
+    	,VHC.npa_right
+    	,VHC.npa_left
+    	,VHC.pd_right
+    	,VHC.pd_left
+    	,VHC.lsph_right
+    	,VHC.lsph_left
+    	,VHC.lcyl_right
+    	,VHC.lcyl_left
+    	,VHC.laxis_right
+    	,VHC.laxis_left
+    	,VHC.prism_right
+    	,VHC.prism_left
+    	,VHC.base_right
+    	,VHC.base_left
+    	,VHC.bc_right
+    	,VHC.bc_left
+    	,VHC.dia_right
+    	,VHC.dia_left
+    	,VHC.dom_eye	
+    	,S.memo cstmrMemo
+	FROM
+		sale_off S,visit_history VHC
+	WHERE
+		S.sale_id = #{saleId}
+	AND
+		S.hist_id = VHC.hist_id
+	
+	</select>
+	
+	<select id="getCstmrhstryMemo" parameterType="cstmrHstryVo" resultType="String" >
+		SELECT 
+			sale_memo
+		FROM
+			sale_off
+		WHERE
+			sale_id = #{saleId}
+	</select>
+	<update id="cstmrHstryMemoUpdate" parameterType="cstmrHstryVo">
+		UPDATE 
+			sale_off
+		SET
+			sale_memo = #{saleMemo}
+		WHERE
+			sale_id = #{saleId}
+	</update>
+</mapper>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.cstmr">
+    <insert id="addCstmr" parameterType="cstmrVo">
+        INSERT INTO cstmr
+        	(
+				cstmr_login_id
+				,cstmr_login_pw
+				,cstmr_cd
+				,cstmr_name
+				,reg_shop_id
+				,reg_date
+				,telephone
+				,cellphone
+				,sex_cd
+				,birth_day
+				,birth_day_ty_cd
+				,zip_cd
+				,email
+				,addr
+				,bigo
+				,get_sms_yn
+        	) 
+        VALUES (
+        		#{cstmrLoginId}
+				,#{cstmrLoginPw}
+				,#{cstmrCd}
+				,#{cstmrName}
+				,#{regShopId}
+				,#{regDate}
+				,#{telephone}
+				,#{cellphone}
+				,#{sexCd}
+				,#{birthDay}
+				,#{birthDayTyCd}
+				,#{zipCd}
+				,#{email}
+				,#{addr}
+				,#{bigo}
+				,#{getSmsYn}
+        	)    
+    </insert>
+    
+    <select id="getCstmrLoginId" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_name
+    		,cellphone
+    		,cstmr_login_id
+    	FROM cstmr
+    	WHERE 
+    		cstmr_name=#{cstmrName} and
+    		cellphone = #{cellphone} 
+    </select>
+    
+    <select id="getCstmrLoginPw" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+    		,cstmr_name
+    		,cellphone
+    		,cstmr_login_id
+    		,cstmr_login_pw
+    		,email
+    	FROM cstmr
+    	WHERE 
+    		cstmr_name=#{cstmrName} and
+    		cellphone = #{cellphone} and
+    		cstmr_login_id = #{cstmrLoginId} 
+    </select>
+    
+    <select id="countCstmrById" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId}
+    </select>
+    <select id="login" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId} and cstmr_login_pw=#{cstmrLoginPw}
+    </select>
+    
+    
+    <select id="getCstmrForLogin" parameterType="cstmrVo" resultType="cstmrVo">
+		SELECT
+			cstmr_id
+			,cstmr_cd
+			,cstmr_name
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,bigo
+			,get_sms_yn
+			,get_email_yn
+			,facebook
+			,twitter
+			,instagram
+		FROM cstmr
+		WHERE cstmr_login_id=#{cstmrLoginId} and cstmr_login_pw=#{cstmrLoginPw}
+    </select>
+    
+    <select id="mgetCstmr" parameterType="cstmrVo" resultType="cstmrVo">
+	   SELECT
+			C.cstmr_name
+			,C.birth_day
+			,C.birth_day_ty_cd
+			,C.cellphone
+			,C.addr
+			,C.cstmr_cd
+			,C.email
+			,C.facebook
+			,C.twitter
+			,C.instagram
+			,V.gsph_left
+			,V.gsph_right
+			,V.datetime
+			,(select count(coupon_id) from coupon where cstmr_id=#{cstmrId})coupon
+			,(select count(cstmr_id) from sale where cstmr_id=#{cstmrId})buyCount
+		FROM
+			cstmr C
+		LEFT JOIN
+			visit_history V
+		ON 
+			C.cstmr_id = V.cstmr_id
+		WHERE
+			C.cstmr_id = #{cstmrId}
+		ORDER BY
+			V.datetime DESC
+		LIMIT 1;
+	</select>
+
+	
+    
+    <update id="modifyCstmr" parameterType="cstmrVo">
+        UPDATE cstmr SET
+        
+        WHERE
+        	cstmr_login_id 			= #{cstmrLoginId}
+    </update>
+    <update id="modifyCsmtrPw" parameterType="cstmrVo">
+        UPDATE cstmr SET
+        	cstmr_login_pw	= #{cstmrLoginPw}	
+        WHERE
+        	cstmr_id 		= #{cstmrId}
+    </update>
+    <update id="updateInfo">
+    	UPDATE cstmr SET
+    		cstmr_id = #{cstmrId}
+    		<if test="email!=null">
+    			, email = #{email}
+    		</if>
+    		<if test="telephone!=null">
+    			, telephone = #{telephone}
+    		</if>
+    		<if test="addr!=null">
+    			, addr = #{addr}
+    		</if>
+    		<if test="facebook!=null">
+    			, facebook = #{facebook}
+    		</if>
+    		<if test="twitter!=null">
+    			, twitter = #{twitter}
+    		</if>
+    		<if test="instagram!=null">
+    			, instagram = #{instagram}
+    		</if>
+    		
+    	WHERE cstmr_id=#{cstmrId}
+    </update>
+    
+    <update id="updatePw">
+    	UPDATE	cstmr SET
+    		cstmr_login_pw = #{newPw}
+    	WHERE 
+    		cstmr_id = #{cstmrId}
+    </update>
+   <!--  <update id="modifyCsmtrPw" parameterType="cstmrVo">
+        UPDATE cstmr SET
+        	<if test="telephone!=null">
+        		telephone = #{telephone}
+        	</if>
+        WHERE
+        	cstmr_id 		= #{cstmrId}
+    </update> -->
+    
+     <select id="checkId" parameterType="cstmrVo" resultType="String">
+        SELECT cstmr_login_pw 
+        FROM cstmr
+        WHERE cstmr_id = #{cstmrId}
+    </select>
+    
+    <select id="buyList" parameterType="saleVo" resultType="saleVo">
+    	SELECT 
+    		datetime
+    		,(select shop_name from shop where shop_id = S.shop_id) shopName
+    		,(select sum(prc) from salePrdct where sale_id = S.sale_id) ognPrice
+    		,(select prdct_name from prdct, salePrdct P where prdct.prdct_id=P.prdct_id AND prdct.prdct_ty_cd='00300001' AND P.sale_id = S.sale_id) frame
+    		,(select prdct_name from prdct, salePrdct P where prdct.prdct_id=P.prdct_id AND prdct.prdct_ty_cd='00300002' AND P.sale_id = S.sale_id) lens
+    	FROM
+    		sale S
+    	WHERE 
+    		cstmr_id = #{cstmrId}
+    		
+    	ORDER BY datetime DESC;
+    	
+    </select>
+    
+    <select id="myCoupon" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		coupon_name,
+    		coupon_cd,
+    		start_date,
+    		end_date,
+    		dscnt_prcnt,
+    		dscnt_prc
+    	FROM
+    		coupon
+    	WHERE
+    		cstmr_id = #{cstmrId}
+    </select>
+    
+    <select id="cstmrList" resultType="cstmrVo">
+    	SELECT
+    		email
+    	FROM
+    		cstmr
+    	WHERE
+    		email is not null
+    </select>
+</mapper>

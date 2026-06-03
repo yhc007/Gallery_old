@@ -1,0 +1,6 @@
+rootProject.name = 'gallery-glasses'
+include 'gallery-core'
+include 'gallery-board'
+include 'gallery-manager'
+include 'gallery-staff'
+include 'gallery-talk'

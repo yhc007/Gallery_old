@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.brand.BrandMapper">
+    <insert id="addBrand" parameterType="brandVo">
+        INSERT INTO brand
+        	(
+        	brand_name
+        	,bigo
+        	)
+        VALUES (
+        	#{brandName}
+        	, #{bigo}
+        	)
+    </insert>
+
+     <select id="listBrandByTy" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		B.brand_id
+    		, B.brand_name
+
+    	FROM brand B,
+    		<if test="prdctTyCd.equals('00300001')">
+    			prdct P
+    		</if>
+    		<if test="prdctTyCd.equals('00300002')">
+    			lens P
+    		</if>
+    		<if test="prdctTyCd.equals('00300003')">
+    			clens P
+    		</if>
+    		<if test="prdctTyCd.equals('00300004')">
+    			clens_acc P
+    		</if>
+    		</select>
+     <select id="srchBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id,
+    		brand_name
+    	FROM
+    		brand
+    	WHERE
+    		brand_name like CONCAT(#{brandName}, '%')
+    	ORDER BY brand_name ASC
+    </select>
+
+    <select id="countBrand" parameterType="brandVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM brand
+    	WHERE brand_name=#{brandName}
+    </select>
+    <select id="pagedListBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT *
+    	FROM(
+    		SELECT
+    		*
+    		,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		brand_id
+		    		,brand_name
+		    	FROM brand
+		    	<where>
+		    		<if test="brandName!=null">
+		    			<if test="!brandName.equals('')">
+		    				and ( brand_name like CONCAT('%', #{brandName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+	    	) A
+	    	,(select @rownum:=0) R
+	    	ORDER BY brand_name desc
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListBrandCount" parameterType="brandVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM brand
+    	<where>
+    		<if test="brandName!=null">
+    			<if test="!brandName.equals('')">
+    				and ( brand_name like CONCAT('%', #{brandName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listBrand" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    	FROM brand
+    	ORDER BY brand_name
+    </select>
+    <update id="modifyBrand" parameterType="brandVo">
+        UPDATE brand SET
+        	brand_name 	= #{brandName},
+        	bigo		= #{bigo}
+        WHERE
+        	brand_id 			= #{brandId}
+    </update>
+    <select id="getBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    		,bigo
+    	FROM brand
+    	WHERE
+    		brand_id=#{brandId}
+    </select>
+    <delete id="removeBrand" parameterType="brandVo">
+    	DELETE
+    	FROM brand
+    	WHERE
+    		brand_id 			= #{brandId}
+    </delete>
+
+</mapper>

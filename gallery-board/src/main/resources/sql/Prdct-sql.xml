@@ -1,0 +1,4984 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.prdct">
+    <insert id="addPrdct" parameterType="prdctVo" useGeneratedKeys="true" keyProperty="prdctId">
+        INSERT INTO prdct 
+        	(
+        	prdct_name
+        	,prdct_ty_cd
+        	,brand_id
+        	,mnf_country
+        	,wh_date
+        	,prdct_stat_ty_cd
+        	,prdct_visible_cd
+        	,puchas_prc
+        	,trde_prc
+        	,reg_time
+        	,upd_time
+        	,i_num
+        	,shop_id
+        	,color_id
+        	,color_id2
+        	,prdct_ty
+        	,mtrl_id
+        	,prdct_shape
+        	,memo
+        	) 
+        VALUES (
+        	#{prdctName}
+        	,#{prdctTyCd}
+        	,#{brandId}
+        	,#{mnfCountry}
+        	,#{whDate}
+        	,#{prdctStatTyCd}
+        	,#{prdctVisibleCd}
+        	,#{puchasPrc}
+        	,#{trdePrc}
+        	, now()
+        	, now()
+        	,#{iNum}
+        	,#{shopId}
+        	,#{colorId}
+        	,#{colorId2}
+        	,#{prdctTy}
+        	,#{mtrlId}
+        	,#{prdctShape}
+        	,#{memo}
+        	)    
+       	<selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+    </insert>
+    
+    
+    <insert id="addPrdctColor" parameterType="prdctVo">
+        INSERT INTO still_img
+        	(
+        	prdct_id
+        	,color
+        	) 
+        VALUES (
+        	#{prdctId}
+        	,#{color}
+        	)    
+    </insert>
+    
+    <select id="countPrdct" parameterType="prdctVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM prdct
+    	WHERE 
+    		prdct_name=#{prdctName} 
+    	AND
+    		shop_id = #{shopId}
+    	
+    	 AND brand_Id = #{brandId}
+    	<if test="colorId!=null">
+    		AND
+    		color_id = #{colorId}
+    	</if>
+		
+		<if test="colorId2!=null">
+    		AND
+    		color_id2 = #{colorId2}
+    	</if>
+		    		
+    </select>
+    <select id="countPrdctColor" parameterType="prdctVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM still_img
+    	WHERE prdct_id=#{prdctId} and color=#{color} 
+    </select>
+    <select id="getPrdctInvn" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT prdct_id,cnt,(select trde_prc from prdct where prdct_id=A.prdct_id) trde_prc
+    	FROM invn A
+    	WHERE prdct_id=#{prdctId}
+    </select>
+    <select id="countPrdctForBrand" parameterType="brandVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM prdct
+    	WHERE brand_id=#{brandId}
+    </select>
+    <select id="countPrdctForCompany" parameterType="CompanyVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM prdct
+    	WHERE i_num=#{iNum}
+    </select>
+    <select id="pagedListPrdctCount" parameterType="prdctVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM prdct A
+    	<where>
+    		
+    		<if test="brandId!=null">
+    			<if test="brandId!=-1">
+    				(brand_id = #{brandId})
+    			</if>
+    		</if>
+    		<if test="prdctName!=null">
+    			<if test="!prdctName.equals('')">
+    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+    			</if>
+    		</if>
+    		<if test="prdctTyCd!=null">
+    			<if test="prdctTyCd!=-1">
+    				and (prdct_ty_cd = #{prdctTyCd})
+    			</if>
+    		</if>
+    		<if test="prdctStatTyCd!=null">
+    			<if test="prdctStatTyCd!=-1">
+    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+    			</if>
+    		</if>
+    		<if test="iNum!=null">
+    				and (i_num = #{iNum})
+    		</if>
+		    <if test="shopId!=null">
+    			<if test="shopId!=777">
+    				and (shop_id= #{shopId})
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="pagedListPrdct" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		(select shop_name from shop where shop_id = A.shop_id)shopName
+		    		,prdct_id
+		    		,(select c_name from com_info where i_num=A.i_num) comName
+		    		,prdct_name
+		    		,(select brand_name from brand where brand_id=A.brand_id) brand_name
+		    		,prdct_ty_cd
+		    		,(select img_path from still_img where prdct_id=A.prdct_id limit 1) img_path
+		        	,(select count(*) from rotate_img where prdct_id=A.prdct_id AND media_ty_cd='00200002') multi_img_cnt
+				    ,(select video_cd from video where prdct_id=A.prdct_id) video_cd
+				    ,wh_date
+		    	FROM prdct A
+		    	<where>
+		    		
+		    		<if test="brandId!=null">
+		    			<if test="brandId!=-1">
+		    				and (brand_id = #{brandId})
+		    			</if>
+		    		</if>
+		    		<if test="prdctName!=null">
+		    			<if test="!prdctName.equals('')">
+		    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="prdctTyCd!=null">
+		    			<if test="prdctTyCd!=-1">
+		    				and (prdct_ty_cd = #{prdctTyCd})
+		    			</if>
+		    		</if>
+		    		<if test="prdctStatTyCd!=null">
+		    			<if test="prdctStatTyCd!=-1">
+		    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+		    			</if>
+		    		</if>
+		    		<if test="shopId!=null">
+		    			<if test="shopId!=777">
+		    				and (shop_id= #{shopId})
+		    			</if>
+		    		</if>
+		    		<if test="iNum!=null">
+		    				and (i_num = #{iNum})
+		    		</if>
+		    		
+		    	</where>
+		    	
+	    	) B,(select @rownum:=0) R
+	    	ORDER BY brand_name, prdct_name,prdct_id desc
+    	) C
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    
+     <select id="listPrdctColor" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		prdct_id
+    		,color
+    	FROM
+    		still_img
+    	WHERE
+    		prdct_id=#{prdctId}
+    </select>
+    
+    <select id="listPrdctForEvent" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		prdct_id
+		    		,prdct_name
+		    		,(select brand_name from brand where brand_id=A.brand_id) brand_name
+		    		,prdct_ty_cd
+		    		,(select img_path from still_img where prdct_id=A.prdct_id limit 1) img_path
+		        	,(select count(*) from rotate_img where prdct_id=A.prdct_id AND media_ty_cd='00200002') multi_img_cnt
+				    ,(select video_cd from video where prdct_id=A.prdct_id) video_cd
+				    ,prdct_stat_ty_cd
+		    	FROM prdct A
+		    	<where>
+		    		prdct_id not in (select prdct_id from event_prdct where event_id=#{eventId})
+		    		<if test="prdctName!=null">
+		    			<if test="!prdctName.equals('')">
+		    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY prdct_name desc
+	    	) B,(select @rownum:=0) R
+    	) C
+    </select>
+    
+    <select id="pagedListPrdctConfirmCount" parameterType="prdctVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM prdct
+    	<where>
+    		<if test="brandId!=null">
+    			<if test="brandId!=-1">
+    				and (brand_id = #{brandId})
+    			</if>
+    		</if>
+    		<if test="prdctName!=null">
+    			<if test="!prdctName.equals('')">
+    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+    			</if>
+    		</if>
+    		<if test="prdctTyCd!=null">
+    			<if test="prdctTyCd!=-1">
+    				and (prdct_ty_cd = #{prdctTyCd})
+    			</if>
+    		</if>
+    		<if test="prdctStatTyCd!=null">
+    			<if test="prdctStatTyCd!=-1">
+    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="pagedListPrdctConfirm" parameterType="prdctVo" resultType="prdctVo">
+    
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		prdct_id
+		    		,prdct_name
+		    		,brand_id
+		    		,(select brand_name from brand where brand_id=A.brand_id) brand_name
+		    		,prdct_ty_cd
+		    		,prdct_stat_ty_cd
+		    	FROM prdct A
+		    	<where>
+		    		<if test="brandId!=null">
+		    			<if test="brandId!=-1">
+		    				and (brand_id = #{brandId})
+		    			</if>
+		    		</if>
+		    		<if test="prdctName!=null">
+		    			<if test="!prdctName.equals('')">
+		    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="prdctTyCd!=null">
+		    			<if test="prdctTyCd!=-1">
+		    				and (prdct_ty_cd = #{prdctTyCd})
+		    			</if>
+		    		</if>
+		    		<if test="prdctStatTyCd!=null">
+		    			<if test="prdctStatTyCd!=-1">
+		    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+		    			</if>
+		    		</if>
+		    	</where>
+		    	
+	    	) B,(select @rownum:=0) R
+	    	ORDER BY brand_name, prdct_name,prdct_id desc
+    	) C
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    		
+    	</where>
+    </select>
+    
+    
+    <select id="pagedListPrdctRemain" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		prdct_id
+		    		,prdct_name
+		    		,(select brand_name from brand where brand_id=A.brand_id) brand_name
+		    		,prdct_ty_cd
+		    		,(select img_path from still_img where prdct_id=A.prdct_id limit 1) img_path
+		        	,(select count(*) from rotate_img where prdct_id=A.prdct_id AND media_ty_cd='00200002') multi_img_cnt
+				    ,(select video_cd from video where prdct_id=A.prdct_id) video_cd
+				    ,prdct_stat_ty_cd
+				    ,(select cnt from invn where prdct_id=A.prdct_id) remain_cnt
+		    	FROM prdct A
+		    	<where>
+		    		<if test="brandId!=null">
+		    			<if test="brandId!=-1">
+		    				and (brand_id = #{brandId})
+		    			</if>
+		    		</if>
+		    		<if test="prdctName!=null">
+		    			<if test="!prdctName.equals('')">
+		    				and ( A.prdct_name like CONCAT('%', #{prdctName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="prdctTyCd!=null">
+		    			<if test="prdctTyCd!=-1">
+		    				and (prdct_ty_cd = #{prdctTyCd})
+		    			</if>
+		    		</if>
+		    		<if test="prdctStatTyCd!=null">
+		    			<if test="prdctStatTyCd!=-1">
+		    				and (prdct_stat_ty_cd = #{prdctStatTyCd})
+		    			</if>
+		    		</if>
+		    	</where>
+		    	
+	    	) B,(select @rownum:=0) R
+	    	ORDER BY brand_name, prdct_name,prdct_id desc
+    	) C
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    		
+    	</where>
+    </select>
+    
+    
+    <select id="pagedListPrdctInvnHistCount" parameterType="prdctVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM invn_hist A inner join prdct B on A.prdct_id = B.prdct_id 
+    	<where>
+    		<if test="brandId!=null">
+    			<if test="brandId!=-1">
+    				(B.brand_id = #{brandId})
+    			</if>
+    		</if>
+    		<if test="prdctName!=null">
+    			<if test="!prdctName.equals('')">
+    				and ( B.prdct_name like CONCAT('%', #{prdctName}, '%') )
+    			</if>
+    		</if>
+    		<if test="prdctTyCd!=null">
+    			<if test="prdctTyCd!=-1">
+    				and (B.prdct_ty_cd = #{prdctTyCd})
+    			</if>
+    		</if>
+    		<if test="prdctStatTyCd!=null">
+    			<if test="prdctStatTyCd!=-1">
+    				and (B.prdct_stat_ty_cd = #{prdctStatTyCd})
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="pagedListPrdctInvnHist" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		A.invn_hist_id
+		    		,A.prdct_id
+		    		,B.prdct_name
+		    		,B.brand_id
+		    		,(select brand_name from brand where brand_id=B.brand_id) brand_name
+		    		,B.prdct_ty_cd
+				    ,A.invn_ty_cd
+				    ,A.cnt
+				    ,A.cstmr_id
+				    ,DATE_FORMAT(A.reg_time,'%Y-%m-%d %H:%i:%s') reg_time
+		    	FROM invn_hist A inner join prdct B on A.prdct_id = B.prdct_id 
+		    	<where>
+		    		<if test="brandId!=null">
+		    			<if test="brandId!=-1">
+		    				and (B.brand_id = #{brandId})
+		    			</if>
+		    		</if>
+		    		<if test="prdctName!=null">
+		    			<if test="!prdctName.equals('')">
+		    				and ( B.prdct_name like CONCAT('%', #{prdctName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="prdctTyCd!=null">
+		    			<if test="prdctTyCd!=-1">
+		    				and (B.prdct_ty_cd = #{prdctTyCd})
+		    			</if>
+		    		</if>
+		    		<if test="prdctStatTyCd!=null">
+		    			<if test="prdctStatTyCd!=-1">
+		    				and (B.prdct_stat_ty_cd = #{prdctStatTyCd})
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY reg_time desc
+	    	) B,(select @rownum:=0) R
+    	) C
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    		
+    	</where>
+    </select>
+    
+    
+    <select id="mListFrame" parameterType="prdctVo" resultType="prdctVo">
+    	<!-- 
+    	SELECT * FROM(
+    	 -->
+		SELECT
+			Z.prdct_id
+			,prdct_name
+			,(select count(*) from cart where prdct_id=Z.prdct_id and cstmr_id=#{cstmrId}) jjim
+			,trde_prc
+			,(select server_url from file_server where isdefault='1') url_str
+			,(select count(*) from rotate_img where prdct_id=Z.prdct_id AND
+			media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where prdct_id=Z.prdct_id) video_cd
+			,Y.img_path
+			,Y.color
+			,X.event_id
+			,X.event_name
+			,X.dscnt
+		FROM prdct Z
+		LEFT OUTER JOIN still_img Y
+		on Z.prdct_id=Y.prdct_id
+		LEFT OUTER JOIN
+		(
+			select * from(
+				select Z.event_id,event_name,dscnt,ifnull(prdct_id,-1) prdct_id
+				from event Z left outer join event_prdct X
+				on Z.event_id = X.event_id
+				where DATE_FORMAT(now(), '%Y%m%d') between start_time and end_time and
+				event_stat_ty_cd='00500001'
+				order by dscnt desc
+			)A
+			GROUP BY prdct_id
+		) X
+		ON Z.prdct_id = X.prdct_id or X.prdct_id=-1
+		WHERE
+			brand_id=#{brandId} and
+			prdct_ty_cd="00300001" and
+			prdct_stat_ty_cd="00100003" and
+			prdct_visible_cd="00500001" and
+			Y.img_path is not null
+		ORDER BY
+			dscnt desc
+	
+		<!-- 
+		)B GROUP BY prdct_id
+		-->
+	</select>
+	<select id="mListLens" parameterType="prdctVo" resultType="prdctVo">
+		SELECT
+			Z.prdct_id
+			,prdct_name
+			,(select count(*) from cart where prdct_id=Z.prdct_id and cstmr_id=#{cstmrId}) jjim
+			,trde_prc
+			,(select server_url from file_server where isdefault='1') url_str
+			,(select img_path from still_img where prdct_id=Z.prdct_id limit 1) img_path
+			,(select count(*) from rotate_img where prdct_id=Z.prdct_id AND
+			media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where prdct_id=Z.prdct_id) video_cd
+			,Y.event_id
+			,Y.event_name
+			,Y.dscnt
+		FROM prdct Z
+		LEFT OUTER JOIN
+		(
+			select * from(
+				select Z.event_id,event_name,dscnt,prdct_id
+				from event Z inner join event_prdct Y
+				on Z.event_id = Y.event_id
+				where DATE_FORMAT(now(), '%Y%m%d') between start_time and end_time and
+				event_stat_ty_cd='00500001'
+				order by dscnt desc
+			)A
+			GROUP BY prdct_id
+		) Y
+		ON Z.prdct_id = Y.prdct_id
+		WHERE
+			brand_id=#{brandId} and
+			prdct_ty_cd="00300002" and
+			prdct_stat_ty_cd="00100003" and
+			prdct_visible_cd="00500001"
+	</select>
+	
+	
+	
+	<select id="mListDsplyLens" parameterType="prdctVo" resultType="prdctVo">
+		SELECT
+			Z.prdct_id
+			,prdct_name
+			,(select server_url from file_server where isdefault='1') url_str
+			,(select img_path from still_img where prdct_id=Z.prdct_id limit 1) img_path
+			,(select count(*) from rotate_img where prdct_id=Z.prdct_id AND
+			media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where prdct_id=Z.prdct_id) video_cd
+		FROM prdct Z
+		WHERE
+			brand_id=#{brandId} and
+			(prdct_ty_cd="00300003" or prdct_ty_cd="00300004") and 
+			prdct_stat_ty_cd="00100003" and
+			prdct_visible_cd="00500001"
+	</select>
+	
+    
+    <update id="modifyPrdct" parameterType="prdctVo">
+        UPDATE prdct SET
+        	prdct_name 			= #{prdctName}
+        	,prdct_ty_cd 		= #{prdctTyCd}
+        	,brand_id 			= #{brandId}
+        	,mnf_country		= #{mnfCountry}
+        	,wh_date			= #{whDate}
+        	,prdct_stat_ty_cd	= #{prdctStatTyCd}
+        	,prdct_visible_cd	= #{prdctVisibleCd}
+        	,puchas_prc			= #{puchasPrc}
+        	,trde_prc			= #{trdePrc}
+        	,upd_time			= now()
+        WHERE
+        	prdct_id 			= #{prdctId}
+    </update>
+    <update id="modifyPrdctAcpt" parameterType="prdctVo">
+        UPDATE prdct SET
+        	prdct_stat_ty_cd	= #{prdctStatTyCd}
+        WHERE
+        	prdct_id 			= #{prdctId}
+    </update>
+    
+    <update id="modifyPrdctInvn" parameterType="prdctVo">
+        UPDATE invn SET
+        	<if test="invnTyCd.equals('00900001')">
+   				cnt	= (cnt+#{cnt})
+   			</if>
+   			<if test="invnTyCd.equals('00900002')">
+   				cnt	= (cnt-#{cnt})
+   			</if>
+        WHERE
+        	prdct_id 			= #{prdctId}
+    </update>
+    <insert id="addPrdctInvn" parameterType="prdctVo">
+    	INSERT into invn
+    	(
+	       	prdct_id
+	       	,cnt
+       	) 
+       VALUES 
+       (
+	       	#{prdctId}
+	       	,#{cnt}
+       	)   
+    </insert>
+    <insert id="addPrdctInvnHist" parameterType="prdctVo">
+    	INSERT into invn_hist
+    	(
+	       	prdct_id
+	       	,cnt
+	       	,invn_ty_cd
+	       	,cstmr_id
+	       	,bigo
+	       	,reg_time
+	       	
+       	) 
+       VALUES 
+       (
+	       	#{prdctId}
+	       	,#{cnt}
+	       	,#{invnTyCd}
+	       	,#{cstmrId}
+	       	,#{bigo}
+	       	,now()
+       	)   
+    </insert>
+    <select id="getPrdct" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		prdct_id
+    		,prdct_name
+        	,brand_id
+        	,(select brand_name from brand where brand_id=A.brand_id) brand_name
+        	,(select server_url from file_server where isdefault='1') url_str
+        	,(select img_path from still_img where prdct_id=A.prdct_id limit 1) img_path
+        	,(select count(*) from rotate_img where prdct_id=A.prdct_id AND media_ty_cd='00200002') multi_img_cnt
+			,(select video_cd from video where prdct_id=A.prdct_id) video_cd
+        	,mnf_country
+        	,wh_date
+        	,prdct_ty_cd
+        	,prdct_stat_ty_cd
+        	,prdct_visible_cd
+        	,puchas_prc
+        	,trde_prc
+        	,reg_time
+        	<!-- ,upd_time -->
+        	,(select c_name from com_info where i_num = A.i_num) c_name
+        	,i_num
+  			,prdct_ty
+  			,mtrl_id
+  			,color_id
+  			,color_id2
+  			,prdct_shape
+    	FROM 
+    	<if test="shopTy.equals('com')">
+    		com_frame A
+    	</if>
+		<if test="!shopTy.equals('com')">
+    		prdct A
+    	</if>
+    	WHERE
+    		prdct_id=#{prdctId}
+    	
+    </select>
+    
+    
+    
+    <select id="getPrdctInvnHist" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		A.prdct_id
+    		,A.prdct_name
+        	,A.brand_id
+        	,(select brand_name from brand where brand_id=A.brand_id) brand_name
+        	,A.mnf_country
+        	,A.prdct_ty_cd
+        	,B.cstmr_id
+        	,B.cnt
+        	,B.invn_ty_cd
+        	,B.reg_time
+        	,B.bigo
+    	FROM prdct A, invn_hist B 
+    	WHERE
+    		A.prdct_id=B.prdct_id and
+    		B.invn_hist_id=#{invnHistId}
+    </select>
+    
+    <select id="getSelectLensDemo" parameterType="prdctVo" resultType="prdctVo">
+        SELECT
+	        prdct_id
+	        ,img_path
+	        ,img_name
+        FROM
+			still_img where prdct_id > 30 and 43 > prdct_id ;
+    </select>
+    
+    <delete id="removePrdct" parameterType="prdctVo">
+    	DELETE 
+    	FROM prdct
+    	WHERE
+    		prdct_id 			= #{prdctId}
+    </delete>
+    
+    <select id="getShopId" parameterType="Integer" resultType="String">
+    	Select shop_id
+    	from adminMember
+    	where shop_id=#{shopId}
+    </select>
+    
+    
+    <select id="modifyPrdctPrc" parameterType="PrdctVo">
+    	UPDATE
+    		prdct
+    	SET
+    		puchas_prc = #{puchasPrc},
+    		trde_Prc = #{trdePrc}
+    	WHERE 
+    		prdct_id = ${prdctId}
+    </select>
+    
+    <select id="getPrdctListByBrand" parameterType="brandVo" resultType="prdctVo">
+    	SELECT
+    		P.prdct_id,
+    		P.prdct_name,
+    		(select C.color_name from prdct_color C where C.color_id = P.color_id )colorName,
+	    	(select C.color_name from prdct_color C where C.color_id = P.color_id2)colorName2
+    	FROM 
+    		<if test="shopTy.equals('com')">
+    			com_frame P
+    		</if>
+    		<if test="!shopTy.equals('com')">
+    			prdct P
+    		</if>
+    		
+    	WHERE
+    		brand_id = #{brandId}
+    	ORDER BY P.prdct_name
+    	
+    </select>
+    
+    <select id="getCntryList" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		*
+		FROM
+			mnf_country
+		    		
+    </select>
+    <insert id="addInvn" parameterType="prdctVo" >
+		INSERT INTO
+			invn
+			(prdct_id,
+			shop_id,
+			cnt,
+			datetime,
+			i_num)
+		VALUES
+			(#{prdctId},
+			#{shopId},
+			#{cnt},
+			#{datetime},
+			#{iNum})    
+    </insert>
+    <insert id="ClensaddInvn" parameterType="prdctVo" >
+		INSERT INTO
+			cinvn_invn
+			(prdct_id,
+			shop_id,
+			cnt,
+			datetime,
+			i_num)
+		VALUES
+			(#{prdctId},
+			#{shopId},
+			#{cnt},
+			#{datetime},
+			#{iNum})    
+    </insert>
+    <select id="getInvnList" parameterType="shopVo" resultType="prdctVo">
+	    select
+	    	shop_id,
+	    	brandName,
+	    	prdctName,
+	    	prdctId,
+	    	cnt,
+	    	colorName,
+	    	colorName2,
+	    	invn_hist_id,
+	    	trdePrc
+	    from(
+	    	SELECT
+	    		invn_hist_id,
+	    		(select B.brand_name from brand B, prdct P where B.brand_id = P.brand_id AND P.prdct_id = I.prdct_id)brandName,
+	    		(select prdct_name from prdct where prdct_id = I.prdct_id)prdctName,
+	    		(select prdct_id from prdct where prdct_id = I.prdct_id)prdctId,
+	    		shop_id,
+	    		cnt,
+	    		(select trde_prc from prdct where prdct_id=I.prdct_id)trdePrc,
+	    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id AND P.prdct_id = I.prdct_id)colorName,
+	    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id2 AND P.prdct_id = I.prdct_id)colorName2
+	    	FROM
+	    		invn I
+	    	 )y
+	    	WHERE   
+	    		y.shop_id = #{shopId}
+	    	<if test="prdctId!=null">
+	    		AND prdctId = #{prdctId}
+	    	</if>
+	    	<!-- GROUP BY prdctName -->	
+			ORDER BY
+				<if test="sort.equals('no')">
+					brandName DESC
+				</if>
+				<if test="sort.equals('brandASC')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandDESC')">
+					brandName DESC
+				</if>
+				<if test="sort.equals('prdctASC')">
+					prdctName ASC
+				</if>
+				<if test="sort.equals('prdctDESC')">
+					prdctName DESC
+				</if>
+				<if test="sort.equals('cntASC')">
+					cnt ASC
+				</if>
+				<if test="sort.equals('cntDESC')">
+					cnt DESC
+				</if>	    		 	
+	    		
+	    	
+    </select>
+    
+    <select id="shopInvn" parameterType="prdctVo" resultType="String">
+    	SELECT 
+    		shop_id
+    	FROM 
+    		invn
+    	where 
+    		shop_id = #{shopId}
+    	AND prdct_id = #{prdctId}
+    </select>
+    
+    <insert id="updateInvn" parameterType="prdctVo">
+    	INSERT INTO
+    		invn_hist
+	    		(prdct_id,
+	    		cnt,
+	    		invn_ty_cd,
+	    		datetime,
+	    		reg_time,
+	    		shop_id,
+	    		i_num,
+	    		puchas_prc)
+	    	VALUES
+	    		(#{prdctId},
+	    		#{cnt},
+	    		#{invnTyCd},
+	    		#{datetime},
+	    		now(),
+	    		#{shopId},
+	    		#{iNum},
+	    		#{puchasPrc})
+    </insert>
+    
+    <insert id="updateAccInvn" parameterType="prdctVo">
+    	INSERT INTO
+    		clens_acc_invn_hist
+	    		(prdct_id,
+	    		cnt,
+	    		invn_ty_cd,
+	    		datetime,
+	    		reg_time,
+	    		shop_id,
+	    		i_num,
+	    		puchas_prc)
+	    	VALUES
+	    		(#{prdctId},
+	    		#{cnt},
+	    		#{invnTyCd},
+	    		#{datetime},
+	    		now(),
+	    		#{shopId},
+	    		#{iNum},
+	    		#{puchasPrc})
+    </insert>
+    <insert id="updateInvnClens" parameterType="prdctVo">
+    	INSERT INTO
+    		clens_invn_hist
+	    		(prdct_id,
+	    		cnt,
+	    		invn_ty_cd,
+	    		datetime,
+	    		reg_time,
+	    		shop_id,
+	    		i_num,
+	    		puchas_prc)
+	    	VALUES
+	    		(#{prdctId},
+	    		#{cnt},
+	    		#{invnTyCd},
+	    		#{datetime},
+	    		now(),
+	    		#{shopId},
+	    		#{iNum},
+	    		#{puchasPrc})
+    </insert>
+    
+    
+    
+     <insert id="updateInvnLens" parameterType="prdctVo">
+    	INSERT INTO
+    		lens_invn_hist
+	    		(prdct_id,
+	    		cnt,
+	    		invn_ty_cd,
+	    		datetime,
+	    		reg_time,
+	    		shop_id,
+	    		i_num,
+	    		puchas_prc)
+	    	VALUES
+	    		(#{prdctId},
+	    		#{cnt},
+	    		#{invnTyCd},
+	    		#{datetime},
+	    		now(),
+	    		#{shopId},
+	    		#{iNum},
+	    		#{puchasPrc})
+    </insert>
+   
+    <update id="InvnUpdate" parameterType="prdctVo">
+    	UPDATE
+    		invn
+    	SET
+    		cnt = cnt+#{cnt}
+    	WHERE shop_id = ${shopId}
+    	AND prdct_id = ${prdctId}
+    </update>
+    
+    
+     <update id="ClensInvnUpdate" parameterType="prdctVo">
+    	UPDATE
+    		cinvn_invn
+    	SET
+    		cnt = cnt+#{cnt}
+    	WHERE shop_id = ${shopId}
+    	AND prdct_id = ${prdctId}
+    </update>
+    
+    
+    <select id="invnHist" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT 
+    		invn_hist_id,
+    		(select c_name from com_info C, prdct P where C.i_num = I.i_num AND P.prdct_id = ${prdctId})comName,
+    		(select c_name from com_info C where C.i_num = I.i_num)iNum,
+    		prdct_id,
+    		(select B.brand_name from brand B, prdct P where B.brand_id = P.brand_id and P.prdct_id = #{prdctId})brandName,
+    		(select prdct_name from prdct where prdct_id = #{prdctId})prdctName,
+    		cnt,
+    		invn_ty_cd invnTyCd,
+    		datetime datetime,
+    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id AND P.prdct_id = #{prdctId})colorName,
+    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id2 AND P.prdct_id = #{prdctId})colorName2
+    	FROM
+    		invn_hist I
+    	WHERE 
+    		prdct_id = #{prdctId}
+    	AND shop_id = #{shopId}
+    	
+     </select>
+     
+     <select id="lensInvnHist" parameterType="prdctVo" resultType="prdctVo">
+     		SELECT 
+    		invn_hist_id,
+    		(select c_name from com_info C, lens P where C.i_num = I.i_num AND P.prdct_id = ${prdctId})comName,
+    		(select c_name from com_info C where C.i_num = I.i_num)iNum,
+    		prdct_id,
+    		(select B.brand_name from brand B, lens P where B.brand_id = P.brand_id and P.prdct_id = #{prdctId})brandName,
+    		(select prdct_name from lens where prdct_id = #{prdctId})prdctName,
+    		cnt,
+    		invn_ty_cd invnTyCd,
+    		datetime datetime,
+    		(select rate from lens where prdct_id = I.prdct_id)rate
+    	FROM
+    		lens_invn_hist I
+    	WHERE 
+    		prdct_id = #{prdctId}
+    	AND shop_id = #{shopId}
+     </select>
+     
+     <select id="clensInvnHist" parameterType="prdctVo" resultType="prdctVo">
+     		SELECT 
+    		invn_hist_id,
+    		(select c_name from com_info C, clens P where C.i_num = I.i_num AND P.prdct_id = #{prdctId})comName,
+    		(select i_num from com_info C where C.i_num = I.i_num)iNum,
+    		prdct_id,
+    		(select B.brand_name from brand B, clens P where B.brand_id = P.brand_id and P.prdct_id = #{prdctId})brandName,
+    		(select prdct_name from clens where prdct_id = #{prdctId})prdctName,
+    		cnt,
+    		invn_ty_cd invnTyCd,
+    		datetime datetime
+    		
+    	FROM
+    		clens_invn_hist I
+    	WHERE 
+    		prdct_id = #{prdctId}
+    	AND shop_id = #{shopId}
+     </select>
+      <select id="clensAccInvnHist" parameterType="prdctVo" resultType="prdctVo">
+     		SELECT 
+    		invn_hist_id,
+    		(select c_name from com_info C, clens_acc P where C.i_num = I.i_num AND P.prdct_id = ${prdctId})comName,
+    		(select c_name from com_info C where C.i_num = I.i_num)iNum,
+    		prdct_id,
+    		(select B.brand_name from brand B, clens_acc P where B.brand_id = P.brand_id and P.prdct_id = #{prdctId})brandName,
+    		(select prdct_name from clens_acc where prdct_id = #{prdctId})prdctName,
+    		cnt,
+    		invn_ty_cd invnTyCd,
+    		datetime datetime,
+    		(select unit_ from clens_acc where prdct_id = I.prdct_id)unit
+    		
+    	FROM
+    		clens_acc_invn_hist I
+    	WHERE 
+    		prdct_id = #{prdctId}
+    	AND shop_id = #{shopId}
+     </select>
+     
+     <select id="getColorList" parameterType="prdctVo" resultType="prdctVo">
+     	SELECT
+     		*
+     	FROM
+     		prdct_color
+     	ORDER BY
+     		color_name
+     	ASC
+     </select>
+     
+     <select id="getMtrlList" parameterType="prdctVo" resultType="prdctVo">
+     	SELECT
+     		*
+     	FROM
+     		prdct_mtrl
+     </select>
+     
+      <select id="getPrdctId" parameterType="prdctVo" resultType="Integer">
+      		SELECT
+      			prdct_id
+      		FROM
+      			prdct
+      		WHERE
+      		
+      		brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		<!-- AND 
+      			shop_id = #{shopId} -->
+      		<if test="colorId!=null"> 
+      			<if test="colorId2!=null">
+      				AND
+      		
+      			color_id = #{colorId}
+      		AND
+      			color_id2 = #{colorId2}	
+      		</if>
+      	</if>
+      </select>
+      <select id="getImgPath" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			distinct(M.img_path)
+      		FROM
+      			still_img M, prdct P
+      		WHERE
+      			M.prdct_id = P.prdct_id
+      		AND
+      			M.prdct_id = #{prdctId}
+      </select>
+      <select id="getURL" resultType="String">
+      		SELECT
+      			server_url
+      		FROM
+      			file_server
+      		WHERE
+      			isdefault=1                                                                                  
+      </select>
+      
+      <select id="prdctClrCk" resultType="String" parameterType="prdctVo">
+      		SELECT
+      			prdct_id
+      		FROM
+      			prdct
+      		WHERE 
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      		AND color_id = #{colorId}
+      		AND color_id2 = #{colorId2}
+      </select>
+      <select id="getPrdctId_" parameterType="prdctVo" resultType="String">
+      		SELECT 
+      			prdct_name
+      		FROM
+      			prdct
+      		WHERE
+      			prdct_id = #{prdctId}
+      </select>
+      
+      <select id="getMorePrdct" parameterType="shopVo" resultType="prdctVo">
+      	 select
+	    	shop_id,
+	    	brandName,
+	    	prdctName,
+	    	prdctId,
+	    	cnt,
+	    	colorName,
+	    	colorName2
+	    from(
+	    	SELECT
+	    		(select B.brand_name from brand B, prdct P where B.brand_id = P.brand_id AND P.prdct_id = I.prdct_id)brandName,
+	    		(select prdct_name from prdct where prdct_id = I.prdct_id)prdctName,
+	    		(select prdct_id from prdct where prdct_id = I.prdct_id)prdctId,
+	    		shop_id,
+	    		cnt,
+	    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id AND P.prdct_id = I.prdct_id)colorName,
+	    		(select C.color_name from prdct_color C, prdct P where C.color_id = P.color_id2 AND P.prdct_id = I.prdct_id)colorName2
+	    	FROM
+	    		invn I
+	    	 )y
+	    	WHERE   
+	    		y.shop_id = #{shopId}
+	    	AND
+	    		y.prdctName = #{prdctName}
+      		
+      </select>
+      
+      <select id="getInvnEditForm" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		P.prdct_ty_cd,
+      		P.mnf_country,
+      		P.brand_id,
+      		P.prdct_id,
+      		P.color_id,
+      		P.color_id2,
+      		P.trde_prc,
+      		I.puchas_prc,
+      		P.prdct_ty,
+      		P.mtrl_id,
+      		P.prdct_shape,
+      		I.i_num,
+      		I.cnt,
+      		I.datetime,
+      		I.invn_hist_id,
+      		P.prdct_name,
+      		I.invn_hist_id,
+      		I.invn_ty_cd,
+      		P.prdct_ty_cd
+      	FROM
+      		prdct P, invn_hist I
+      	where
+      		P.prdct_id = I.prdct_id
+      	AND
+      		invn_hist_id = #{invnHistId}
+      		
+      </select>
+      <select id="getLensInvnEditForm" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		P.ty_id,
+      		P.mtrl,
+      		P.mnf_country,
+      		P.brand_id,
+      		P.prdct_id,
+      		P.sale_prc trdePrc,
+      		P.rate,
+      		I.puchas_prc,
+      		I.i_num,
+      		I.cnt,
+      		I.datetime,
+      		I.invn_hist_id,
+      		P.prdct_name,
+      		I.invn_hist_id,
+      		I.invn_ty_cd
+      	FROM
+      		lens P, lens_invn_hist I
+      	where
+      		P.prdct_id = I.prdct_id
+      	AND
+      		invn_hist_id = #{invnHistId}
+      		
+      </select>
+      
+      <select id="getClensInvnEditForm" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		P.mnf_country,
+      		P.brand_id,
+      		P.prdct_id,
+      		P.sale_prc trdePrc,
+      		P.ty1_id tyId1,
+      		P.ty2_id tyId2,
+      		I.puchas_prc,
+      		I.i_num,
+      		I.cnt,
+      		I.datetime,
+      		I.invn_hist_id,
+      		P.prdct_name,
+      		I.invn_hist_id,
+      		I.invn_ty_cd
+      	FROM
+      		clens P, clens_invn_hist I
+      	where
+      		P.prdct_id = I.prdct_id
+      	AND
+      		invn_hist_id = #{invnHistId}
+      		
+      </select>
+      
+      
+      <select id="getClensAccInvnEditForm" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		P.mnf_country,
+      		P.brand_id,
+      		P.prdct_id,
+      		P.sale_prc trdePrc,
+      		P.unit_ unit,
+      		I.puchas_prc,
+      		I.i_num,
+      		I.cnt,
+      		I.datetime,
+      		I.invn_hist_id,
+      		P.prdct_name,
+      		I.invn_hist_id,
+      		I.invn_ty_cd
+      	FROM
+      		clens_acc P, clens_acc_invn_hist I
+      	where
+      		P.prdct_id = I.prdct_id
+      	AND
+      		invn_hist_id = #{invnHistId}
+      		
+      </select>
+      <update id="modifyInvnPrdct" parameterType="prdctVo">
+      	UPDATE
+      		prdct P, invn_hist I
+      	SET
+      		P.mnf_country = #{mnfCountry},
+      		P.brand_id = #{brandId},
+      		P.color_id = #{colorId},
+      		P.color_id2 = #{colorId2},
+      		P.trde_prc = #{trdePrc},
+      		I.puchas_prc = #{puchasPrc},
+      		P.prdct_ty = #{prdctTy},
+      		P.mtrl_id = #{mtrlId},
+      		P.prdct_shape = #{prdctShape},
+      		I.cnt = #{cnt},
+      		I.datetime = #{datetime}
+      	WHERE
+      		P.prdct_id = #{prdctId}
+      	AND 
+      		I.invn_hist_id = #{invnHistId}
+      		
+      </update>
+      
+       <update id="modifyLensInvnPrdct" parameterType="prdctVo">
+      	UPDATE
+      		lens_invn_hist I
+      	SET
+			I.puchas_prc = #{puchasPrc},
+			I.i_num = #{iNum},
+			I.datetime = #{datetime}
+			
+      	WHERE
+      		I.invn_hist_id = #{invnHistId}
+      		
+      </update>
+      
+      
+      <update id="modifyClensInvnPrdct" parameterType="prdctVo">
+      	UPDATE
+      		clens_invn_hist I
+      	SET
+			I.puchas_prc = #{puchasPrc},
+			I.i_num = #{iNum},
+			I.datetime = #{datetime}
+			
+      	WHERE
+      		I.invn_hist_id = #{invnHistId}
+      		
+      </update>
+      
+      <update id="modifyClensAccInvnPrdct" parameterType="prdctVo">
+      	UPDATE
+      		clens_acc_invn_hist I
+      	SET
+			I.puchas_prc = #{puchasPrc},
+			I.i_num = #{iNum},
+			I.datetime = #{datetime}
+			
+      	WHERE
+      		I.invn_hist_id = #{invnHistId}
+      		
+      </update>
+      <select id="getInvnCnt" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		cnt, shop_id, prdct_id
+      	FROM
+      		invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId} 
+      </select>
+      
+      
+       <select id="getLensInvnCnt" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		cnt, shop_id, prdct_id
+      	FROM
+      		lens_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId} 
+      </select>
+       <select id="getClensInvnCnt" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		cnt, shop_id, prdct_id
+      	FROM
+      		clens_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId} 
+      </select>
+       <select id="getClensAccInvnCnt" parameterType="prdctVo" resultType="prdctVo">
+      	SELECT
+      		cnt, shop_id, prdct_id
+      	FROM
+      		clens_acc_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId} 
+      </select>
+      
+      
+      
+      <delete id="delHistData" parameterType="prdctVo">
+      	DELETE 
+      		
+      	FROM
+      		invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId}
+      	
+      </delete>
+       <delete id="delLensHistData" parameterType="prdctVo">
+      	DELETE 
+      		
+      	FROM
+      		lens_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId}
+      	
+      </delete>
+      <delete id="delClensHistData" parameterType="prdctVo">
+      	DELETE 
+      		
+      	FROM
+      		clens_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId}
+      	
+      </delete>
+      <delete id="delClensAccHistData" parameterType="prdctVo">
+      	DELETE 
+      		
+      	FROM
+      		clens_acc_invn_hist
+      	WHERE
+      		invn_hist_id = #{invnHistId}
+      	
+      </delete>
+      
+      
+      
+      <update id="delHistInvn" parameterType="prdctVo">
+      	update
+      		invn
+      	set
+      		cnt = cnt - ${cnt}
+      	where
+      		shop_id = #{shopId}
+      	and
+      		prdct_id = #{prdctId}
+      </update>
+      
+      
+       <update id="delLensHistInvn" parameterType="prdctVo">
+      	update
+      		lens_invn
+      	set
+      		cnt = cnt - ${cnt}
+      	where
+      		shop_id = #{shopId}
+      	and
+      		prdct_id = #{prdctId}
+      </update>
+       <update id="delClensHistInvn" parameterType="prdctVo">
+      	update
+      		clens_invn
+      	set
+      		cnt = cnt - ${cnt}
+      	where
+      		shop_id = #{shopId}
+      	and
+      		prdct_id = #{prdctId}
+      </update>
+       <update id="delClensAccHistInvn" parameterType="prdctVo">
+      	update
+      		clens_acc_invn
+      	set
+      		cnt = cnt - ${cnt}
+      	where
+      		shop_id = #{shopId}
+      	and
+      		prdct_id = #{prdctId}
+      </update>
+      
+      
+      
+      <delete id="delinvn" >
+      	delete
+      	
+      	from
+      	
+      	 	invn
+      	where cnt = 0;
+      </delete> 
+      
+      <delete id="delLensinvn" >
+      	delete
+      	
+      	from
+      	
+      	 	lens_invn
+      	where cnt = 0;
+      </delete> 
+      <delete id="delClensinvn" >
+      	delete
+      	
+      	from
+      	
+      	 	clens_invn
+      	where cnt = 0;
+      </delete> 
+      <delete id="delClensAccinvn" >
+      	delete
+      	
+      	from
+      	
+      	 	clens_acc_invn
+      	where cnt = 0;
+      </delete> 
+      
+      
+      
+      <select id="insertDiffClr" parameterType="prdctVo" resultType="String">
+      	SELECT
+      		prdct_id
+      	FROM
+      		prdct
+      	WHERE
+      		brand_id = #{brandId}
+      	AND
+      		prdct_name = #{prdctName}
+      	AND
+      		colorId = #{colorId}
+      	AND
+      		colorId2 = #{colorId2}
+      </select>
+      <select id="srchMatchClr" parameterType="prdctVo" resultType="Integer">
+		SELECT
+			prdct_id
+		FROM
+		 	prdct
+		WHERE
+			brand_id= #{brandId}
+		AND
+			prdct_name = #{prdctName}
+		AND
+			color_id = #{colorId}
+		AND 
+			color_id2 = #{colorId2}         
+      </select>
+      
+       <select id="srchMatchUnit" parameterType="prdctVo" resultType="Integer">
+		SELECT
+			prdct_id
+		FROM
+		 	clens_acc
+		WHERE
+			brand_id= #{brandId}
+		AND
+			prdct_name = #{prdctName}
+		AND
+			unit_ = #{unit}
+      </select>
+      
+      <select id="srchMatchClens" parameterType="prdctVo" resultType="Integer">
+		SELECT
+			prdct_id
+		FROM
+		 	clens
+		WHERE
+			brand_id= #{brandId}
+		AND
+			prdct_id = #{prdctId}
+		AND
+			ty1_id = #{tyId1}
+		AND
+			ty2_id = #{tyId2}
+      </select>
+      
+       <select id="srchMatchRate" parameterType="prdctVo" resultType="Integer">
+		SELECT
+			prdct_id
+		FROM
+		 	lens
+		WHERE
+			brand_id= #{brandId}
+		AND
+			ty_id = #{tyId}
+		AND
+			prdct_name = #{prdctName}
+		AND
+			rate = #{rate}
+      </select>
+      
+      <update id="delCntInvn" parameterType="prdctVo">
+		UPDATE
+    		invn
+    	SET
+    		cnt = cnt-#{cnt}
+    	WHERE shop_id = ${shopId}
+    	AND prdct_id = ${prdctId}          
+      </update>
+      
+        <update id="delAccCntInvn" parameterType="prdctVo">
+		UPDATE
+    		clens_acc_invn
+    	SET
+    		cnt = cnt-#{cnt}
+    	WHERE shop_id = ${shopId}
+    	AND prdct_id = ${prdctId}          
+      </update>
+      
+      <update id="delClensCntInvn" parameterType="prdctVo">
+		UPDATE
+    		clens_invn
+    	SET
+    		cnt = cnt-#{cnt}
+    	WHERE shop_id = #{shopId}
+    	AND prdct_id = #{oldPrdctId}          
+      </update>
+      
+      <update id="delLensCntInvn" parameterType="prdctVo">
+		UPDATE
+    		lens_invn
+    	SET
+    		cnt = cnt-#{cnt}
+    	WHERE shop_id = #{shopId}
+    	AND prdct_id = #{prdctId}          
+      </update>
+      
+      
+      <select id="delPrdctInvnHist" parameterType="prdctVo">
+          DELETE FROM invn_hist WHERE invn_hist_id = #{InvnHistId}
+      </select>
+      
+      	<select id="delAccInvnHist" parameterType="prdctVo">
+          DELETE FROM clens_acc_invn_hist WHERE invn_hist_id = #{InvnHistId}
+      </select>
+      
+      	<select id="delClensInvnHist" parameterType="prdctVo">
+          DELETE FROM clens_invn_hist WHERE invn_hist_id = #{InvnHistId}
+      </select>
+      
+ 		<select id="delLensInvnHist" parameterType="prdctVo">
+          DELETE FROM lens_invn_hist WHERE invn_hist_id = #{InvnHistId}
+      </select>
+      
+      <select id="srchPrdctInvn" parameterType="prdctVo" resultType="String">
+		SELECT
+			invn_id
+		FROM
+			invn
+		WHERE
+			prdct_id = #{prdctId}          
+      </select>
+      
+       <select id="srchAccInvn" parameterType="prdctVo" resultType="String">
+		SELECT
+			invn_id
+		FROM
+			clens_acc_invn
+		WHERE
+			prdct_id = #{prdctId}          
+      </select>
+      
+      
+      <select id="srchClensInvn" parameterType="prdctVo" resultType="String">
+		SELECT
+			invn_id
+		FROM
+			clens_invn
+		WHERE
+			prdct_id = #{prdctId}          
+      </select>
+      
+       <select id="srchLensInvn" parameterType="prdctVo" resultType="String">
+		SELECT
+			invn_id
+		FROM
+			lens_invn
+		WHERE
+			prdct_id = #{prdctId}          
+      </select>
+      
+      <select id="getMtrlListLens" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			distinct(mtrl)
+      		FROM
+      			lens
+      		<!-- WHERE
+      			brand_id = #{brandId} -->
+      		ORDER BY mtrl DESC
+      </select>
+      <select id="getFunction" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			(select name from lens_ty where ty_id = A.ty_id)tyName,
+      			(select ty_id from lens_ty where ty_id = A.ty_id)tyId
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_lens A
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			lens A
+      		</if>
+      		
+      			<!-- brand_id= #{brandId}
+      		AND -->
+      		<if test="mtrl!=null">
+      		WHERE
+      			mtrl = #{mtrl}    	
+      		</if>	
+      		GROUP BY tyName	
+      		ORDER BY tyName DESC
+      </select>
+      
+      <select id="getPrdctListLens" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			prdct_id,
+      			prdct_name,
+      			rate
+			FROM
+			<if test="shopTy.equals('com')">
+				com_lens
+			</if>
+      		<if test="!shopTy.equals('com')">
+				lens
+			</if>
+      		WHERE
+      			mtrl = #{mtrl}
+      		AND
+      			ty_id=#{tyId}
+      		<if test="edit==null">
+				GROUP BY prdct_name      		    
+      		</if>
+      		
+      </select>
+      
+      <select id="getPrdctListClens" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			prdct_id,
+      			prdct_name
+			FROM
+			<if test="shopTy.equals('com')">
+				com_clens
+			</if>
+			<if test="!shopTy.equals('com')">
+				clens
+			</if>
+			<if test="brandId!=null">
+	      		WHERE
+	      			brand_id = #{brandId}
+	      		AND 
+	      			ty1_id = #{tyId1}
+	      		AND
+	      			ty2_id = #{tyId2}
+     		</if>
+      		GROUP BY prdct_name
+      		ORDER BY prdct_name DESC
+      </select>
+      <select id="getClensList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			prdct_id,
+      			prdct_name
+			FROM
+			<if test="shopTy.equals('com')">
+				com_clens_acc
+			</if>
+      		<if test="!shopTy.equals('com')">
+				clens_acc
+			</if>
+      		
+      			<if test="brandId!=null">
+      			WHERE
+      			brand_id = #{brandId}
+      		</if>
+      		<!-- GROUP BY prdct_name -->
+      		ORDER BY prdct_name DESC
+      </select>
+      
+      
+      
+      <select id="getEtcList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			prdct_id,
+      			prdct_name
+			FROM
+			<if test="shopTy.equals('com')">
+				com_etc
+			</if>
+      		<if test="!shopTy.equals('com')">
+				clens_acc
+			</if>
+      		
+      			<if test="brandId!=null">
+      			WHERE
+      			brand_id = #{brandId}
+      		</if>
+      		<!-- GROUP BY prdct_name -->
+      		ORDER BY prdct_name DESC
+      </select>
+      	<select id="getLensData" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			distinct(rate)
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_lens
+      		</if>
+   			<if test="!shopTy.equals('com')">
+      			lens
+      		</if>
+			
+			<if test="!allPrdct.equals('true')">      		
+	      			WHERE
+	      			mtrl = #{mtrl}
+	      		AND
+	      			ty_id = #{tyId}
+	      		ANd
+	      			prdct_name = #{prdctName}
+	      		
+				ORDER BY rate ASC
+			</if>
+      	</select>	
+      	
+      	 	<select id="getPrdctPrc" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      		<if test="shopTy.equals('com')">
+      			trde_prc, 
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			sale_prc,
+      		</if>
+      			prdct_id
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_lens
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			lens
+      		</if>
+      		WHERE
+      			<!-- brand_id = #{brandId}
+      		AND -->
+      			mtrl = #{mtrl}
+      		AND
+      			ty_id = #{tyId}
+      		ANd
+      			prdct_name = #{prdctName}
+      		AND
+      			rate = #{rate}
+      			
+      	</select>
+      	<select id="getClensPrc" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      		<if test="shopTy.equals('com')">
+      			trde_prc, 
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			sale_prc,
+      		</if>
+      			puchas_prc puchasPrc,
+      			prdct_id
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens
+      		</if>
+      		WHERE
+      			prdct_id = ${prdctId}
+      			
+      	</select>
+      	
+      	<select id="getClensAccPrc" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      		<if test="shopTy.equals('com')">
+      			trde_prc, 
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			sale_prc,
+      		</if>
+      			puchas_prc puchasPrc,
+      			prdct_id
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens_acc
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens_acc
+      		</if>
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		AND
+      			unit_ = #{unit}
+      			
+      	</select>
+      	
+      	<insert id="addInvnLensData" parameterType="prdctVo">
+      		INSERT INTO
+      			lens_invn
+	      		(prdct_id
+	      		,cnt
+	      		,shop_id
+	      		,datetime
+	      		,i_num)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum})
+      		
+      	</insert>	
+      	
+      		<insert id="addInvnClensData" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_invn
+	      		(prdct_id
+	      		,cnt
+	      		,shop_id
+	      		,datetime
+	      		,i_num)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum})
+      		
+      	</insert>	
+      	
+      	
+      	<insert id="addInvnClensAccData" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_acc_invn
+	      		(prdct_id
+	      		,cnt
+	      		,shop_id
+	      		,datetime
+	      		,i_num)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum})
+      		
+      	</insert>	
+      	<insert id="addInvnLensHistData" parameterType="prdctVo">
+      	
+      		INSERT INTO
+      			lens_invn_hist
+	      		(prdct_id
+	      		,cnt
+	      		,invn_ty_cd
+	      		,reg_time
+	      		,shop_id
+	      		,datetime
+	      		,i_num
+	      		,puchas_prc)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{invnTyCd}
+      			,now()
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum}
+      			,#{puchasPrc})
+      	</insert>
+      	
+      	<insert id="addInvnClensHistData" parameterType="prdctVo">
+      	
+      		INSERT INTO
+      			clens_invn_hist
+	      		(prdct_id
+	      		,cnt
+	      		,invn_ty_cd
+	      		,reg_time
+	      		,shop_id
+	      		,datetime
+	      		,i_num
+	      		,puchas_prc)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{invnTyCd}
+      			,now()
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum}
+      			,#{puchasPrc})
+      	</insert>
+      	
+      		<insert id="addInvnClensAccHistData" parameterType="prdctVo">
+      	
+      		INSERT INTO
+      			clens_acc_invn_hist
+	      		(prdct_id
+	      		,cnt
+	      		,invn_ty_cd
+	      		,reg_time
+	      		,shop_id
+	      		,datetime
+	      		,i_num
+	      		,puchas_prc)
+      		VALUES
+      			(#{prdctId}
+      			,#{cnt}
+      			,#{invnTyCd}
+      			,now()
+      			,#{shopId}
+      			,#{datetime}
+      			,#{iNum}
+      			,#{puchasPrc})
+      	</insert>
+      	<select id="getInvnClens" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			invn_id
+      		FROM
+      			clens_invn
+      		WHERE
+      			prdct_id = #{prdctId}
+   			AND
+      			shop_id = #{shopId}
+      	</select>
+      	
+      	<select id="getInvnClensAcc" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			invn_id
+      		FROM
+      			clens_acc_invn
+      		WHERE
+      			prdct_id = #{prdctId}
+			AND
+      			shop_id = #{shopId}      			
+      	</select>
+      	
+      	<select id="getInvnLens" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			invn_id
+      		FROM
+      			lens_invn
+      		WHERE
+      			prdct_id = #{prdctId}
+      		AND
+      			shop_id = #{shopId}
+      	</select>
+      	
+      	<update id="updateLensInvn" parameterType="prdctVo">
+      		UPDATE
+      			lens_invn
+      		SET
+      			cnt = cnt + #{cnt}
+      		WHERE
+      			invn_id = #{invnId}
+      	</update>
+      	
+      	<update id="updateClensInvn" parameterType="prdctVo">
+      		UPDATE
+      			clens_invn
+      		SET
+      			cnt = cnt + #{cnt}
+      		WHERE
+      			invn_id = #{invnId}
+      	</update>
+      	
+      	
+      	
+      		<update id="updateClensAccInvn" parameterType="prdctVo">
+      		UPDATE
+      			clens_acc_invn
+      		SET
+      			cnt = cnt + #{cnt}
+      		WHERE
+      			invn_id = #{invnId}
+      	</update>
+      	
+      	<select id="getInvnLensList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT 
+      			(select prdct_name from lens where prdct_id = I.prdct_id)prdctName
+      			<!-- ,(select brand_name from lens_brand B, lens L where B.brand_id = L.brand_id AND L.prdct_id=I.prdctId)brandName -->
+      			,prdct_id
+      			,(select rate from lens where prdct_id = I.prdct_id)rate
+      			,cnt
+      			,shop_id
+      			,datetime
+      			,i_num
+      		FROM
+      			lens_invn I
+      		WHERE
+      			shop_id = #{shopId}
+      		ORDER BY
+				<if test="sort.equals('no')">
+					prdctName ASC
+				</if>
+				<if test="sort.equals('brandASC')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandDESC')">
+					brandName DESC
+				</if>
+				<if test="sort.equals('prdctASC')">
+					prdctName ASC
+				</if>
+				<if test="sort.equals('prdctDESC')">
+					prdctName DESC
+				</if>
+				<if test="sort.equals('cntASC')">
+					cnt ASC
+				</if>
+				<if test="sort.equals('cntDESC')">
+					cnt DESC
+				</if>	    		 	
+      	</select>
+      	
+      		<select id="getInvnClensList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT 
+      			(select prdct_name from clens where prdct_id = I.prdct_id)prdctName
+      			,(select brand_name from brand B, clens L where B.brand_id = L.brand_id AND L.prdct_id=I.prdct_id)brandName
+      			,prdct_id
+      			,cnt
+      			,shop_id
+      			,datetime
+      			,i_num
+      		FROM
+      			clens_invn I
+      		WHERE
+      			shop_id = #{shopId}
+      		ORDER BY
+				<if test="sort.equals('no')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandASC')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandDESC')">
+					brandName DESC
+				</if>
+				<if test="sort.equals('prdctASC')">
+					prdctName ASC
+				</if>
+				<if test="sort.equals('prdctDESC')">
+					prdctName DESC
+				</if>
+				<if test="sort.equals('cntASC')">
+					cnt ASC
+				</if>
+				<if test="sort.equals('cntDESC')">
+					cnt DESC
+				</if>	    		 	
+      	</select>
+      	
+      	<select id="getInvnClensAccList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT 
+      			(select prdct_name from clens_acc where prdct_id = I.prdct_id)prdctName
+      			,(select brand_name from brand B, clens_acc L where B.brand_id = L.brand_id AND L.prdct_id=I.prdct_id)brandName
+      			,prdct_id
+      			,cnt
+      			,shop_id
+      			,datetime
+      			,i_num
+      			,(select unit_ from clens_acc where prdct_id = I.prdct_id)unit
+      		FROM
+      			clens_acc_invn I
+      		WHERE
+      			shop_id = #{shopId}
+      		ORDER BY
+				<if test="sort.equals('no')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandASC')">
+					brandName ASC
+				</if>
+				<if test="sort.equals('brandDESC')">
+					brandName DESC
+				</if>
+				<if test="sort.equals('prdctASC')">
+					prdctName ASC
+				</if>
+				<if test="sort.equals('prdctDESC')">
+					prdctName DESC
+				</if>
+				<if test="sort.equals('cntASC')">
+					cnt ASC
+				</if>
+				<if test="sort.equals('cntDESC')">
+					cnt DESC
+				</if>	    		 	
+      	</select>
+      	
+      	<select id="ChkLensTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_lens
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			rate = #{rate}
+      		AND
+      			mtrl = #{mtrl}
+      	</select>
+      	<select id="ChkLensShopTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			lens
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			rate = #{rate}
+      		AND
+      			mtrl = #{mtrl}
+      	</select>
+      	<select id="ChkClensTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_clens
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      			
+      		
+      	</select>
+      	<select id="ChkClensShopTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			clens
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      			
+      		
+      	</select>
+      	<select id="ChkClensAccTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_clens_acc
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      		<if test="unit!=null">
+      			AND unit_ = #{unit}
+      		</if>	
+      	</select>	
+      		
+      			<select id="ChkEtcTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_etc
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      	</select>
+      		<select id="ChkClensAccShopTbl" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			clens_acc
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			brand_id = #{brandId}
+      		<if test="unit!=null">
+      			AND unit_ = #{unit}
+      		</if>	
+      		
+      	</select>
+      	<insert id="addNewLens" parameterType="prdctVo">
+      		INSERT INTO
+      			lens
+      		(mnf_country
+      		,prdct_name
+      		,brand_id
+      		,mtrl
+      		,ty_id
+      		,rate
+      		,puchas_prc
+      		,sale_prc
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{brandId}
+      		,#{mtrl}
+      		,#{tyId}
+      		,#{rate}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	
+      	<insert id="addNewComLens" parameterType="prdctVo">
+      		INSERT INTO
+      			com_lens
+      		(mnf_country
+      		,prdct_name
+      		,mtrl
+      		,ty_id
+      		,rate
+      		,puchas_prc
+      		,trde_prc
+      		,i_num
+      		,upd_time
+      		,brand_Id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{mtrl}
+      		,#{tyId}
+      		,#{rate}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{iNum}
+      		,now()
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	
+      	<insert id="addNewClens" parameterType="prdctVo">
+      		INSERT INTO
+      			clens
+      		(mnf_country
+      		,prdct_name
+      		,ty1_id
+      		,ty2_id
+      		,puchas_prc
+      		,sale_prc
+      		,brand_id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{tyId1}
+      		,#{tyId2}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      		<insert id="addNewComClens" parameterType="prdctVo">
+      		INSERT INTO
+      			com_clens
+      		(mnf_country
+      		,prdct_name
+      		,ty1_id
+      		,ty2_id
+      		,puchas_prc
+      		,trde_prc
+      		,brand_id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{tyId1}
+      		,#{tyId2}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	<insert id="addNewClensAcc" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_acc
+      		(mnf_country
+      		,prdct_name
+			,unit_
+      		,puchas_prc
+      		,sale_prc
+      		,brand_id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{unit}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	<insert id="addNewComClensAcc" parameterType="prdctVo">
+      		INSERT INTO
+      			com_clens_acc
+      		(mnf_country
+      		,prdct_name
+			,unit_
+      		,puchas_prc
+      		,trde_prc
+      		,brand_id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{unit}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	
+      	<insert id="addNewComEtc" parameterType="prdctVo">
+      		INSERT INTO
+      			com_etc
+      		(mnf_country
+      		,prdct_name
+      		,puchas_prc
+      		,trde_prc
+      		,brand_id
+      		,memo)
+      		
+      		VALUES
+      		(#{mnfCountry}
+      		,#{prdctName}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,#{brandId}
+      		,#{memo})
+      		
+		  <selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+      	</insert>
+      	
+      	<select id="getClensTyList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			(select name from clens_ty1 where ty1_id = C.ty1_id )tyName,
+      			(select ty1_id from clens_ty1 where ty1_id = C.ty1_id )tyId1
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens C
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens C
+      		</if>
+      		
+      			<if test="brandId!=null">
+      			WHERE
+      				brand_id = #{brandId}
+      			</if>
+      			
+      			GROUP BY tyName
+      	</select>
+      	
+      	<select id="getClensTyList2" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			(select name from clens_ty2 where ty2_id = C.ty2_id )tyName,
+      			(select ty2_id from clens_ty2 where ty2_id = C.ty2_id )tyId1
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens C
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens C
+      		</if>
+      		<if test="!allPrdct.equals('true')">
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			ty1_id = #{tyId1}
+      		</if>
+      		GROUP BY tyName
+      	</select>
+      	
+      	<select id="getNewClensTyList2" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			name tyName,
+      			ty2_id tyId1
+      		FROM
+				clens_ty2
+      	</select>
+      	<select id="getPrdctUnit" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			unit_ unit
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens_acc
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens_acc
+      		</if>
+	      		WHERE
+	      			brand_id = #{brandId}
+	      		AND
+	      			prdct_name = #{prdctName}
+      		GROUP BY unit_
+      		ORDER BY unit_ DESC
+      	</select>
+      	<select id="getAccId" parameterType="prdctVo" resultType="String">
+      		SELECT	
+      			prdct_id
+      		FROM
+      		<if test="shopTy.equals('com')">
+      			com_clens_acc
+      		</if>
+      		<if test="!shopTy.equals('com')">
+      			clens_acc
+      		</if>
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		AND
+      			unit_ = #{unit}
+      	</select>
+      	<select id="getFrameId" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			prdct
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			color_id = #{colorId}
+      		AND
+      			color_id2 = #{colorId2}
+      		AND
+      			prdct_name = #{prdctName}
+      	</select>
+      	
+      	<insert id="addReqeustFrame" parameterType="prdctVo">
+      		INSERT INTO
+      			request_frame
+	      		(prdct_id
+	      		,puchas_prc
+	      		,trde_prc
+	      		,upd_time
+	      		,i_num
+	      		,allow
+	      		,url
+	      		,memo)
+	      	VALUES
+	      		(#{prdctId}
+	      		,#{puchasPrc}
+	      		,#{salePrc}
+	      		,now()
+	      		,#{iNum}
+	      		,'0'
+	      		,#{url}
+	      		,#{memo})
+      		
+   	<!-- 	  <selectKey keyProperty="id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey> -->
+      	</insert>
+      	
+      	<select id="addReqeustlens" parameterType="prdctVo">
+      		INSERT INTO
+      			request_lens
+      		(prdct_id
+      		,puchas_prc
+      		,trde_prc
+      		,i_num
+      		,upd_time
+      		,url
+      		,memo)
+      		VALUES
+      		(#{prdctId}
+      		,#{puchasPrc}
+      		<if test="salePrc!=null">
+      			,#{salePrc}
+      		</if>
+      		<if test="trdePrc!=null">
+      			,#{trdePrc}
+      		</if>
+      		,#{iNum}
+      		,now()
+      		,#{url}
+      		,#{memo})
+      	</select>
+      	
+      	 	<select id="addReqeustClens" parameterType="prdctVo">
+      		INSERT INTO
+      			request_clens
+      		(prdct_id
+      		,puchas_prc
+      		,trde_prc
+      		,i_num
+      		,upd_time
+      		,url
+      		,memo)
+      		VALUES
+      		(#{prdctId}
+      		,#{puchasPrc}
+      		<if test="salePrc!=null">
+      			,#{salePrc}
+      		</if>
+      		<if test="trdePrc!=null">
+      			,#{trdePrc}
+      		</if>
+      		,#{iNum}
+      		,now()
+      		,#{url}
+      		,#{memo})
+      	</select>
+      	
+      	
+      	<select id="addReqeustAcc" parameterType="prdctVo">
+      		INSERT INTO
+      			request_acc
+      		(prdct_id
+      		,puchas_prc
+      		,trde_prc
+      		,i_num
+      		,upd_time
+      		,url
+      		,memo)
+      		VALUES
+      		(#{prdctId}
+      		,#{puchasPrc}
+      		<if test="salePrc!=null">
+      			,#{salePrc}
+      		</if>
+      		<if test="trdePrc!=null">
+      			,#{trdePrc}
+      		</if>
+      		,#{iNum}
+      		,now()
+      		,#{url}
+      		,#{memo})
+      	</select>
+      	
+      		<select id="addReqeustEtc" parameterType="prdctVo">
+      		INSERT INTO
+      			request_etc
+      		(prdct_id
+      		,puchas_prc
+      		,trde_prc
+      		,i_num
+      		,upd_time
+      		,url
+      		,memo)
+      		VALUES
+      		(#{prdctId}
+      		,#{puchasPrc}
+      		<if test="salePrc!=null">
+      			,#{salePrc}
+      		</if>
+      		<if test="trdePrc!=null">
+      			,#{trdePrc}
+      		</if>
+      		,#{iNum}
+      		,now()
+      		,#{url}
+      		,#{memo})
+      	</select>
+      	<!-- 거래처 재고관련 -->
+      	
+      	<select id="getFrame" parameterType="prdctVo" resultType="prdctVo">
+			SELECT
+				<if test="comTy==1">
+				(select brand_name from brand B, com_frame F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+				,(select prdct_id from com_frame where prdct_id = C.prdct_id)prdctId
+				,(select prdct_name from com_frame where prdct_id = C.prdct_id)prdctName
+				</if>
+				<if test="comTy==2">
+				(select brand_name from brand B, com_lens F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+				,(select prdct_id from com_lens where prdct_id = C.prdct_id)prdctId
+				,(select prdct_name from com_lens where prdct_id = C.prdct_id)prdctName
+				</if>
+				<if test="comTy==3">
+				(select brand_name from brand B, com_clens F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+				,(select prdct_id from com_clens where prdct_id = C.prdct_id)prdctId
+				,(select prdct_name from com_clens where prdct_id = C.prdct_id)prdctName
+				</if>
+				<if test="comTy==4">
+				(select brand_name from brand B, com_clens_acc F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+				,(select prdct_id from com_clens_acc where prdct_id = C.prdct_id)prdctId
+				,(select prdct_name from com_clens_acc where prdct_id = C.prdct_id)prdctName
+				</if>
+				<if test="comTy==5">
+				(select brand_name from brand B, com_etc F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+				,(select prdct_id from com_etc where prdct_id = C.prdct_id)prdctId
+				,(select prdct_name from com_etc where prdct_id = C.prdct_id)prdctName
+				</if>
+				,puchas_prc
+				,trde_prc
+				,upd_time
+				,id
+				,memo
+				,allow
+			FROM
+				
+			<if test="comTy==1">
+      			request_frame C
+      		</if>
+      		<if test="comTy==2">
+      			request_lens C
+      		</if>
+      		<if test="comTy==3">
+      			request_clens C
+      		</if>
+      		<if test="comTy==4">
+      			request_acc C
+      		</if>
+      		<if test="comTy==5">
+      			request_etc C
+      		</if>
+			WHERE i_num = #{shopId}
+			AND
+      			substr(replace(upd_time,"-",""),1,8) between #{sdate} AND #{edate}
+		    ORDER BY 
+			<if test="sort.equals('brandNameD')">
+				brandName DESC			    
+			</if>
+			<if test="sort.equals('brandNameA')">
+				brandName ASC			    
+			</if>
+			<if test="sort.equals('prdctNameD')">
+	    		prdctName DESC			    
+			</if>
+			<if test="sort.equals('prdctNameA')">
+	    		prdctName ASC			    
+			</if>
+			<if test="sort.equals('puchasPrcD')">
+	    		puchas_prc DESC			    
+			</if>
+			<if test="sort.equals('puchasPrcA')">
+	    		puchas_prc ASC			    
+			</if>
+			<if test="sort.equals('salePrcD')">
+	    		trde_prc DESC			    
+			</if>
+			<if test="sort.equals('salePrcA')">
+	    		trde_prc ASC			    
+			</if>
+			<if test="sort.equals('updTimeD')">
+	    		upd_time DESC			    
+			</if>
+			<if test="sort.equals('updTimeA')">
+	    		upd_time ASC			    
+			</if>
+			<if test="sort.equals('allowD')">
+	    		allow DESC			    
+			</if>
+			<if test="sort.equals('allowA')">
+	    		allow ASC			    
+			</if>
+      	</select>
+      	
+      	
+      	<select id="getComPrdctEditForm" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			id
+      			,(select server_url from file_server where isdefault=2)urlStr
+      			,puchas_prc
+      			,trde_prc
+      			,url
+      			,memo
+      			<if test="comTy==1">
+	      			,(select prdct_id from com_frame where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_frame where prdct_id = C.prdct_id)prdctName
+	      			,(select B.brand_id from brand B, com_frame F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandId
+	      			,(select brand_name from brand B, com_frame F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandName
+	      			,(select cntry_name from mnf_country A, com_frame B where A.cntry_id = B.mnf_country AND B.prdct_id = C.prdct_id)mnf_country
+	      			,(select mnf_country from com_frame where prdct_id = C.prdct_id)country
+      				,(select color_id from com_frame where prdct_id = C.prdct_Id)colorId
+      				,(select color_id2 from com_frame where prdct_id = C.prdct_Id)colorId2
+      				,(select color_name from prdct_color A, com_frame B where A.color_id = B.color_id AND B.prdct_id = C.prdct_id)colorName1
+      				,(select color_name from prdct_color A, com_frame B where A.color_id = B.color_id2 AND B.prdct_id = C.prdct_id)colorName2
+      				,(select mtrl_id from com_frame where prdct_id = C.prdct_Id)mtrlId
+      				,(select mtrl_name from prdct_mtrl A, com_frame B where A.mtrl_id = B.mtrl_id AND B.prdct_id = C.prdct_Id)mtrlName
+      				,(select prdct_ty from com_frame where prdct_id = C.prdct_id)prdctTy
+      				,(select type_name from prdct_ty A, com_frame B where A.type_id=B.prdct_ty AND B.prdct_id = C.prdct_Id)prdctTyName
+      				,(select ty_name from prdct_shape A, com_frame B where A.prdct_ty = B.prdct_shape AND prdct_id = C.prdct_Id)prdctShapeName
+      				,(select prdct_shape from com_frame where prdct_id = C.prdct_id)prdctShape
+      				,(select img_path from com_still_img where prdct_id = C.prdct_id)imgPath
+      			</if>
+      			<if test="comTy==2">
+	      			,(select prdct_id from com_lens where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_lens where prdct_id = C.prdct_id)prdctName
+	      			,(select B.brand_id from brand B, com_lens F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandId
+	      			,(select brand_name from brand B, com_lens F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandName
+	      			,(select cntry_name from mnf_country A, com_lens B where A.cntry_id = B.mnf_country AND B.prdct_id = C.prdct_id)mnf_country
+	      			,(select mnf_country from com_lens where prdct_id = C.prdct_id)country
+      				,(select name from lens_mtrl A, com_lens B where A.ty_id = B.mtrl AND B.prdct_id = C.prdct_Id)mtrl
+      				,(select mtrl from com_lens where prdct_id = C.prdct_Id)mtrlId
+      				,(select name from lens_ty A, com_lens B where A. ty_id = B.ty_id AND B.prdct_id = C.prdct_Id)tyId
+      				,(select ty_id from com_lens where prdct_id = C.prdct_id)tyId2	
+      				,(select rate from com_lens where prdct_id = C.prdct_Id)rate
+      			</if>
+      			<if test="comTy==3">
+      				,(select prdct_id from com_clens where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_clens where prdct_id = C.prdct_id)prdctName
+	      			,(select B.brand_id from brand B, com_clens F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandId
+	      			,(select brand_name from brand B, com_clens F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandName
+	      			,(select cntry_name from mnf_country A, com_clens B where A.cntry_id = B.mnf_country AND B.prdct_id = C.prdct_id)mnf_country
+	      			,(select mnf_country from com_clens where prdct_id = C.prdct_id)country
+      				,(select name from clens_ty1 A, com_clens B where A.ty1_id = B.ty1_id AND B.prdct_id = C.prdct_Id)tyId1
+      				,(select ty1_id from com_clens where prdct_id = C.prdct_id)ty1
+      				,(select name from clens_ty2 A, com_clens B where A.ty2_id = B.ty2_id AND B.prdct_id = C.prdct_Id)tyId2
+      				,(select ty2_id from com_clens where prdct_id = C.prdct_id)ty2
+      			</if>
+      			<if test="comTy==4">
+      				,(select prdct_id from com_clens_acc where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_clens_acc where prdct_id = C.prdct_id)prdctName
+	      			,(select B.brand_id from brand B, com_clens_acc F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandId
+	      			,(select brand_name from brand B, com_clens_acc F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandName
+	      			,(select cntry_name from mnf_country A, com_clens_acc B where A.cntry_id = B.mnf_country AND B.prdct_id = C.prdct_id)mnf_country
+	      			,(select mnf_country from com_clens_acc where prdct_id = C.prdct_id)country
+      				,(select unit_ from com_clens_acc where prdct_id = C.prdct_id)unit
+      			</if>
+      			<if test="comTy==5">
+      				,(select prdct_id from com_etc where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_etc where prdct_id = C.prdct_id)prdctName
+	      			,(select B.brand_id from brand B, com_etc F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandId
+	      			,(select brand_name from brand B, com_etc F where B.brand_id = F.brand_id AND F.prdct_id = C.prdct_id)brandName
+	      			,(select cntry_name from mnf_country A, com_etc B where A.cntry_id = B.mnf_country AND B.prdct_id = C.prdct_id)mnf_country
+	      			,(select mnf_country from com_etc where prdct_id = C.prdct_id)country
+      			</if>
+      			
+      		FROM
+      		<if test="comTy==1">
+      			request_frame C
+      		</if>
+      		<if test="comTy==2">
+      			request_lens C
+      		</if>
+      		<if test="comTy==3">
+      			request_clens C
+      		</if>
+      		<if test="comTy==4">
+      			request_acc C
+      		</if>
+      		<if test="comTy==5">
+      			request_etc C
+      		</if>
+      		
+      		WHERE
+      			id = #{id}
+      	</select>
+      	
+      	<update id="modifyComPrdct" parameterType="prdctVo">
+      		UPDATE
+      			<if test="comTy==1">
+      				request_frame
+      			</if>
+      			<if test="comTy==2">
+      				request_lens
+      			</if>
+      			<if test="comTy==3">
+      				request_clens
+      			</if>
+      			<if test="comTy==4">
+      				request_acc
+      			</if>
+      			<if test="comTy==5">
+      				request_etc
+      			</if>
+      			
+      		SET
+      			puchas_prc = #{puchasPrc}
+      			,trde_prc = 
+      			<if test="salePrc!=null">
+      				#{salePrc}
+      			</if>
+      			<if test="trdePrc!=null">
+      				#{trdePrc}
+      			</if>
+      			,memo = #{memo}
+      			,url = #{url}
+      		WHERE id = #{id}
+      		
+      	</update>
+      	
+      	<select id="getComPrdct" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			<if test="prdctType==1">
+      				(select brand_name from brand B, com_frame F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+					,(select prdct_id from com_frame where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_frame where prdct_id = C.prdct_id)prdctName
+					,(select c_name from com_info where i_num=C.i_num)comName
+      			</if>
+      			<if test="prdctType==2">
+      				(select brand_name from brand B, com_lens F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+					,(select prdct_id from com_lens where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_lens where prdct_id = C.prdct_id)prdctName
+					,(select c_name from com_info where i_num=C.i_num)comName
+      			</if>
+      			<if test="prdctType==3">
+      				(select brand_name from brand B, com_clens F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+					,(select prdct_id from com_clens where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_clens where prdct_id = C.prdct_id)prdctName
+					,(select c_name from com_info where i_num=C.i_num)comName
+      			</if>
+      			<if test="prdctType==4">
+      				(select brand_name from brand B, com_clens_acc F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+					,(select prdct_id from com_clens_acc where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_clens_acc where prdct_id = C.prdct_id)prdctName
+					,(select c_name from com_info where i_num=C.i_num)comName
+      			</if>
+      			<if test="prdctType==5">
+      				(select brand_name from brand B, com_etc F where B.brand_id = F.brand_id AND F.prdct_id=C.prdct_id)brandName
+					,(select prdct_id from com_etc where prdct_id = C.prdct_id)prdctId
+					,(select prdct_name from com_etc where prdct_id = C.prdct_id)prdctName
+					,(select c_name from com_info where i_num=C.i_num)comName
+      			</if>
+      			
+				,puchas_prc
+				,i_num
+				,trde_prc
+				,upd_time
+				,modify_time
+				,id
+				,allow
+      		FROM
+      		
+      		<if test="prdctType==1">
+      			request_frame C
+      		</if>
+      		<if test="prdctType==2">
+      			request_lens C
+      		</if>
+      		<if test="prdctType==3">
+      			request_clens C
+      		</if>
+      		<if test="prdctType==4">
+      			request_acc C
+      		</if>
+      		<if test="prdctType==5">
+      			request_etc C
+      		</if>		
+      		<if test="iNum!=-1">
+      			WHERE
+      				i_num = #{iNum}
+      		</if>
+      		<if test="allow!=-1 and iNum!=-1">
+      			AND
+      				allow = #{allow}
+      		</if>
+      		<if test="allow!=-1 and iNum==-1">
+      			WHERE
+      				allow = #{allow}
+      		</if>
+      		 ORDER BY 
+			<if test="sort.equals('brandNameD')">
+				brandName DESC			    
+			</if>
+			<if test="sort.equals('brandNameA')">
+				brandName ASC			    
+			</if>
+			<if test="sort.equals('prdctNameD')">
+	    		prdctName DESC			    
+			</if>
+			<if test="sort.equals('prdctNameA')">
+	    		prdctName ASC			    
+			</if>
+			<if test="sort.equals('puchasPrcD')">
+	    		puchas_prc DESC			    
+			</if>
+			<if test="sort.equals('puchasPrcA')">
+	    		puchas_prc ASC			    
+			</if>
+			<if test="sort.equals('salePrcD')">
+	    		trde_prc DESC			    
+			</if>
+			<if test="sort.equals('salePrcA')">
+	    		trde_prc ASC			    
+			</if>
+			<if test="sort.equals('updTimeD')">
+	    		upd_time DESC			    
+			</if>
+			<if test="sort.equals('updTimeA')">
+	    		upd_time ASC			    
+			</if>
+			<if test="sort.equals('iNumD')">
+	    		i_num DESC			    
+			</if>
+			<if test="sort.equals('iNumA')">
+	    		i_num ASC			    
+			</if>
+			<if test="sort.equals('allowD')">
+	    		allow DESC			    
+			</if>
+			<if test="sort.equals('allowA')">
+	    		allow ASC			    
+			</if>
+      	</select>
+      	
+      	<select id="getComFrame" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_frame
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			color_id = #{colorId}
+      		AND
+      			color_id2 = #{colorId2}
+      		AND
+      			brand_id = #{brandId}
+      	</select>
+      	
+      	<insert id="addNewComPrdct" parameterType="prdctVo">
+      		INSERT INTO
+      			com_frame
+      		(brand_id
+      		,mnf_country
+      		,prdct_name
+      		,color_id
+      		,color_id2
+      		,prdct_ty
+      		,mtrl_id
+      		,prdct_shape
+      		,upd_time
+      		,puchas_prc
+      		,trde_prc
+      		,memo)
+      		VALUE
+      		(#{brandId}
+      		,#{mnfCountry}
+      		,#{prdctName}
+      		,#{colorId}
+      		,#{colorId2}
+      		,#{prdctTy}
+      		,#{mtrlId}
+      		,#{prdctShape}
+      		,now()
+      		,#{puchasPrc}
+      		,#{salePrc}
+      		,#{memo})
+      		<selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      	
+      	<update id="allowPrdct" parameterType="prdctVo">
+      		UPDATE
+      		<if test="comTy==1">
+      			request_frame
+      		</if>
+      		<if test="comTy==2">
+      			request_lens
+      		</if>
+      		<if test="comTy==3">
+      			request_clens
+      		</if>
+      		<if test="comTy==4">
+      			request_acc
+      		</if>
+      		<if test="comTy==5">
+      			request_etc
+      		</if>		
+      		SET
+      			allow = 1,
+      			modify_time = now()
+      		WHERE
+      			id = #{id}
+      	</update>
+      	
+      	<update id="modifyTrdePrc" parameterType="prdctVo">
+      		UPDATE
+      		<if test="comTy==1">
+      			request_frame
+      		</if>
+      		<if test="comTy==2">
+      			request_lens
+      		</if>
+      		<if test="comTy==3">
+      			request_clens
+      		</if>
+      		<if test="comTy==4">
+      			request_acc
+      		</if>	
+      		<if test="comTy==5">
+      			request_etc
+      		</if>	
+      		SET
+      			trde_prc = #{salePrc}
+      		WHERE
+      			id = #{id}
+      	</update>
+      	<update id="rejectPrdct" parameterType="prdctVo">
+      		UPDATE
+      			<if test="comTy==1">
+      				request_frame
+	      		</if>
+	      		<if test="comTy==2">
+	      			request_lens
+	      		</if>
+	      		<if test="comTy==3">
+	      			request_clens
+	      		</if>
+	      		<if test="comTy==4">
+	      			request_acc
+	      		</if>
+	      		<if test="comTy==5">
+	      			request_etc
+	      		</if>		
+      		SET
+      			allow = 2,
+      			modify_time = now()
+      		WHERE
+      			id = #{id}
+      	</update>
+      	
+      	<select id="getPrdctColors" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_frame
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		AND
+      			color_id = #{colorId}
+      		AND
+      			color_id2 = #{colorId2}
+      	</select>
+      	
+      	<update id="updateComPrdctColor" parameterType="prdctVo">
+      		UPDATE
+      			request_frame
+      		SET
+      			prdct_id = #{prdctId}
+      		WHERE 
+      			prdct_id = #{oldPrdctId}
+      	</update>
+      	
+      	<update id="updatePrdctImg" parameterType="prdctVo">
+      		UPDATE
+      			com_still_img
+      		SET
+      			prdct_id = #{prdctId}
+      		where
+      			prdct_id = #{oldPrdctId}
+      	</update>
+      	
+      	<insert id="addComFrame" parameterType="prdctVo">
+      		INSERT INTO
+      			com_frame
+      		(prdct_name
+      		,brand_id
+      		,mnf_country
+      		,puchas_prc
+      		,trde_prc
+      		,upd_time
+      		,color_id
+      		,color_id2
+      		,mtrl_id
+      		,prdct_shape
+      		)
+      		
+      		VALUES
+      		(#{prdctName}
+      		,#{brandId}
+      		,#{mnfCountry}
+      		,#{puchasPrc}
+      		,#{trdePrc}
+      		,now()
+      		,#{colorId}
+      		,#{colorId2}
+      		,#{mtrlId}
+      		,#{prdctShape}
+      		)
+      			<selectKey keyProperty="prdctId" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      
+        <select id="getComBrandName" parameterType="prdctVo" resultType="String">
+        		SELECT 
+        			brand_id
+        		FROM
+        			brand
+        		WHERE
+        			brandName = #{brandName}
+        </select>
+        
+        <update id="changePrdctName" parameterType="prdctVo">
+          	UPDATE
+          		<if test="comTy==1">
+         				com_frame
+          		</if>
+          		<if test="comTy==2">
+         				com_lens
+          		</if>
+          		<if test="comTy==3">
+         				com_clens
+          		</if>
+          		<if test="comTy==4">
+         				com_clens_acc
+          		</if>
+          		<if test="comTy==5">
+         				com_etc
+          		</if>
+          		
+          	SET
+          		prdct_name = #{prdctName}
+          	WHERE 
+          		prdct_id = #{prdctId}
+        </update>
+        
+        <delete id="delRequestPrdct" parameterType="prdctVo">
+        		DELETE
+        			FROM
+        		<if test="comTy==1">
+        			request_frame
+        		</if>
+        		<if test="comTy==2">
+        			request_lens
+        		</if>
+        		<if test="comTy==3">
+        			request_clens
+        		</if>
+        		<if test="comTy==4">
+        			request_acc
+        		</if>
+        		<if test="comTy==5">
+        			request_etc
+        		</if>
+        		
+        		WHERE
+        			id = #{id}
+        </delete>
+        
+        	<select id="getOrderList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			id
+      			,prdct_ty
+      			,cnt
+      			,upd_time
+      			,state
+      			,spec
+      			,BC
+      			,diam
+      			,(select shop_name from shop where shop_id = C.shop_id)comName
+      			,detail
+      			<if test="prdctTy==1">
+      				,(select brand_name from brand A, com_frame B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_frame where prdct_id = C.prdct_id)prdctName
+      				,(select A.color_name from prdct_color A, com_frame B where A.color_id = B.color_id AND B.prdct_id = C.prdct_id)colorName1
+      				,(select A.color_name from prdct_color A, com_frame B where A.color_id = B.color_id2 AND B.prdct_id = C.prdct_id)colorName2
+      			</if>
+      			<if test="prdctTy==2">
+      				,(select brand_name from brand A, com_lens B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_lens where prdct_id = C.prdct_id)prdctName
+      				,(select mtrl from com_lens A where A.prdct_id = C.prdct_id)mtrl
+      				,(select A.name from lens_ty A, com_lens B where A.ty_id = B.ty_id AND B.prdct_id = C.prdct_id)tyName
+      				,(select rate from com_lens WHERE prdct_id = C.prdct_id)rate
+      			</if>
+      			<if test="prdctTy==3">
+      				,(select brand_name from brand A, com_clens B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_clens where prdct_id = C.prdct_id)prdctName
+      				,(select A.name from clens_ty1 A, com_clens B where A.ty1_id = B.ty1_id AND B.prdct_id = C.prdct_id)ty1
+      				,(select A.name from clens_ty2 A, com_clens B where A.ty2_id = B.ty2_id AND B.prdct_id = C.prdct_id)ty2
+      			</if>
+      			<if test="prdctTy==4">
+      				,(select brand_name from brand A, com_clens_acc B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_clens_acc where prdct_id = C.prdct_id)prdctName
+      				,(select unit_ from com_clens_acc where prdct_id = C.prdct_id)unit
+      			</if>
+      			<if test="prdctTy==5">
+      				,(select brand_name from brand A, com_etc B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_etc where prdct_id = C.prdct_id)prdctName
+      			</if>
+      		FROM
+      			orderlist C
+      		WHERE
+      			i_num = #{iNum}
+      		AND
+      		<if test="!shopId.equals('-1')">
+      			shop_id = #{shopId}
+      		AND
+      		</if>
+      			prdct_ty = #{prdctTy}
+      		AND
+      			substr(replace(upd_time,"-",""),1,8) between #{sdate} AND #{edate}
+      		AND
+      			state = 0
+      		AND
+      			cancel != 1
+      			ORDER BY 
+			<if test="sort.equals('brandNameD')">
+				brandName DESC			    
+			</if>
+			<if test="sort.equals('brandNameA')">
+				brandName ASC			    
+			</if>
+			<if test="sort.equals('prdctNameD')">
+	    		prdctName DESC			    
+			</if>
+			<if test="sort.equals('prdctNameA')">
+	    		prdctName ASC			    
+			</if>
+			<if test="sort.equals('cntD')">
+				cnt DESC
+			</if>
+			<if test="sort.equals('cntA')">
+				cnt ASC
+			</if>
+			<if test="sort.equals('updTimeD')">
+	    		upd_time DESC			    
+			</if>
+			<if test="sort.equals('updTimeA')">
+	    		upd_time ASC			    
+			</if>
+			<if test="sort.equals('cNameD')">
+	    		comName DESC			    
+			</if>
+			<if test="sort.equals('cNameA')">
+	    		comName ASC			    
+			</if>
+			<if test="sort.equals('stateD')">
+	    		state DESC			    
+			</if>
+			<if test="sort.equals('stateA')">
+	    		state ASC			    
+			</if>
+      	</select>
+      	
+      	<select id="getDeliverList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			id
+      			,cnt
+      			,deliver_time
+      			,state
+      			,receive
+      			,(select shop_name from shop where shop_id = C.shop_id)comName
+      			,return_cd
+      			,spec
+      			<if test="prdctTy==1">
+      				,(select brand_name from brand A, com_frame B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_frame where prdct_id = C.prdct_id)prdctName
+      			</if>
+      			<if test="prdctTy==2">
+      				,(select brand_name from brand A, com_lens B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_lens where prdct_id = C.prdct_id)prdctName
+      			</if>
+      			<if test="prdctTy==3">
+      				,(select brand_name from brand A, com_clens B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_clens where prdct_id = C.prdct_id)prdctName
+      			</if>
+      			<if test="prdctTy==4">
+      				,(select brand_name from brand A, com_clens_acc B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_clens_acc where prdct_id = C.prdct_id)prdctName
+      			</if>
+      			<if test="prdctTy==5">
+      				,(select brand_name from brand A, com_etc B where A.brand_id = B.brand_id AND B.prdct_id = C.prdct_id)brandName
+      				,(select prdct_name from com_etc where prdct_id = C.prdct_id)prdctName
+      			</if>
+      		FROM
+      			orderlist C
+      		WHERE
+      			i_num = #{iNum}
+      			
+      		AND
+      		<if test="!shopId.equals('-1')">
+      			shop_id = #{shopId}
+      		AND
+      		</if>
+      			prdct_ty = #{prdctTy}
+      		AND
+      			substr(replace(upd_time,"-",""),1,8) between #{sdate} AND #{edate}
+      		AND
+      			(state = 1 OR state = 2)
+      		
+      			ORDER BY 
+			<if test="sort.equals('brandNameD')">
+				brandName DESC			    
+			</if>
+			<if test="sort.equals('brandNameA')">
+				brandName ASC			    
+			</if>
+			<if test="sort.equals('prdctNameD')">
+	    		prdctName DESC			    
+			</if>
+			<if test="sort.equals('prdctNameA')">
+	    		prdctName ASC			    
+			</if>
+			<if test="sort.equals('cntD')">
+				cnt DESC
+			</if>
+			<if test="sort.equals('cntA')">
+				cnt ASC
+			</if>
+			<if test="sort.equals('updTimeD')">
+	    		deliver_time DESC			    
+			</if>
+			<if test="sort.equals('updTimeA')">
+	    		deliver_time ASC			    
+			</if>
+			<if test="sort.equals('cNameD')">
+	    		comName DESC			    
+			</if>
+			<if test="sort.equals('cNameA')">
+	    		comName ASC			    
+			</if>
+			<if test="sort.equals('stateD')">
+	    		state DESC			    
+			</if>
+			<if test="sort.equals('stateA')">
+	    		state ASC			    
+			</if>
+      	</select>
+      	
+      	<update id="deliverPrdct" parameterType="prdctVo">
+      		UPDATE
+      			orderlist
+      		SET
+      			state = 1
+      			,deliver_time = now()
+      		WHERE
+      			id = #{id}
+      	</update>
+      	
+      	<select id="getPrdctCnt" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			sum(cnt)
+      		FROM
+      		<if test="comTy==1">
+      			invn
+      		</if>
+			<if test="comTy==2">
+      			lens_invn
+      		</if>
+      		<if test="comTy==3">
+      			clens_invn
+      		</if>
+      		<if test="comTy==4">
+      			clens_acc_invn
+      		</if>
+      		<if test="comTy==5">
+      			etc_invn
+      		</if>      		      		
+      		WHERE
+      			shop_id = #{shopId}
+      	</select>
+      	
+      	<insert id="addNewClensTy1" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_ty1
+      		(name)
+      		VALUES
+      		(#{name})
+      		
+      		<selectKey keyProperty="tyId1" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      	
+      	<insert id="addNewClensTy2" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_ty2
+      		(name)
+      		VALUES
+      		(#{name})
+      		
+      		<selectKey keyProperty="tyId1" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      	
+      	
+      	
+      		<insert id="addNewLensTy" parameterType="prdctVo">
+      		INSERT INTO
+      			clens_ty2
+      		(name)
+      		VALUES
+      		(#{name})
+      		
+      		<selectKey keyProperty="lens_ty" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      	
+      	
+      	<select id="getNewTyList" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			name tyName
+      			,ty1_id tyId1
+      		FROM
+      			clens_ty1
+      	</select>
+      	
+      	<delete id="deleteDeliverData" parameterType="prdctVo">
+      		DELETE
+      			FROM
+      		orderlist
+      			WHERE
+      		id = #{id}
+      	</delete>
+      	
+      	<select id="getLensRate" parameterType="prdctVo" resultType="Integer">
+      		SELECT
+      			prdct_id
+      		FROM
+      			com_lens
+      		WHERE
+      			prdct_name = #{prdctName}
+      		AND
+      			mtrl = #{mtrl}
+      		AND
+      			ty_id = #{tyId}
+      		ANd
+      			rate = #{rate}
+      	</select>
+	
+		<update id="modifyLensRate" parameterType="prdctVo">
+			UPDATE
+				request_lens
+			SET
+				prdct_id = #{prdctId}
+			WHERE
+				prdct_id = #{oldPrdctId}
+		</update>
+		
+		<update id="modifyClensData" parameterType="prdctVo">
+			UPDATE
+				request_clens
+			SET
+				prdct_id = #{prdctId}
+			WHERE
+				prdct_id = #{oldPrdctId}
+		</update>
+		
+		
+		<select id="getAccUnitId" parameterType="prdctVo" resultType="Integer">
+			SELECT
+				prdct_id
+			FROM
+				com_clens_acc
+			WHERE
+				brand_id = #{brandId}
+			AND
+				prdct_name = #{prdctName}
+			AND
+				unit_ = #{unit}
+		</select>
+		<update id="changeAccUnit" parameterType="prdctVo">
+			UPDATE
+				request_acc
+			SET
+				prdct_id = #{prdctId}
+			WHERE
+				prdct_id = #{oldPrdctId}		    
+		</update>
+		
+		<select id="srchPrdct" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		prdct_id
+    		,prdct_name
+    		,(select C.color_name from prdct_color C where C.color_id = P.color_id )colorName
+	    	,(select C.color_name from prdct_color C where C.color_id = P.color_id2)colorName2
+    	FROM
+    		prdct P
+    	WHERE
+    		prdct_name like CONCAT(#{prdctName}, '%')
+    	AND
+    		brand_id = #{brandId} 
+    	ORDER BY prdct_name ASC
+    </select>
+    
+    <select id="chkRequestFrame" parameterType="prdctVo" resultType="String">
+    	SELECT
+    		prdct_id
+    	FROM
+    		request_frame
+    	WHERE
+    	 	i_num = #{iNum}
+    	 AND
+    	 	prdct_id = #{prdctId}
+    </select>
+    
+    <select id="chkRequestLens" parameterType="prdctVo" resultType="String">
+    	SELECT
+    		prdct_id
+    	FROM
+    		request_lens
+    	WHERE
+    	 	i_num = #{iNum}
+    	 AND
+    	 	prdct_id = #{prdctId}
+    </select>
+    <select id="chkRequestClens" parameterType="prdctVo" resultType="String">
+    	SELECT
+    		prdct_id
+    	FROM
+    		request_clens
+    	WHERE
+    	 	i_num = #{iNum}
+    	 AND
+    	 	prdct_id = #{prdctId}
+    </select>
+    <select id="chkRequestAcc" parameterType="prdctVo" resultType="String">
+    	SELECT
+    		prdct_id
+    	FROM
+    		request_acc
+    	WHERE
+    	 	i_num = #{iNum}
+    	 AND
+    	 	prdct_id = #{prdctId}
+    </select>
+    
+     <select id="chkRequestEtc" parameterType="prdctVo" resultType="String">
+    	SELECT
+    		prdct_id
+    	FROM
+    		request_etc
+    	WHERE
+    	 	i_num = #{iNum}
+    	 AND
+    	 	prdct_id = #{prdctId}
+    </select>
+    
+    <update id="updatePrdctPrc" parameterType="prdctVo">
+    	UPDATE
+    		<if test="comTy==1">
+    			prdct
+    		</if>
+    		<if test="comTy==2">
+    			lens
+    		</if>
+    		<if test="comTy==3">
+    			clens
+    		</if>
+    		<if test="comTy==4">
+    			clens_acc
+    		</if>
+    		<if test="comTy==5">
+    			etc
+    		</if>
+    	SET
+    		<if test="comTy==1">
+    			trde_prc = #{salePrc}
+    		</if>
+    		<if test="comTy!=1">
+    			sale_prc = #{salePrc}
+    		</if>
+    	WHERE
+    		prdct_id = #{prdctId}
+    </update>
+    
+    <select id="getPrdctIdByClr" parameterType="prdctVo" resultType="Integer">
+    	SELECT
+      			prdct_id
+      		FROM
+      		<if test="comTy==1">
+      			prdct
+      		</if>
+      		<if test="comTy==2">
+      			lens
+      		</if>
+      		<if test="comTy==3">
+      			clens
+      		</if>
+      		<if test="comTy==4">
+      			clens_acc
+      		</if>
+      		<if test="comTy==5">
+      			clens_etc
+      		</if>
+      		
+      		WHERE
+      		
+      		brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		<if test="comTy==1">
+      		AND
+      			color_id = #{colorId}
+      		AND
+      			color_id2 = #{colorId2}
+      		</if>
+      		<if test="comTy==2">
+      		AND
+      			rate = #{rate}
+      		AND
+      			mtrl = #{mtrl}
+   			AND
+      			ty_id = #{tyId}
+      		</if>
+      		<if test="comTy==3">
+      		AND
+      			ty1_id = #{tyId1}
+      		AND
+      			ty2_id = #{tyId2}
+      		</if>
+      		<if test="comTy==4">
+      		AND
+      			unit_ = #{unit}
+      		</if>
+      		</select>
+      		<select id="getComPrdctIdByClr" parameterType="prdctVo" resultType="prdctVo">
+				SELECT
+					prdct_name
+					,brand_id
+					,puchas_prc
+					,trde_prc
+					,mnf_country
+					<if test="comTy==1">
+						,color_id
+						,color_id2
+						,prdct_ty
+						,mtrl_id
+						,prdct_shape
+					</if>
+					<if test="comTy==2">
+						,mtrl
+						,ty_id
+						,rate
+					</if>
+					<if test="comTy==3">
+						,ty1_id tyId1
+						,ty2_id tyId2
+					</if>
+					<if test="comTy==4">
+						,unit_ unit
+					</if>
+				FROM
+				<if test="comTy==1">
+					com_frame
+				</if>
+				<if test="comTy==2">
+					com_lens
+				</if>
+				<if test="comTy==3">
+					com_clens
+				</if>
+				<if test="comTy==4">
+					com_clens_acc
+				</if>      			
+				WHERE
+					prdct_id = #{prdctId}
+    		</select>
+    
+    <select id="getReceipt" parameterType="prdctVo" resultType="prdctVo" >
+    	SELECT
+    		(select prdct_name from com_frame where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_frame where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=1
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    	ORDER BY upd_time ASC
+    </select>
+    
+    
+    <select id="getReceiptLens" parameterType="prdctVo" resultType="prdctVo" >
+    	SELECT
+    		(select prdct_name from com_lens where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_lens where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=2
+    	AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    	ORDER BY upd_time ASC
+    </select>
+    
+    <select id="getReceiptClens" parameterType="prdctVo" resultType="prdctVo" >
+    	SELECT
+    		(select prdct_name from com_clens where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_clens where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=3
+    	AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    	ORDER BY upd_time ASC
+    </select>
+    
+    <select id="getReceiptAcc" parameterType="prdctVo" resultType="prdctVo" >
+    	SELECT
+    		(select prdct_name from com_clens_acc where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_acc where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,cnt
+    		
+    	FROM
+    		orderlist O
+   		
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=4
+       AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    	ORDER BY upd_time ASC
+    </select>
+    
+    <select id="getReceiptEtc" parameterType="prdctVo" resultType="prdctVo" >
+    	SELECT
+    		(select prdct_name from com_etc where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_etc where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,cnt
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=5
+    	AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    	ORDER BY upd_time ASC
+    </select>
+    <select id="getReceiptHeader" parameterType="prdctVo" resultType="prdctVo"> 
+    	SELECT
+    		distinct((select shop_name from shop where shop_id = O.shop_id))shopName
+    		,(select telephone from shop where shop_id = O.shop_id)telephone
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,(select e_name from com_info where i_num = O.i_num)mtrlName
+    		,(select p_num1 from com_info where i_num = O.i_num)ty1
+    	FROM
+    		orderlist O
+    	WHERE
+    		shop_id = #{shopId}
+    	AND
+    		i_num = #{iNum}
+   		AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+    </select>
+    
+    <insert id="addNewLensTyId" parameterType="prdctVo">
+    	INSERT INTO
+    		lens_ty
+    	(name)
+    	VALUES
+    	(#{name})
+    	
+    	<selectKey keyProperty="tyId1" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+        	
+    </insert>
+    
+    <select id="showAllLensType" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		ty_id tyId
+    		,name tyName
+    	FROM
+    		lens_ty
+    </select>
+    
+    <update id="modifyPrdctCnt" parameterType="prdctVo">
+    	UPDATE
+    		orderlist
+    	SET
+    		cnt = #{cnt}
+    	WHERE
+    		id = #{id}
+    </update>
+    
+    <select id="getRtnMsg" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		return_cnt
+    		,(select reason from return_cd where id = O.return_reason)returnReason
+    		,shop_id
+    		,prdct_ty
+    		,prdct_id
+    	FROM
+    		orderlist O
+    	WHERE
+    		id = #{id}
+    </select>
+    
+    <select id="getRtnFrame" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		(select prdct_name from com_frame where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_frame where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,return_cnt cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=1
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+	    AND
+	    	return_cd = 2
+    	ORDER BY upd_time ASC
+    		
+    </select>
+    
+    <select id="getRtnLens" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		(select prdct_name from com_lens where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_lens where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,return_cnt cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=2
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+	    AND
+	    	return_cd = 2
+    	ORDER BY upd_time ASC
+    		
+    </select>
+    
+    <select id="getRtnClens" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		(select prdct_name from com_clens where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_clens where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,return_cnt cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=3
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+	    AND
+	    	return_cd = 2
+    	ORDER BY upd_time ASC
+    		
+    </select>
+    
+    <select id="getRtnAcc" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		(select prdct_name from com_clens_acc where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_acc where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,return_cnt cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=4
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+	    AND
+	    	return_cd = 2
+    	ORDER BY upd_time ASC
+    		
+    </select>
+    
+    <select id="getRtnEtc" parameterType="prdctVo" resultType="prdctVo">
+    	SELECT
+    		(select prdct_name from com_etc where prdct_id = O.prdct_id)prdctName
+    		,(select puchas_prc from request_etc where prdct_id = O.prdct_id AND i_num = #{iNum})puchasPrc
+    		,upd_time
+    		,(select c_name from com_info where i_num = O.i_num)comName
+    		,return_cnt cnt
+    		
+    	FROM
+    		orderlist O
+    	WHERE
+    	<if test="!shopId.equals('-1')">
+    		shop_id = #{shopId}
+    	AND
+    	</if>
+    	
+    	<if test="!iNum.equals('-1')">
+   			i_num = #{iNum}
+   		AND
+    	</if>
+    		date(upd_time) <![CDATA[ >= ]]> date(#{sdate})
+    	AND
+    		date(upd_time) <![CDATA[ <= ]]> date(#{edate})
+    	AND
+	    	prdct_ty=5
+	    AND
+	    	cancel != 1
+	    AND
+	    	state != 0
+	    AND
+	    	return_cd = 2
+    	ORDER BY upd_time ASC
+    		
+    </select>
+    <update id="allowRtn" parameterType="prdctVo">
+    	UPDATE
+    		orderlist
+    	SET
+    		return_cd = 2,
+    		rtn_time = now()
+    	WHERE
+    		id = #{id}
+    </update>
+    
+    <select id="getComPrdctForRtn" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			puchas_prc
+      			,trde_prc
+      			,i_num
+      			<if test="comTy==1">
+      				,(select brand_id from com_frame where prdct_id = R.prdct_id)brandId
+	      			,(select prdct_name from com_frame where prdct_id = R.prdct_id)prdctName
+	      			,(select color_id from com_frame where prdct_id = R.prdct_id)colorId
+	      			,(select color_id2 from com_frame where prdct_id = R.prdct_id)colorId2
+	      			,(select mnf_country from com_frame where prdct_id = R.prdct_id)mnfCountry
+	      			,(select prdct_ty from com_frame where prdct_id = R.prdct_id)prdctTy
+	      			,(select mtrl_id from com_frame where prdct_id = R.prdct_id)mtrlId
+	      			,(select prdct_shape from com_frame where prdct_id = R.prdct_id)prdctShape
+      			</if>
+      			<if test="comTy==2">
+      				,(select brand_id from com_lens where prdct_id = R.prdct_id)brandId
+	      			,(select prdct_name from com_lens where prdct_id = R.prdct_id)prdctName
+	      			,(select mnf_country from com_lens where prdct_id = R.prdct_id)mnfCountry
+	      			,(select ty_id from com_lens where prdct_id = R.prdct_id)tyId
+	      			,(select rate from com_lens where prdct_id = R.prdct_id)rate
+	      			,(select mtrl from com_lens where prdct_id = R.prdct_id)mtrl
+      			</if>
+      			<if test="comTy==3">
+      				,(select brand_id from com_clens where prdct_id = R.prdct_id)brandId
+	      			,(select prdct_name from com_clens where prdct_id = R.prdct_id)prdctName
+	      			,(select mnf_country from com_clens where prdct_id = R.prdct_id)mnfCountry
+	      			,(select ty1_id from clens where prdct_id = R.prdct_id)tyId1
+	      			,(select ty2_id from clens where prdct_id = R.prdct_id)tyId2
+      			</if>
+      			<if test="comTy==4">
+      				,(select brand_id from com_clens_acc where prdct_id = R.prdct_id)brandId
+	      			,(select prdct_name from com_clens_acc where prdct_id = R.prdct_id)prdctName
+	      			,(select mnf_country from com_clens_acc where prdct_id = R.prdct_id)mnfCountry
+	      			,(select unit_ from com_clens_acc where prdct_id = R.prdct_id)unit
+      			</if>
+      			
+      			<if test="comTy==5">
+      				,(select brand_id from com_etc where prdct_id = R.prdct_id)brandId
+	      			,(select prdct_name from com_etc where prdct_id = R.prdct_id)prdctName
+	      			,(select mnf_country from com_etc where prdct_id = R.prdct_id)mnfCountry
+      			</if>
+      			
+      			
+      		FROM
+      			<if test="comTy==1">
+      				request_frame R
+      			</if>
+      			<if test="comTy==2">
+      				request_lens R
+      			</if>
+      			<if test="comTy==3">
+      				request_clens R
+      			</if>
+      			<if test="comTy==4">
+      				request_acc R
+      			</if>
+      			<if test="comTy==5">
+      				request_etc R
+      			</if>
+      		WHERE
+      			prdct_id = #{prdctId}
+      		AND
+      			i_num = #{iNum}
+      			
+      	</select>
+      	
+      	<select id="srchPrdctTlb" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			prdct_id
+      		FROM
+      			<if test="comTy==1">
+      				prdct
+      			</if>
+      			<if test="comTy==2">
+      				lens
+      			</if>
+      			<if test="comTy==3">
+      				clens
+      			</if>
+      			<if test="comTy==4">
+      				clens_acc
+      			</if>
+      			<if test="comTy==5">
+      				etc
+      			</if>
+      			
+      		WHERE
+      			brand_id = #{brandId}
+      		AND
+      			prdct_name = #{prdctName}
+      		<if test="comTy==1">
+				AND
+	      			color_id = #{colorId}
+	      		AND
+	      			color_id2 = #{colorId2}
+      		</if>
+      		<if test="comTy==2">
+				AND
+	      			mtrl = #{mtrl}
+	      		AND
+	      			ty_id = #{tyId}
+	      		AND
+	      			rate = #{rate}
+      		</if>
+      		<if test="comTy==3">
+				AND
+	      			ty1_id = #{tyId1}
+	      		AND
+	      			ty2_id = #{tyId2}
+      		</if>
+      		<if test="comTy==4">
+				AND
+	      			unit_ = #{unit}
+      		</if>
+      			
+      	</select>
+      	
+      	
+      	 	<select id="srchPrdctShopInvn" parameterType="prdctVo" resultType="String">
+      		SELECT
+      			invn_id
+      		FROM
+      		<if test="comTy==1">
+   				invn
+      		</if>
+      		<if test="comTy==2">
+   				lens_invn
+      		</if>
+      		<if test="comTy==3">
+   				clens_invn
+      		</if>
+      		<if test="comTy==4">
+   				clens_acc_invn
+      		</if>
+      		<if test="comTy==5">
+   				etc_invn
+      		</if>
+      		WHERE
+      			prdct_id = #{prdctId}
+      		AND
+      			shop_id = #{shopId}
+      	</select>
+      	
+      	<update id="modifyInvn" parameterType="prdctVo">
+      		UPDATE
+      			<if test="comTy==1">
+      				invn
+      			</if>
+      			<if test="comTy==2">
+      				lens_invn
+      			</if>
+      			<if test="comTy==3">
+      				clens_invn
+      			</if>
+      			<if test="comTy==4">
+      				clens_acc_invn
+      			</if>
+      			<if test="comTy==5">
+      				etc_invn
+      			</if>
+      		SET
+      			cnt = cnt - #{cnt}
+      		WHERE
+      			invn_id = ${invnId} 
+      	</update>
+      	
+      	<insert id="addInvnHist" parameterType="prdctVo">
+      		INSERT INTO
+      		<if test="comTy==1">
+      			invn_hist
+      		</if>
+      		<if test="comTy==2">
+      			lens_invn_hist
+      		</if>
+      		<if test="comTy==3">
+      			clens_invn_hist
+      		</if>
+      		<if test="comTy==4">
+      			clens_acc_invn_hist
+      		</if>
+      		<if test="comTy==5">
+      			etc_invn_hist
+      		</if>
+      		(prdct_id
+      		,cnt
+      		,invn_ty_cd
+      		,reg_time
+      		,shop_id
+      		,datetime
+      		,i_num)
+      		
+      		VALUES(
+      		#{prdctId}
+      		,#{cnt}
+      		,#{invnTyCd}
+      		,now()
+      		,#{shopId}
+      		,#{datetime}
+      		,#{iNum})
+      	</insert>
+      	
+      	<update id="insertPrdctId" parameterType="prdctVo">
+      		UPDATE
+      		<if test="comTy==1">
+      			request_frame
+      		</if>
+      		<if test="comTy==3">
+      			request_lens
+      		</if>
+      		<if test="comTy==3">
+      			request_clens
+      		</if>
+      		<if test="comTy==4">
+      			request_acc
+      		</if>
+      		<if test="comTy==5">
+      			request_etc
+      		</if>
+      			insert_id = #{prdctId}
+      		WHERE
+      			id = #{id}
+      	</update>
+      	
+      	<select id="selectCom" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			C.i_num test
+      			,C.c_name test2
+      		FROM
+      			com_info C,
+      			com_ty T
+      		WHERE
+      			C.i_num = T.i_num
+      		AND
+      			T.ty = #{prdctTy}
+      		ORDER BY
+      			test2
+      		ASC
+      	</select>
+      	
+      	<select id="getTradeData" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			(select c_name from com_info where i_num = O.i_num)comName
+      			,(select shop_name from shop where shop_id = O.shop_id)shopName
+      			,cnt
+      			,shop_id
+      			,i_num
+      			<!-- <if test="comTy==1">
+      			,(select puchas_prc from com_frame where p0dct_id = O.prdct_id)puchasPrc
+      			</if>
+      			<if test="comTy==2">
+      			,(select puchas_prc from com_lens where prdct_id = O.prdct_id)puchasPrc
+      			</if>
+      			<if test="comTy==3">
+      			,(select puchas_prc from com_clens where prdct_id = O.prdct_id)puchasPrc
+      			</if>
+      			<if test="comTy==4">
+      			,(select puchas_prc from com_clens_acc where prdct_id = O.prdct_id)puchasPrc
+      			</if>
+      			<if test="comTy==5">
+      			,(select puchas_prc from com_etc where prdct_id = O.prdct_id)puchasPrc
+      			</if> -->
+      			,puchas_prc
+      			,(select tax from com_info where i_num = O.i_num)tax
+      			,deliver_time
+      			,devide
+      			,admin_allow
+      			,due_month 
+      			,prdct_ty
+   			FROM
+      			orderlist O
+      		WHERE
+      			state != 0
+      		AND
+      			return_cd !=2
+      		AND
+      			cancel != 1
+      		AND
+      			prdct_ty = #{comTy}
+      		<if test="shopId!=-1">
+      		AND
+      			shop_id = #{shopId}
+      		</if>
+      		<if test="iNum!=-1">
+      		AND
+      			i_num = #{iNum}
+      		</if>
+      		AND
+	    		(date(deliver_time) <![CDATA[ >= ]]> date(#{sdate})
+	    	AND
+   	 			date(deliver_time) <![CDATA[ <= ]]> date(#{edate})
+   		 	OR
+   		 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(${sdate},6,1)))
+    		ORDER BY
+    			deliver_time
+    		DESC
+      	</select>
+      	
+      	
+      	
+      	<select id="getTradeGroupData" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+      			(select c_name from com_info where i_num = O.i_num)comName
+      			,(select shop_name from shop where shop_id = O.shop_id)shopName
+				,puchas_prc
+      			,sum(cnt) cnt
+				,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+																puchas_prc)*cnt) devide
+				,sum((select puchas_prc from com_frame where prdct_id = O.prdct_id) * cnt) total
+      			,(select tax from com_info where i_num = O.i_num)tax
+      			,deliver_time
+      			,devide
+      			,admin_allow
+      			,due_month
+      			,i_num test1
+      			,shop_id 
+      			,prdct_ty
+   			FROM
+      			orderlist O
+      		WHERE
+      			state != 0
+      		AND
+      			return_cd !=2
+      		AND
+      			cancel != 1
+      		AND
+      			prdct_ty = #{comTy}
+      		<if test="shopId!=-1">
+      		AND
+      			shop_id = #{shopId}
+      		</if>
+      		<if test="iNum!=-1">
+      		AND
+      			i_num = #{iNum}
+      		</if>
+      		AND
+	    		(date(deliver_time) <![CDATA[ >= ]]> date(#{sdate})
+	    	AND
+   	 			date(deliver_time) <![CDATA[ <= ]]> date(#{edate})
+   		 	OR
+   		 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(${sdate},6,1)))
+			group by comName, shopName
+			
+    		ORDER BY
+    		<if test="sort.equals('comNameD')">
+    			comName DESC
+    		</if>
+    		<if test="sort.equals('comNameA')">
+    			comName ASC
+    		</if>
+    		<if test="sort.equals('shopNameD')">
+    			shopName DESC
+    		</if>
+    		<if test="sort.equals('shopNameA')">
+    			shopName ASC
+    		</if>
+    		<if test="sort.equals('cntD')">
+    			cnt DESC
+    		</if>
+    		<if test="sort.equals('cntA')">
+    			cnt ASC
+    		</if>
+      		
+      	</select>
+      	
+      	<select id="getTradeListAll" parameterType="prdctVo" resultType="prdctVo">
+      		SELECT
+		S.shop_name
+	,ifnull(round(F.devide_pay),0) frame_devide
+	,ifnull(round(L.devide_pay),0) lens_devide
+	,ifnull(round(C.devide_pay),0) clens_devide
+	,ifnull(round(A.devide_pay),0) acc_devide
+   ,ifnull(round(E.devide_pay),0) etc_devide
+	,ifnull(F.total,0) FRAME_TOTAL
+	,ifnull(L.total,0) LENS_TOTAL
+	,ifnull(C.total,0) CLENS_TOTAL
+	,ifnull(A.total,0) ACC_TOTAL
+	,ifnull(E.total,0) ETC_TOTAL
+	
+	,round(ifnull(F.revenue,0) + ifnull(L.revenue,0) + ifnull(C.revenue,0) + ifnull(A.revenue,0) + ifnull(E.revenue,0))revenue
+FROM
+	shop S
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+			,puchas_prc
+			,sum(cnt) cnt
+			,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+			,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 1
+	
+		
+		AND
+ 		(date(deliver_time)  <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)  <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by shopName
+	
+	order by shopName
+	)F
+	ON S.shop_id = F.shop_id
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 2
+		
+		AND
+ 		(date(deliver_time)  <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)  <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by shopName
+	
+	order by shopName
+	)L
+	ON S.shop_id = L.shop_id
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 3
+		
+		AND
+ 		(date(deliver_time)  <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)  <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by shopName
+	
+	order by shopName
+	)C
+	ON S.shop_id = C.shop_id
+	
+		LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 4
+		
+		AND
+ 		(date(deliver_time)  <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)  <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by shopName
+	
+	order by shopName
+	)A
+	ON S.shop_id = A.shop_id
+		LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 5
+		
+		AND
+ 		(date(deliver_time)  <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)  <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by shopName
+	
+	order by shopName
+	)E
+	ON S.shop_id = E.shop_id
+	where
+	S.shop_stat_ty_cd=00500001
+	</select>
+	
+      	<select id="getTradeListAllC" parameterType="prdctVo" resultType="prdctVo">
+      	    
+      	    		SELECT
+		S.c_name comName
+	,ifnull(round(F.devide_pay),0) frame_devide
+	,ifnull(round(L.devide_pay),0) lens_devide
+	,ifnull(round(C.devide_pay),0) clens_devide
+	,ifnull(round(A.devide_pay),0) acc_devide
+   ,ifnull(round(E.devide_pay),0) etc_devide
+	,ifnull(F.total,0) FRAME_TOTAL
+	,ifnull(L.total,0) LENS_TOTAL
+	,ifnull(C.total,0) CLENS_TOTAL
+	,ifnull(A.total,0) ACC_TOTAL
+	,ifnull(E.total,0) ETC_TOTAL
+	
+	,round(ifnull(F.revenue,0) + ifnull(L.revenue,0) + ifnull(C.revenue,0) + ifnull(A.revenue,0) + ifnull(E.revenue,0))revenue
+FROM
+	com_info S
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select c_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+			,i_num
+			,puchas_prc
+			,sum(cnt) cnt
+			,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+			,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 1
+	
+		
+		AND
+ 		(date(deliver_time)   <![CDATA[ >= ]]>    date(#{sdate})
+ 	AND
+ 			date(deliver_time)    <![CDATA[ <= ]]>   date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by comName
+	
+	order by comName
+	)F
+	ON S.i_num = F.i_num
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+						,i_num
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 2
+		
+		AND
+ 		(date(deliver_time)    <![CDATA[ >= ]]>   date(#{sdate})
+ 	AND
+ 			date(deliver_time)   <![CDATA[ <= ]]>   date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by comName
+	
+	order by comName
+	)L
+	ON S.i_num = L.i_num
+	LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+						,i_num
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 3
+		
+		AND
+ 		(date(deliver_time)    <![CDATA[ >= ]]>  date(#{sdate})
+ 	AND
+ 			date(deliver_time)    <![CDATA[ <= ]]>   date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by comName
+	
+	order by comName
+	)C
+	ON S.i_num = C.i_num
+	
+		LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+						,i_num
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 4
+		
+		AND
+ 		(date(deliver_time)    <![CDATA[ >= ]]>    date(#{sdate})
+ 	AND
+ 			date(deliver_time)    <![CDATA[ <= ]]>   date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by comName
+	
+	order by comName
+	)A
+	ON S.i_num = A.i_num
+		LEFT OUTER JOIN
+	(
+	SELECT
+			(select shop_name from shop where shop_id = O.shop_id)shopName
+			,(select c_name from com_info where i_num = O.i_num)comName
+						,i_num
+		,puchas_prc
+			,sum(cnt) cnt
+		,sum(if(devide!=0 and admin_allow=1,puchas_prc/devide,
+														puchas_prc)*cnt) devide_pay
+		,sum(puchas_prc * cnt) total
+			,(select tax from com_info where i_num = O.i_num)tax
+			,sum(puchas_prc * cnt)*((select tax from com_info where i_num = O.i_num)/100)revenue
+			,deliver_time
+			,devide
+			,admin_allow
+			,due_month
+			,i_num test1
+			,shop_id 
+			,prdct_ty
+		FROM
+			orderlist O
+		WHERE
+			state != 0
+		AND
+			return_cd !=2
+		AND
+			cancel != 1
+		AND
+			prdct_ty = 5
+		
+		AND
+ 		(date(deliver_time)   <![CDATA[ >= ]]>    date(#{sdate})
+ 		AND
+ 			date(deliver_time)    <![CDATA[ <= ]]>  date(#{edate})
+	 	OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+	group by comName
+	
+	order by comName
+	)E
+	ON S.i_num = E.i_num
+      	    
+      	</select>
+      	
+      	<select id="getTradeDataCsv" parameterType="prdctVo" resultType="prdctVo">
+      		select 
+				(select c_name from com_info where i_num = O.i_num)comName
+				,(select shop_name from shop where shop_id = O.shop_id)shopName
+				,ifnull(sum((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0)),0)sales
+				,ifnull(sum((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2)),0)return_prc
+				,sum(ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0),0)-ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2),0))pay
+				,devide
+				
+
+				,sum(if(ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0),0)
+				-ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2),0)=0 or devide=0
+				,puchas_prc*0
+				,(if(devide!=0 ,round(round((puchas_prc*0.1*cnt) + (puchas_prc*cnt))/devide)
+									,round(round((puchas_prc*0.1*cnt) + (puchas_prc*cnt))/1))))) devide_pay
+									
+				,ifnull(round(sum((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0))*((select tax from com_info where i_num = O.i_num)/100)),0)tax
+			from
+				orderlist O
+			where
+				(date(deliver_time)   <![CDATA[ >= ]]>    date(#{sdate})
+ 			AND
+ 				date(deliver_time)    <![CDATA[ <= ]]>  date(#{edate})
+	 		OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+			group by comName, shopName
+			order by comName;
+      	</select>
+      	
+      	<select id="getTradeDataCsvS" parameterType="prdctVo" resultType="prdctVo">
+      		select 
+				(select c_name from com_info where i_num = O.i_num)comName
+				,(select shop_name from shop where shop_id = O.shop_id)shopName
+				,ifnull(sum((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0)),0)sales
+				,ifnull(sum((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2)),0)return_prc
+				,sum(ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0),0)-ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2),0))pay
+				,devide
+				
+				,sum(if(ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * cnt from orderlist where id = O.id and state != 0 and cancel=0),0)
+				-ifnull((select round(puchas_prc*0.1*cnt) + puchas_prc * total_rtn_cnt from orderlist where id = O.id and return_cd=2),0)=0 or devide=0
+				,puchas_prc*0
+				,(if(devide!=0 ,round(round((puchas_prc*0.1*cnt) + (puchas_prc*cnt))/devide)
+									,round(round((puchas_prc*0.1*cnt) + (puchas_prc*cnt))/1))))) devide_pay
+				
+			from
+				orderlist O
+			where
+				(date(deliver_time)   <![CDATA[ >= ]]>    date(#{sdate})
+ 			AND
+ 				date(deliver_time)    <![CDATA[ <= ]]>  date(#{edate})
+	 		OR
+	 		(devide !=0 AND admin_allow = 1 AND due_month >= substr(#{sdate},6,1)))
+			group by comName, shopName
+			order by shopName;
+      	</select>
+      	
+     
+     </mapper>

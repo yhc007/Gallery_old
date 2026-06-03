@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.admin.AdminMapper">
+	<select id="getPwd" parameterType="adminVo" resultType="adminVo">
+		Select
+		<if test="shopTy.equals('shop')">
+			shop_id,
+		</if>
+		<if test="shopTy.equals('invn')">
+			shop_id,
+		</if>
+		<if test="shopTy.equals('com')">
+			i_num,
+		</if>
+		lv,
+		id,
+		pwd
+		<if test="shopTy.equals('shop')">
+			,(select shop_name from shop where shop_id = A.shop_id)shopName
+		</if>
+		<if test="shopTy.equals('invn')">
+			,(select shop_name from shop where shop_id = A.shop_id)shopName
+		</if>
+		FROM
+		<if test="shopTy.equals('com')">
+			com_info
+		</if>
+		<if test="shopTy.equals('shop')">
+			shop A
+		</if>
+		<if test="shopTy.equals('invn')">
+			shop A
+		</if>
+
+		WHERE
+		id=#{id}
+	</select>
+
+	<select id="getDscntList" parameterType="adminVo"
+		resultType="adminVo">
+		SELECT
+		(select partner_name from partner_dscnt where partner_id = F.partner_id)
+		comName
+		,(select shop_name from shop where shop_id=F.shop_id) shopName
+		,F.shop_id
+		,count(*) cnt
+		,sum(dscnt_price) prc
+		FROM
+		sale_off F
+		INNER JOIN
+		partner_dscnt P
+		ON
+		F.partner_id = P.partner_id
+		WHERE
+		F.datetime <![CDATA[ >= ]]>
+		#{sdate}
+		and F.datetime <![CDATA[ <= ]]>
+		#{edate}
+		group by F.partner_id, shop_id
+		order by F.partner_id, shopName;
+		;
+	</select>
+
+	<select id="connectIp" parameterType="adminVo" resultType="Integer">
+		SELECT
+			count
+		FROM
+			connect_ip
+		WHERE
+			ip=#{ip}
+	</select>
+
+	<insert id="addConnectIp" parameterType="adminVo">
+		INSERT INTO
+			connect_ip(shop_id, ip, count, connect_time)
+		VALUES
+			(#{shopId},#{ip},1,now())
+	</insert>
+
+	<update id="updateConnectIp" parameterType="adminVo">
+		UPDATE
+			connect_ip
+		SET
+			count=count+1,
+			connect_time=now()
+		WHERE
+			ip=#{ip}
+	</update>
+</mapper>

@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.cstmr.CstmrMapper">
+    <insert id="addCstmr" parameterType="cstmrVo">
+        INSERT INTO cstmr
+        	(
+				cstmr_login_id
+				,cstmr_login_pw
+				,cstmr_cd
+				,cstmr_name
+				,reg_shop_id
+				,reg_date
+				,telephone
+				,cellphone
+				,sex_cd
+				,birth_day
+				,birth_day_ty_cd
+				,zip_cd
+				,email
+				,addr
+				,bigo
+				,get_sms_yn
+        	)
+        VALUES (
+        		#{cstmrLoginId}
+				,#{cstmrLoginPw}
+				,#{cstmrCd}
+				,#{cstmrName}
+				,#{regShopId}
+				,#{regDate}
+				,#{telephone}
+				,#{cellphone}
+				,#{sexCd}
+				,#{birthDay}
+				,#{birthDayTyCd}
+				,#{zipCd}
+				,#{email}
+				,#{addr}
+				,#{bigo}
+				,#{getSmsYn}
+        	)
+    </insert>
+
+    <select id="getCstmrLoginId" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_name
+    		,cellphone
+    		,cstmr_login_id
+    	FROM cstmr
+    	WHERE
+    		cstmr_name=#{cstmrName} and
+    		cellphone = #{cellphone}
+    </select>
+
+    <select id="getCstmrLoginPw" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+    		,cstmr_name
+    		,cellphone
+    		,cstmr_login_id
+    		,cstmr_login_pw
+    		,email
+    	FROM cstmr
+    	WHERE
+    		cstmr_name=#{cstmrName} and
+    		cellphone = #{cellphone} and
+    		cstmr_login_id = #{cstmrLoginId}
+    </select>
+
+    <select id="countCstmrById" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId}
+    </select>
+    <select id="login" parameterType="cstmrVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM cstmr
+    	WHERE cstmr_login_id=#{cstmrLoginId} and cstmr_login_pw=#{cstmrLoginPw}
+    </select>
+
+
+    <select id="getCstmrForLogin" parameterType="cstmrVo" resultType="cstmrVo">
+		SELECT
+			cstmr_id
+			,cstmr_cd
+			,cstmr_name
+			,telephone
+			,cellphone
+			,sex_cd
+			,birth_day
+			,birth_day_ty_cd
+			,zip_cd
+			,email
+			,addr
+			,bigo
+			,get_sms_yn
+			,get_email_yn
+			,facebook
+			,twitter
+			,instagram
+		FROM cstmr
+		WHERE cstmr_login_id=#{cstmrLoginId} and cstmr_login_pw=#{cstmrLoginPw}
+    </select>
+
+    <select id="mgetCstmr" parameterType="cstmrVo" resultType="cstmrVo">
+	   SELECT
+			C.cstmr_name
+			,C.birth_day
+			,C.birth_day_ty_cd
+			,C.cellphone
+			,C.addr
+			,C.cstmr_cd
+			,C.email
+			,C.facebook
+			,C.twitter
+			,C.instagram
+			,V.gsph_left
+			,V.gsph_right
+			,V.datetime
+			,(select count(coupon_id) from coupon where cstmr_id=#{cstmrId})coupon
+			,(select count(cstmr_id) from sale where cstmr_id=#{cstmrId} AND (result = '0000' or result='sucess' or result='0'))buyCount
+			,(select shop_name from shop where shop_id=V.visit_shop_id)shopName
+			,(select staff_name from staff where staff_id=V.staff_id) staffName
+		FROM
+			cstmr C
+		LEFT JOIN
+			visit_history V
+		ON
+			C.cstmr_id = V.cstmr_id
+		WHERE
+			C.cstmr_id = #{cstmrId}
+		ORDER BY
+			V.datetime DESC
+		LIMIT 1;
+	</select>
+
+	<select id="eyesCheckResult" parameterType="cstmrVo" resultType="cstmrVo">
+		SELECT
+			datetime,
+    		gsph_right,
+    		gsph_left,
+  			gcyl_right,
+  			gcyl_left,
+  			gaxis_right,
+  			gaxis_left,
+  			add_right,
+  			add_left,
+  			npc_right,
+  			npc_left,
+  			npa_right,
+  			npa_left,
+  			pd_right,
+  			pd_left,
+  			lsph_right,
+  			lsph_left,
+  			lcyl_right,
+  			lcyl_left,
+  			laxis_right,
+  			laxis_left,
+  			prism_right,
+  			prism_left,
+  			base_right,
+  			base_left,
+  			bc_right,
+  			bc_left,
+  			dia_right,
+  			dia_left,
+  			dom_eye
+		FROM
+			visit_history
+		WHERE
+			cstmr_id = ${cstmrId}
+		ORDER BY datetime DESC
+		LIMIT 1
+	</select>
+
+    <update id="modifyCsmtrPw" parameterType="cstmrVo">
+        UPDATE cstmr SET
+        	cstmr_login_pw	= #{cstmrLoginPw}
+        WHERE
+        	cstmr_id 		= #{cstmrId}
+    </update>
+    <update id="updateInfo" parameterType="cstmrVo">
+    	UPDATE cstmr SET
+    		cstmr_id = #{cstmrId}
+    		<if test="email!=null">
+    			, email = #{email}
+    		</if>
+    		<if test="telephone!=null">
+    			, telephone = #{telephone}
+    		</if>
+    		<if test="cellphone!=null">
+    			, cellphone = #{cellphone}
+    		</if>
+    		<if test="addr!=null">
+    			, addr = #{addr}
+    		</if>
+    		<if test="facebook!=null">
+    			, facebook = #{facebook}
+    		</if>
+    		<if test="twitter!=null">
+    			, twitter = #{twitter}
+    		</if>
+    		<if test="instagram!=null">
+    			, instagram = #{instagram}
+    		</if>
+
+    	WHERE cstmr_id=#{cstmrId}
+    </update>
+
+    <update id="updatePw"  parameterType="cstmrVo">
+    	UPDATE	cstmr SET
+    		cstmr_login_pw = #{newPw}
+    	WHERE
+    		cstmr_id = #{cstmrId}
+    </update>
+
+     <select id="checkId" parameterType="cstmrVo" resultType="String">
+        SELECT cstmr_login_pw
+        FROM cstmr
+        WHERE cstmr_id = #{cstmrId}
+    </select>
+
+    <select id="buyList" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		datetime
+    		,(select shop_name from shop where shop_id = S.shop_id) shopName
+    		,(select sum(prc) from salePrdct where sale_id = S.sale_id) ognPrice
+    		,(select prdct_name from prdct, salePrdct P where prdct.prdct_id=P.prdct_id AND prdct.prdct_ty_cd='00300001' AND P.sale_id = S.sale_id) frame
+    		,(select prdct_name from prdct, salePrdct P where prdct.prdct_id=P.prdct_id AND prdct.prdct_ty_cd='00300002' AND P.sale_id = S.sale_id) lens
+    	FROM
+    		sale S
+    	WHERE
+    		cstmr_id = #{cstmrId}
+    		and
+    		(result = '0000' or result='sucess' or result='0')
+
+    	ORDER BY datetime DESC;
+
+    </select>
+
+    <select id="myCoupon" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		coupon_name,
+    		coupon_cd,
+    		start_date,
+    		end_date,
+    		dscnt_prcnt,
+    		dscnt_prc
+    	FROM
+    		coupon
+    	WHERE
+    		cstmr_id = #{cstmrId}
+    </select>
+
+    <select id="getCstmrListForChk" parameterType="cstmrVo" resultType="cstmrVo">
+	    SELECT
+			distinct(C.cstmr_id)
+			, C.cstmr_name
+			, C.cellphone
+			, C.get_sms_yn
+			,max(S.datetime) as datetime
+		FROM
+			cstmr C
+		INNER JOIN
+			sale_off S
+		ON
+			C.cstmr_id = S.cstmr_id
+		WHERE
+			S.datetime <![CDATA[>=]]> #{sdate}
+			and cellphone REGEXP '[0-9]{3}\-[0-9]{3,4}\-[0-9]{4}'
+			and C.birth_day REGEXP  '[0-9]{4}\.[0-9]{2}\.[0-9]{2}'
+			and 2020-substr(C.birth_day,1,4)  <![CDATA[ < ]]> 19
+		GROUP BY
+			C.cstmr_id
+		HAVING
+			datetime <![CDATA[>=]]> #{sdate}
+			and
+			datetime <![CDATA[<=]]> #{edate}
+		ORDER BY
+			datetime asc,C.cstmr_name asc
+    </select>
+
+    <select id="getCstmrListForChk2" parameterType="cstmrVo" resultType="cstmrVo">
+    SELECT
+		distinct(C.cstmr_id)
+		, C.cstmr_name
+		, C.cellphone
+		, C.get_sms_yn
+		,max(S.datetime) as datetime
+	FROM
+		cstmr C
+	INNER JOIN
+		sale_off S
+	ON
+		C.cstmr_id = S.cstmr_id
+	WHERE
+		S.datetime <![CDATA[>=]]> #{startDate}
+		and cellphone REGEXP '[0-9]{3}\-[0-9]{3,4}\-[0-9]{4}'
+		and C.birth_day REGEXP  '[0-9]{4}\.[0-9]{2}\.[0-9]{2}'
+		and 2020-substr(C.birth_day,1,4)  <![CDATA[ >= ]]> 19
+	GROUP BY
+		C.cstmr_id
+	HAVING
+		datetime <![CDATA[>=]]> #{startDate}
+		and
+		datetime <![CDATA[<=]]> #{endDate}
+	ORDER BY
+		datetime asc,C.cstmr_name asc
+    </select>
+
+    <select id="getCstmrId4Digit" parameterType="cstmrVo" resultType="cstmrVo">
+      	SELECT
+      		(select count(*) from visit_history where cstmr_id = C.cstmr_id)visitCnt
+      		,C.cstmr_name
+      		,C.cstmr_id
+      		,C.cstmr_cd
+      	FROM
+      		cstmr C
+      	WHERE
+      		<if test="cstmrName != null">
+		 	    <if test="!cstmrName.equals('')">
+			  		cstmr_name = #{cstmrName}
+			    </if>
+			 </if>
+
+			 <if test="digit4 != null">
+			 	<if test="!digit4.equals('')">
+					AND (right(cellphone,4) = #{digit4} OR right(telephone,4) = #{digit4})
+				</if>
+			 </if>
+
+    </select>
+
+    <update id="setSaleOff" parameterType="cstmrVo" >
+			update sale_off set cstmr_id = #{DSID}, cstmr_cd=#{DS} where cstmr_id=#{SCID};
+    </update>
+
+    <update id="visit_history1" parameterType="cstmrVo" >
+			update visit_history set cstmr_cd = #{DS} where cstmr_id=#{SCID};
+    </update>
+
+    <update id="visit_history2" parameterType="cstmrVo" >
+			update visit_history set cstmr_id = #{DSID} where cstmr_id=#{SCID};
+    </update>
+
+    <update id="point_hist1" parameterType="cstmrVo" >
+			update point_hist set cstmr_cd = #{DS} where cstmr_cd = #{SC};
+    </update>
+
+    <update id="point_hist2" parameterType="cstmrVo" >
+			update point_hist set fmly_cd = #{DS} where fmly_cd = #{SC};
+    </update>
+
+    <select id="getPoint" parameterType="cstmrVo" resultType="Integer">
+        	select point from cstmr where cstmr_id=#{SCID};
+    </select>
+
+    <update id="cstmrSet1" parameterType="cstmrVo">
+			update cstmr set fmly_cd = #{DS} WHERE cstmr_id = #{SCID};
+    </update>
+
+    <update id="cstmrSet2" parameterType="cstmrVo">
+			update cstmr set point = point + #{point} WHERE cstmr_id = #{DSID};
+    </update>
+
+    <delete id="delCstmr" parameterType="cstmrVo">
+			delete from cstmr where cstmr_id=#{SCID};
+    </delete>
+
+    <select id="getSCID" parameterType="cstmrVo" resultType="String">
+		select cstmr_id from cstmr where cstmr_cd = #{SC}
+    </select>
+
+    <select id="getDSID" parameterType="cstmrVo" resultType="String">
+		select cstmr_id from cstmr where cstmr_cd = #{DS}
+    </select>
+
+    <select id="getListCstmr4Fmly" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		cstmr_id
+			,C.cstmr_cd
+			,C.cstmr_name
+			,(SELECT IFNULL(C.point,0)) + SUM(IF((H.point_status='P' and H.fmly_cd=C.cstmr_cd),H.point,0)) - SUM(IF((H.point_status='M' and H.fmly_cd=C.cstmr_cd),H.point,0)) as point_total
+			,C.telephone
+			,C.cellphone
+			,C.addr
+			,C.birth_day
+			,C.fmly_cd
+			,(select cstmr_name from cstmr where cstmr_cd = C.fmly_cd) as fmly_name
+			,(select telephone from cstmr where cstmr_cd = C.fmly_cd) as fmly_tel
+			,(select cellphone from cstmr where cstmr_cd = C.fmly_cd) as fmly_cell
+			,(select addr from cstmr where cstmr_cd = C.fmly_cd) as fmly_addr
+			,(select birth_day from cstmr where cstmr_cd = C.fmly_cd) as fmly_birth
+			,(SELECT IFNULL((select point from cstmr where cstmr_cd = C.fmly_cd),0))+SUM(IF((H.point_status='P' and H.fmly_cd=C.fmly_cd),H.point,0)) -SUM(IF((H.point_status='M' and H.fmly_cd=C.fmly_cd),H.point,0)) as fmly_total
+    	FROM
+    		cstmr C
+    	LEFT JOIN
+    		point_hist H
+    	ON
+			H.fmly_cd = C.fmly_cd OR H.fmly_cd = C.cstmr_cd
+ 		WHERE
+			C.cstmr_name = #{cstmrName}
+			AND (right(C.cellphone,4) = #{digit4} OR right(C.telephone,4) = #{digit4})
+		group by C.cstmr_cd
+		order by C.cstmr_cd;
+    </select>
+
+    <select id="cntCstmr" parameterType="cstmrVo" resultType="Integer" >
+	    SELECT
+			count(*)
+		FROM
+			cstmr C
+		WHERE
+			C.cstmr_name = #{cstmrName}
+					AND (right(C.cellphone,4) = #{digit4} OR right(C.telephone,4) = #{digit4})
+	</select>
+
+    <select id="getListCstmr4Tax" parameterType="cstmrVo" resultType="cstmrVo">
+    	SELECT
+    		D.cstmr_id
+    		,D.cstmr_name
+    		,D.telephone
+    		,D.cellphone
+    		,D.addr
+    		,D.birth_day
+    		,D.cstmr_cd
+    		,if( (D.fmly_cd is null) , D.cstmr_cd, D.fmly_cd) as fmly_cd
+    		,D.email
+    	FROM
+    		cstmr C
+    	INNER JOIN
+    		cstmr D
+    	ON
+			C.cstmr_cd = D.cstmr_cd
+	    	or C.cstmr_cd = D.fmly_cd
+	    	or C.fmly_cd = D.fmly_cd
+	    	or C.fmly_cd = D.fmly_cd
+
+		WHERE
+			C.cstmr_name = #{cstmrName} AND (right(C.cellphone,4) = #{digit4} OR right(C.telephone,4) = #{digit4});
+
+	</select>
+
+    <select id="listCntVisitor" parameterType="cstmrVo" resultType="cstmrVo">
+        select
+				left(datetime,7) monthly
+				,count(*) as visitCnt
+			from
+				sale_off
+			where
+				shop_id = #{shopId}
+			or
+			 	shop_id=#{shopNum}
+			group by monthly
+			having  monthly <![CDATA[ >= ]]> #{sdate}
+			and
+				monthly <![CDATA[ <= ]]> #{edate}
+    </select>
+
+    <select id="getCstmrList" parameterType="cstmrVo"  resultType="cstmrVo">
+        	select
+				(select cstmr_cd from cstmr where cstmr_id = F.cstmr_id) as cstmrCd
+				,(select cstmr_name from cstmr where cstmr_id = F.cstmr_id) as cstmrName
+				,(select telephone from cstmr where cstmr_id = F.cstmr_id) as telephone
+				,(select cellphone from cstmr where cstmr_id = F.cstmr_id) as cellphone
+				,(select email from cstmr where cstmr_id = F.cstmr_id) as email
+				,(select addr from cstmr where cstmr_id = F.cstmr_id) as addr
+				,(select get_sms_yn from cstmr where cstmr_id = F.cstmr_id) as getSmsYn
+				,(select get_email_yn from cstmr where cstmr_id = F.cstmr_id) as getEmailYn
+				,(select get_dm_yn from cstmr where cstmr_id = F.cstmr_id) as getDmYn
+				,F.datetime as datetime
+			FROM
+				sale_off F
+			where
+				F.datetime <![CDATA[ >= ]]> #{sdate}
+				and F.datetime <![CDATA[ <= ]]> #{edate}
+				and (shop_id=#{shopId} or shop_id=#{shopNum})
+			group by cstmr_id
+			order by cstmrName asc ;
+    </select>
+</mapper>

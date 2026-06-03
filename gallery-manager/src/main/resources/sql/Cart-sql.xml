@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.cart.CartMapper">
+    <insert id="addCart" parameterType="cartVo">
+        INSERT INTO cart
+        	(
+        	cstmr_id
+        	,prdct_id
+        	)
+        VALUES (
+        	#{cstmrId}
+        	, #{prdctId}
+        	)
+    </insert>
+
+    <select id="countCart" parameterType="cartVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM cart
+    	WHERE
+    		cstmr_id=#{cstmrId} and
+    		prdct_id=#{prdctId}
+    </select>
+
+    <update id="modifyCart" parameterType="cartVo">
+        UPDATE cart SET
+        	cart_name 	= #{cartName},
+        	bigo		= #{bigo}
+        WHERE
+        	cart_id 			= #{cartId}
+    </update>
+
+    <delete id="removeCart" parameterType="cartVo">
+    	DELETE
+    	FROM cart
+    	WHERE
+    		cart_id 			= #{cartId}
+    </delete>
+
+     <delete id="removeCartCstmrPrdct" parameterType="cartVo">
+    	DELETE
+    	FROM cart
+    	WHERE
+			cstmr_id = #{cstmrId} and prdct_id = #{prdctId};
+    </delete>
+</mapper>

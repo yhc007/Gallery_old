@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+					
+<mapper namespace="com.gallery.board">
+	  <select id="getBoardList" parameterType="boardVo" resultType="boardVo">
+	  		SELECT
+				if(writer_ty='S',(select shop_name from shop where shop_id = B.writer),(select c_name from com_info where i_num = B.writer))writer
+	  			,no
+	  			,title
+	  			,content
+	  			,upd_time
+	  			,(select count(no)from reply where no = B.no)reply	
+				,priority  		
+				,(select count(reader) from board_reader where no = B.no)cnt
+				,ty
+				,complete
+	  		FROM
+	  			board B
+	  		WHERE
+	  			ty = #{ty}
+	  		ORDER BY
+	  			priority DESC,
+	  			upd_time DESC
+	  		limit #{page}, 20
+	  </select>
+	  
+	  <insert id="write" parameterType="boardVo">
+	  		INSERT INTO
+	  			board
+	  		(ty
+	  		,writer
+	  		,writer_ty
+	  		,title
+	  		,content
+	  		,upd_time
+	  		,priority)
+	  		VALUES
+	  		(#{ty}
+	  		,#{writer}
+	  		,#{writerTy}
+	  		,#{title}
+	  		,#{content}
+	  		,now()
+	  		,#{priority})
+	  </insert>
+	  
+	  <select id="viewContent" parameterType="boardVo" resultType="boardVo">
+	  		SELECT
+	  			if(writer_ty='S',(select shop_name from shop where shop_id = B.writer),(select c_name from com_info where i_num = B.writer))writer
+	  			,writer writerNo
+	  			,no
+	  			,ty
+	  			,title
+	  			,content
+	  			,upd_time
+	  			,priority
+			FROM
+				board B
+			WHERE
+				no = #{no}	  			
+	  </select>
+	  
+	  <insert id="writeReply" parameterType="boardVo">
+	  		INSERT INTO
+	  			reply
+	  		(no
+	  		,writer
+	  		,writer_ty
+	  		,content
+	  		,upd_time)
+	  		VALUES
+	  		(#{no}
+	  		,#{writer}
+	  		,#{writerTy}
+	  		,#{content}
+	  		,now())
+	  </insert>
+	  
+	  <select id="getReplyList" parameterType="boardVo" resultType="boardVo">
+	  		SELECT
+	  			if(writer_ty='S',(select shop_name from shop where shop_id = R.writer),(select c_name from com_info where i_num = R.writer))writer
+	  			,no
+	  			,id
+	  			,writer replyNo
+	  			,content
+	  			,upd_time
+	  		FROM
+	  			reply R
+	  		WHERE
+	  			no = #{no}
+	  		ORDER BY 
+	  			upd_time ASC
+	  		
+	  </select>
+	  
+	  
+	  <select id="checkUsr" parameterType="boardVo" resultType="boardVo">
+  			<if test="shopTy==2">
+  				SELECT
+  					c_name usr
+  					,i_num writer
+  				FROM
+  					com_info
+  				WHERE
+  					i_num = #{shopId}
+  			</if>
+  			
+  			<if test="shopTy==1">
+  				SELECT
+  					shop_name usr
+  					,shop_id writer
+  					,id shopLoginId
+  					,pwd
+  				FROM
+  					shop
+  				WHERE
+  					shop_id = #{shopId}
+  			</if>
+	  </select>
+	  
+	  <delete id="delBoard" parameterType="boardVo">
+	  		DELETE
+	  			FROM
+	  		board
+	  			WHERE
+	  		no = #{no}
+	  </delete>
+	  
+	  <delete id="delReply" parameterType="boardVo">
+	  		DELETE
+	  			FROM
+	  		reply
+	  			WHERE
+	  		id = #{id}
+	  </delete>
+	  
+	  <update id="modifyWrite" parameterType="boardVo">
+	  		UPDATE
+	  			board
+	  		SET
+	  			title = #{title}
+	  			,content = #{content}
+	  			,priority = #{priority}
+	  		WHERE
+	  			no = #{no}
+	  </update>
+	  
+	  
+	   	
+      	<insert id="uploadFile" parameterType="fileVo" >
+      		INSERT INTO
+      			board_file
+      		(no
+      		,file_name)
+      		VALUES
+      		(#{no}
+      		,#{fileName})
+      	</insert>
+      	
+      	<insert id="writeBeForeUpload" parameterType="boardVo">
+      		INSERT INTO
+      			board
+      		(title)
+      		VALUES
+      		('temp')
+      		
+      		<selectKey keyProperty="no" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+      	</insert>
+      	
+      	<update id="modifyWirteAfterFilUpload" parameterType="boardVo">
+      		UPDATE
+      			board
+      		SET
+      			ty = #{ty}
+      			,writer = #{writer}
+      			,writer_ty = #{writerTy}
+      			,title = #{title}
+      			,content = #{content}
+      			,upd_time = now()
+      			,priority = #{priority}
+      		WHERE
+      			no = #{no}
+      	</update>
+      	
+      	<select id="getFile" parameterType="boardVo" resultType="boardVo">
+      		SELECT
+      			file_name
+      			,(select server_url from file_server where server_id=3)url
+      		FROM
+      			board_file
+      		WHERE	
+      			no = #{no}
+      	</select>
+      	
+		<update id="modifyFile" parameterType="boardVo">
+			UPDATE 
+				board_file
+			SET
+				file_name = #{fileName}
+			WHERE	
+				no = #{no}
+		</update>
+		
+		<update id="modifyFileData" parameterType="fileServerVo">
+			UPDATE
+				board_file
+			SET
+				file_name = #{fileName}
+			WHERE
+				file_name = #{originFileName}
+		</update>
+		
+		<select id="checkShopTy" parameterType="boardVo" resultType="String">
+				<if test="shopTy==2">
+					SELECT
+						c_name
+					FROM
+						com_info
+					WHERE
+						i_num = #{shopId}
+				</if>
+				
+				<if test="shopTy==1">
+					SELECT
+						shop_name
+					FROM
+						shop
+					WHERE
+						shop_id = #{shopId}
+				</if>
+		</select>
+		
+		<select id="checkExist" parameterType="boardVo" resultType="String" >
+			SELECT
+				reader
+			FROM
+				board_reader
+			WHERE
+				no = #{no}
+			AND
+				reader = #{reader}
+		</select>
+		
+		<insert id="checkReader" parameterType="boardVo">
+			INSERT INTO
+				board_reader
+			(no
+			,reader)
+			
+			VALUES
+			(#{no}
+			,#{reader})
+		</insert>
+		
+		<select id="showReader" parameterType="boardVo" resultType="boardVo">
+			SELECT
+				reader
+			FROM
+				board_reader
+			WHERE
+				no = #{no}
+			ORDER BY
+				reader ASC
+		</select>
+		
+		<update id="setComplete" parameterType="boardVo">
+		    UPDATE
+			    board
+		    SET
+		    	complete = 1
+		    WHERE
+		    	no = #{no}
+		</update>
+</mapper>

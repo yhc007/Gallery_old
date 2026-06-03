@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.fileserver.FileServerMapper">
+    <insert id="addFileServer" parameterType="fileServerVo">
+        INSERT INTO file_server
+        	(
+        	server_name
+        	,server_url
+        	,isdefault
+        	,bigo
+        	)
+        VALUES (
+        	#{serverName}
+        	,#{serverUrl}
+        	,#{isdefault}
+        	, #{bigo}
+        	)
+    </insert>
+    <select id="countFileServer" parameterType="fileServerVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM file_server
+    	WHERE server_name=#{serverName}
+    </select>
+    <update id="dropDefault">
+    	UPDATE file_server SET
+    		isdefault='0';
+    </update>
+    <select id="pagedListFileServer" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		server_id
+		    		,server_name
+		    		,server_url
+		    		,isdefault
+		    		,bigo
+		    	FROM file_server
+		    	<where>
+		    		<if test="serverName!=null">
+		    			<if test="!serverName.equals('')">
+		    				and ( server_name like CONCAT('%', #{serverName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY server_id desc
+	    	) A,(select @rownum:=0) R
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListFileServerCount" parameterType="fileServerVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM file_server
+    	<where>
+    		<if test="serverName!=null">
+    			<if test="!serverName.equals('')">
+    				and ( server_name like CONCAT('%', #{serverName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+
+    <update id="modifyFileServer" parameterType="fileServerVo">
+        UPDATE file_server SET
+        	server_name 	= #{serverName},
+        	server_url 		= #{serverUrl},
+        	isdefault		= #{isdefault},
+        	bigo			= #{bigo}
+        WHERE
+        	server_id 			= #{serverId}
+    </update>
+    <select id="getFileServer" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT
+    		server_id
+    		,server_name
+    		,server_url
+    		,isdefault
+    		,bigo
+    	FROM file_server
+    	WHERE
+    		server_id=#{serverId}
+    </select>
+    <delete id="removeFileServer" parameterType="fileServerVo">
+    	DELETE
+    	FROM file_server
+    	WHERE
+    		server_id 			= #{serverId}
+    </delete>
+
+    <select id="getCstmrForCP" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT
+    		cstmr_name
+    		,cstmr_cd
+    		,email
+    		,get_email_yn
+    		,cellphone
+    		,get_sms_yn
+    	FROM
+    	 	cstmr
+    	WHERE
+		((email !="" and get_email_yn = 'Y')
+    		or (LENGTH(replace(cellphone,"-","")) > 9 and get_sms_yn = 'Y'))
+
+    		and substr(birth_day,6) = #{birthDay}
+    	AND
+    		(birth_day_ty_cd = #{birthDayTyCd}
+    		<if test="birthDayTyCd.equals('00600001')">
+		    	or birth_day_ty_cd is null
+			</if>
+		)
+
+    </select>
+
+
+    <select id="getLunarDate" parameterType="fileServerVo" resultType="String">
+    	SELECT
+    		lunar_date
+    	FROM
+    		lunar_solar
+    	WHERE
+    		solar_date = #{birthDay}
+    </select>
+
+
+    <insert id="createCoupon" parameterType="java.util.HashMap">
+    	INSERT INTO
+    		coupon_birth
+    	(coupon_cd
+    	,cstmr_name
+    	,cstmr_cd
+    	,cstmr_mail
+    	,cstmr_cell)
+    	VALUES
+    	<foreach collection="coupon" item="item" separator=",">
+    		(#{item.couponCd}
+    		,#{item.cstmrName}
+    		,#{item.cstmrCd}
+    		,#{item.email}
+    		,#{item.cellphone}
+    		)
+    	</foreach>
+    </insert>
+
+    <select id="getCouponList" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT
+    		cstmr_name
+    		,cstmr_cd
+    		,cstmr_mail email
+    		,cstmr_cell cellphone
+    		,(select(select shop_name from shop where shop_id = last_shop_id) as shop_name from cstmr where cstmr_cd = C.cstmr_cd) last_shop_name
+    		,using_date usingDate
+    		,(select shop_name from shop where shop_id = C.shop_num)shopName
+    		,w_memo memo
+    		,coupon_cd
+    	FROM
+    		coupon_birth C
+    	WHERE
+    		substr(coupon_cd,1,6) = #{couponCd}
+    </select>
+
+    <delete id="delCoupon" parameterType="fileServerVo">
+    	DELETE
+    	FROM
+    		coupon_birth
+    	WHERE
+    		substr(coupon_cd,3,4) = replace(#{birthDay},".","")
+    		and shop_num=0
+    </delete>
+</mapper>

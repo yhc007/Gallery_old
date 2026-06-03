@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.fileserver">
+    <insert id="addFileServer" parameterType="fileServerVo">
+        INSERT INTO file_server 
+        	(
+        	server_name
+        	,server_url
+        	,isdefault
+        	,bigo
+        	) 
+        VALUES (
+        	#{serverName}
+        	,#{serverUrl}
+        	,#{isdefault}
+        	, #{bigo}
+        	)    
+    </insert>
+    <select id="countFileServer" parameterType="fileServerVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM file_server
+    	WHERE server_name=#{serverName}
+    </select>
+    <update id="dropDefault">
+    	UPDATE file_server SET
+    		isdefault='0';
+    </update>
+    <select id="pagedListFileServer" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		server_id
+		    		,server_name
+		    		,server_url
+		    		,isdefault
+		    		,bigo
+		    	FROM file_server
+		    	<where>
+		    		<if test="serverName!=null">
+		    			<if test="!serverName.equals('')">
+		    				and ( server_name like CONCAT('%', #{serverName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY server_id desc
+	    	) A,(select @rownum:=0) R
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListFileServerCount" parameterType="fileServerVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM file_server
+    	<where>
+    		<if test="serverName!=null">
+    			<if test="!serverName.equals('')">
+    				and ( server_name like CONCAT('%', #{serverName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listFileServer" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT
+    		server_id
+    		,server_name
+    	FROM file_server
+    	ORDER BY server_name
+    </select>
+    
+    <update id="modifyFileServer" parameterType="fileServerVo">
+        UPDATE file_server SET
+        	server_name 	= #{serverName},
+        	server_url 		= #{serverUrl},
+        	isdefault		= #{isdefault},
+        	bigo			= #{bigo}
+        WHERE
+        	server_id 			= #{serverId}
+    </update>
+    <select id="getFileServer" parameterType="fileServerVo" resultType="fileServerVo">
+    	SELECT
+    		server_id
+    		,server_name
+    		,server_url
+    		,isdefault
+    		,bigo
+    	FROM file_server
+    	WHERE
+    		server_id=#{serverId}
+    </select>
+    <delete id="removeFileServer" parameterType="fileServerVo">
+    	DELETE 
+    	FROM file_server
+    	WHERE
+    		server_id 			= #{serverId}
+    </delete>
+    
+</mapper>

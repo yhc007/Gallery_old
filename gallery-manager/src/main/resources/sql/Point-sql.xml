@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.point.PointMapper">
+
+
+    <select id="listFamilyCd"  resultType="pointVo">
+    	SELECT DISTINCT fmly_cd from tb_point_earn UNION SELECT DISTINCT fmly_cd from tb_point_using;
+    </select>
+
+    <insert id="calcBalancePoint" parameterType="pointVo" >
+		INSERT INTO tb_point_balance (fmly_cd, total_point)
+			VALUES (#{fmlyCd} ,
+				round((select sum(earn_point) from tb_point_earn where fmly_cd=#{fmlyCd})
+					- (select sum(using_point) from tb_point_using where fmly_cd=#{fmlyCd}),1)
+					);
+    </insert>
+
+    <select id="listPointHist" parameterType="pointVo" resultType="pointVo" >
+    	SELECT date_time, fmly_cd, (select cstmr_name from cstmr C where C.cstmr_cd = H.cstmr_cd) cstmr_name, point, IF(point_status='M', '사용', '적립') point_status
+    	FROM point_hist H where  fmly_cd=#{fmlyCd} and point!=0  order by date_time desc, point_id desc;
+    </select>
+
+
+	<select id="listPointM" parameterType="pointVo" resultType="pointVo" >
+	    SELECT
+			point_id
+			, sale_id
+			, cstmr_cd
+			, fmly_cd
+			, point
+			, shop_num
+			, date_time
+			, total_point
+			, m_point
+			, cstmr_point
+		FROM
+			point_monthly_b
+	</select>
+    <insert id="addPointHist" parameterType="pointVo" >
+		INSERT INTO
+			point_hist
+				(sale_id
+				, cstmr_cd
+				, fmly_cd
+				, point
+				, shop_num
+				, date_time
+				, point_status)
+			VALUES
+				(#{saleId},#{cstmrCd},#{fmlyCd},#{point},#{shopNum},#{dateTime},#{pointStatus});
+    </insert>
+
+	<insert id="tradePointShop" parameterType="java.util.HashMap">
+    	INSERT INTO
+    		point_trade
+	    	(sale_id
+	    	,point_id
+	    	,using_shop_id
+	    	,earn_shop_id
+	    	,point)
+	    VALUES
+	   <foreach collection="listRecPoint" item="trade" separator=",">
+    		(#{trade.saleId}
+    		,#{trade.pointId}
+    		,#{trade.usingShopId}
+    		 ,#{trade.earnShopId}
+    		 ,abs(#{trade.point})
+    		 )
+    	</foreach>
+    </insert>
+
+    <select id="listPointHistMonthly" resultType="pointVo" >
+	    SELECT
+		P.point_id
+		, P.sale_id
+		, P.cstmr_cd
+		, P.fmly_cd
+		, P.point
+		, (select shop_id from sale_off where sale_id = P.sale_id) as shop_id
+		, P.date_time
+		, P.point_status
+		, M.total_point
+		, M.m_point
+		, M.cstmr_point
+		FROM
+			point_hist P
+		inner join
+			point_monthly_b M
+		on
+			P.fmly_cd = M.fmly_cd
+		where
+			left(P.date_time,7) &lt;= left(M.date_time,7)
+		order by P.fmly_cd, P.point_id desc;
+	</select>
+
+    <insert id="createPointMonthly" parameterType="pointVo">
+	   	INSERT
+	   		into point_monthly_b (point_id, sale_id, shop_num,date_time, total_point, fmly_cd, m_point,cstmr_point,cstmr_cd)
+		SELECT 	 F.point_id
+				,F.sale_id
+				,F.shop_num
+				,F.date_time
+				,IFNULL(C.point,0) +
+					(IFNULL((SELECT sum(point_hist.point) FROM point_hist where point_hist.fmly_cd = F.fmly_cd and point_hist.point_status='P' and left(date_time,7) &lt;=left(#{dateTime},7) ),0)
+					- IFNULL((SELECT sum(point_hist.point) FROM point_hist where point_hist.fmly_cd = F.fmly_cd and point_hist.point_status='M' and left(date_time,7) &lt;=left(#{dateTime},7) ),0)) total_point
+				, (F.fmly_cd) fmly_cd
+				,F.point as m_point
+				,C.point
+				,F.cstmr_cd
+		FROM
+				cstmr C
+		JOIN
+				(SELECT point_id , sale_id , cstmr_cd , fmly_cd, sum(point) `point`, shop_num , date_time , point_status ,(select shop_name from 	shop
+						where shop_id = (select shop_id from sale_off where sale_id = P.sale_id)) as shop_name
+				 	FROM
+						point_hist P
+					WHERE
+						point_status='M' and P.sale_id is not null
+						and left(date_time,7) = left(#{dateTime},7)
+					group by fmly_cd,shop_num
+				)as F
+		ON
+				C.cstmr_cd = F.fmly_cd;
+
+    </insert>
+
+    <delete id="removePointMonthly" >
+    	DELETE
+    	FROM point_monthly_b
+    </delete>
+    <delete id="removePointTrade" >
+    	DELETE
+    	FROM point_trade
+    </delete>
+
+    <update id="modifyUShopId">
+    	UPDATE point_trade set using_shop_id=(select shop_id from shop where shop_num=using_shop_id) where using_shop_id &lt; 70;
+    </update>
+    <update id="modifyEShopId">
+    	UPDATE point_trade set earn_shop_id=(select shop_id from shop where shop_num=earn_shop_id) where earn_shop_id &lt; 70;
+    </update>
+
+	<select id="getEuTable" resultType="pointVo">
+	    SELECT
+			(select shop_name from shop where shop_id = earn_shop_id) as earn_shop
+			,earn_shop_id
+			,(select shop_name from shop where shop_id = using_shop_id) as using_shop
+			,using_shop_id
+			, sum(abs(point))*50 as point
+		FROM
+			point_trade T
+		WHERE
+			using_shop_id != earn_shop_id group by earn_shop_id, using_shop_id  order by earn_shop, using_shop
+	</select>
+
+	<select id="getUeTable" resultType="pointVo">
+		SELECT
+			(select shop_name from shop where shop_id = using_shop_id) as using_shop
+			,using_shop_id
+			,(select shop_name from shop where shop_id = earn_shop_id) as earn_shop
+			,earn_shop_id
+			,sum(abs(point))*50 as point
+		FROM
+			point_trade T
+		WHERE
+			using_shop_id != earn_shop_id group by earn_shop_id, using_shop_id  order by using_shop, earn_shop
+	</select>
+
+	<select id="getESumTable" resultType="pointVo">
+		SELECT
+			(select shop_name from shop where shop_id = earn_shop_id) as earn_shop
+			, sum(abs(point))*50 as point
+		FROM
+			point_trade T
+		WHERE
+			using_shop_id != earn_shop_id group by earn_shop_id  order by earn_shop
+	</select>
+
+	<select id="getUSumTable" resultType="pointVo">
+		SELECT
+			(select shop_name from shop where shop_id = using_shop_id) as using_shop
+			, sum(abs(point))*50 as point
+		FROM
+			point_trade T
+		WHERE
+			using_shop_id != earn_shop_id group by using_shop_id  order by  using_shop
+    </select>
+
+    <delete id="cleanPointTrade">
+    	DELETE
+    	FROM
+    		point_trade
+    	WHERE
+    		point = 0
+    </delete>
+
+
+    <insert id="calcExpirePoint" parameterType="pointVo" >
+		INSERT INTO point_year (cstmr_name, fmly_cd, p_point,m_point,basic_point,current_point,inner_point)
+		SELECT
+			cstmr_name
+			,H.fmly_cd
+			,sum(IF(H.point_status='P',IFNULL(H.point,0),0)) as P
+			,sum(IF(H.point_status='M',IFNULL(H.point,0),0)) as M
+			,C.point
+			,C.point + (sum(IF(H.point_status='P',IFNULL(H.point,0),0))) - (sum(IF(H.point_status='M',IFNULL(H.point,0),0))) as sum_point
+			,sum(IF(H.point_status='P' and (H.date_time &gt; #{tgtDate}),IFNULL(H.point,0),0)) as inner_point
+		FROM
+			point_hist H
+		INNER JOIN
+			cstmr C
+		ON
+			H.fmly_cd = C.cstmr_cd
+		WHERE
+			H.point!=0
+		group by fmly_cd;
+    </insert>
+
+    <insert id="expirePoint" parameterType="pointVo" >
+
+		INSERT INTO point_hist (point_id
+			,sale_id
+			,cstmr_cd
+			,fmly_cd
+			,point
+			,shop_num
+			,date_time
+			,point_status)
+		SELECT
+			NULL
+			,NULL
+			,'expired'
+			,fmly_cd
+			,(current_point - inner_point) as del_point
+			,0
+			,#{crtDate}
+			,'M'
+		FROM
+			point_year where current_point - inner_point &gt; 0
+
+    </insert>
+    <delete id='removePointYear'>
+    	DELETE from point_year
+    </delete>
+
+
+
+
+
+
+
+</mapper>

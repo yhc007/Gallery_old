@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.sale.SaleMapper">
+    <insert id="addSale" parameterType="saleVo" useGeneratedKeys="true" keyProperty="ShopOrderNo">
+            INSERT INTO sale
+        	(
+        	cstmr_id
+        	,shop_id
+			,coupon_id
+			,ogn_price
+			,pay_cash
+			,pay_card
+			,email
+			,phone
+			,addr
+			,datetime
+			,regtime
+        	)
+        VALUES (
+        	(select cstmr_id from cstmr where cstmr_login_id = #{UserID})
+        	, #{shopNumber}
+        	, #{couponId}
+        	, #{ognPrice}
+        	, #{payCash}
+        	, #{payCard}
+        	, #{UserEmail}
+        	, #{UserPhone}
+        	, #{userAddr}
+        	, DATE_FORMAT(now(),'%Y%m%d')
+        	, now()
+        	);
+        <selectKey keyProperty="ShopOrderNo" resultType="String" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <insert id="addSalePrdct" parameterType="salePrdctVo">
+            INSERT INTO salePrdct
+        	(
+        	sale_id
+        	,prdct_id
+			,prdct_cnt
+			,event_id
+			,dscnt
+			,prc
+        	)
+        VALUES (
+        	#{saleId}
+        	, #{prdctId}
+        	, #{prdctCnt}
+        	, #{eventId}
+        	, #{dscnt}
+        	, #{prc}
+        	);
+    </insert>
+
+    <select id="selectSaleTimeExceed" resultType="saleVo">
+    	select sale_id from sale
+    	where
+    		result is null and
+    		now()-regtime > 300
+    </select>
+
+    <select id="pagedListSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		sale_id
+		    		,sale_name
+		    	FROM sale
+		    	<where>
+		    		<if test="saleName!=null">
+		    			<if test="!saleName.equals('')">
+		    				and ( sale_name like CONCAT('%', #{saleName}, '%') )
+		    			</if>
+		    		</if>
+		    	</where>
+		    	ORDER BY sale_id desc
+	    	) A,(select @rownum:=0) R
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListSaleCount" parameterType="saleVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM sale
+    	<where>
+    		<if test="saleName!=null">
+    			<if test="!saleName.equals('')">
+    				and ( sale_name like CONCAT('%', #{saleName}, '%') )
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    <select id="listSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,sale_name
+    	FROM sale
+    	ORDER BY sale_name
+    </select>
+
+    <select id="listSaleHist" parameterType="saleHistSearchVo" resultType="saleVo">
+    	SELECT * FROM(
+    	SELECT
+    		A.sale_id
+    		,(select shop_name from shop where shop_id=A.shop_id) shop_name
+    		,(select cstmr_name from cstmr where cstmr_id=A.cstmr_id) userName
+    		,addr userAddr
+    		,phone userPhone
+    		,datetime
+    		,regtime
+    		,result
+    		,(select sum(prc) from salePrdct where sale_id=A.sale_id) price
+    	FROM sale A
+    	WHERE
+    		datetime between ${startTime} and ${endTime}
+    		<if test="result!=-1">
+    			<if test="result==0000">
+    				and (result = '0000' or result = '0' or result='sucess')
+    			</if>
+    			<if test="result!=0000">
+    				and (result = #{result})
+    			</if>
+   			</if>
+   		) B
+   		<where>
+   			<if test="cstmrName!=null">
+    			<if test="cstmrName!=''">
+    				and ( userName = #{cstmrName})
+    			</if>
+    		</if>
+   		</where>
+    	order by datetime desc,regtime desc
+
+    </select>
+
+
+    <select id="listSalesHist" parameterType="saleHistSearchVo" resultType="salesVo">
+    	 <if test="shopId==999">
+    	 select
+    	 	datetime
+			,(select shop_name from shop where shop_id=Y.shop_id) shop_name
+			,sum(pay_cash) pay_cash
+			,sum(pay_card) pay_card
+			,IFNULL(sum(pay_point),0) pay_point
+			,sum(price) total
+			,sum(frame_prc) frame_prc
+			,sum(lens_prc) lens_prc
+			,sum(clens_prc) clens_prc
+			,sum(acc_prc) acc_prc
+
+		from(
+			SELECT
+				Z.sale_id
+				,pay_cash
+				,pay_card
+				,pay_point
+				,shop_id
+				,result
+				,(select IFNULL(sum(prc),0) from salePrdct where sale_id=Z.sale_id) price
+				,(select IFNULL(sum(prc),0) from salePrdct A, prdct B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id ) frame_prc
+				,(select IFNULL(sum(prc),0) from salePrdct A, lens B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id ) lens_prc
+				,(select IFNULL(sum(prc),0) from salePrdct A, clens B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id ) clens_prc
+				,(select IFNULL(sum(prc),0) from salePrdct A, clens_acc B where A.prdct_id = B.prdct_id and A.sale_id=Z.sale_id ) acc_prc
+				,datetime
+			FROM sale Z
+			WHERE
+					(select replace(datetime ,".","")from sale_off where sale_id = Z.sale_id) between ${startTime} and ${endTime}
+				<if test="shopId!='all'">
+						AND shop_id = #{shopId}
+				</if>
+				AND (result = '0000' OR result='success')
+
+		) Y
+		<if test="shopId!='all'">
+			group by datetime
+		</if>
+		<if test="shopId=='all'">
+			group by shop_name
+		</if>
+		 </if>
+
+		 <if test="shopId!=999">
+		 	SELECT
+		 		if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'-',if(Y.cnt_pre = 0, (@CNT:=@CNT+1) ,'-') ) as cnt
+		 		,if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'취소',if(Y.cnt_pre = 0, if(Y.remained = 0, '완료','미수금') ,'미수입금') ) as cancel
+				,Y.sale_id
+				,Y.job_id
+				,if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'0',if(Y.cnt_pre = 0, if(Y.remained = 0, '0', -(Y.pay_card + Y.pay_cash + Y.pay_point) ) ,(Y.pay_card + Y.pay_cash + Y.pay_point)) ) as pay_status
+				,Y.pay_cash
+				,Y.pay_card
+				,Y.pay_point
+
+				,if(Y.cnt_pre = 0 ,Y.dscnt_price,0) as dscnt_price
+				,if(Y.cnt_pre = 0 ,Y.etc_dscnt,0) as etc_dscnt
+
+				,Y.datetime
+				,Y.pay_card + Y.pay_cash + Y.pay_point as total
+
+				,if(Y.cnt_pre = 0 , round(Y.frame_prc0 + Y.new_frame_prc0 - Y.frame_prc2 - Y.new_frame_prc2),0) frame_prc
+				,if(Y.cnt_pre = 0 , round(Y.lens_prc0 + Y.new_lens_prc0 -Y.lens_prc2 - Y.new_lens_prc2),0) lens_prc
+				,if(Y.cnt_pre = 0 , round(Y.clens_prc0 + Y.new_clens_prc0 - Y.clens_prc2 - Y.new_clens_prc2),0) clens_prc
+				,if(Y.cnt_pre = 0 , round(Y.acc_prc0 + Y.new_acc_prc0 -Y.acc_prc2 - Y.new_acc_prc2),0) acc_prc
+				,if(Y.cnt_pre = 0 , round(Y.sun_prc0 + Y.new_sun_prc0 -Y.sun_prc2 - Y.new_sun_prc2),0) sun_prc
+				,if(Y.cnt_pre = 0 , round(Y.dis_prc0 + Y.new_dis_prc0 -Y.dis_prc2 - Y.new_dis_prc2),0) dis_prc
+
+				,Y.cstmrName
+				,Y.cstmrCd
+				,Y.cardCom
+				,Y.phone
+
+
+			FROM
+				(SELECT
+					@CNT:=0
+					,O.cancel
+					,(select count(*) from sale_job_off where sale_id = O.sale_id and job_id &lt; O.job_id) as cnt_pre
+					,SF.dscnt_price - SF.etc_dscnt - (O.pay_card + O.pay_cash + O.pay_point) as remained
+					,O.job_id
+					,O.sale_id
+					,O.datetime
+					,O.pay_cash
+					,O.pay_card
+					,O.pay_point
+					,SF.dscnt_price
+					,SF.etc_dscnt
+					,(select card_com_name from card_com_info where card_com_id = O.card_ty)cardCom
+					,(select cstmr_name from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)cstmrName
+					,(select cellphone from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)phone
+					,(select C.cstmr_cd from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)cstmrCd
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=1 and SF.cancel = 0),0)frame_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=1 and SF.cancel = 2),0)frame_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=2 and SF.cancel = 0),0)lens_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=2 and SF.cancel = 2),0)lens_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=3 and SF.cancel = 0),0)clens_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=3 and SF.cancel = 2) ,0)clens_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=4 and SF.cancel = 0),0)acc_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=4 and SF.cancel = 2),0)acc_prc2
+
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=5 and SF.cancel = 0) ,0)sun_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=5 and SF.cancel = 2) ,0)sun_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=6 and SF.cancel = 0) ,0)dis_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=6 and SF.cancel = 2) ,0)dis_prc2
+
+
+
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=1 and SF.cancel = 0 ),0)new_frame_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=1 and SF.cancel = 2 ),0)new_frame_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=2 and SF.cancel = 0 ),0)new_lens_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=2 and SF.cancel = 2 ),0)new_lens_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=3 and SF.cancel = 0),0)new_clens_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=3 and SF.cancel = 2),0)new_clens_prc2
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=4 and SF.cancel = 0),0)new_acc_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=4 and SF.cancel = 2),0)new_acc_prc2
+
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=5 and SF.cancel = 0),0)new_sun_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=5 and SF.cancel = 2),0)new_sun_prc2
+
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=6 and SF.cancel = 0),0)new_dis_prc0
+					,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=6 and SF.cancel = 2),0)new_dis_prc2
+
+
+				FROM
+					sale_job_off O
+				INNER JOIN
+					sale_off SF
+				ON
+					O.sale_id = SF.sale_id
+				WHERE
+					(select S.shop_id from shop S, sale_off F where S.shop_id = F.shop_id and F.sale_id = O.sale_id) = #{shopId}
+				AND
+					SF.is_old = 0
+				AND
+					O.ty_cd = 01200004
+				AND
+					SF.cancel != 1
+				AND
+					replace(O.datetime,".","") between #{startTime} and #{endTime}
+				)Y
+			WHERE
+				Y.pay_card + Y.pay_cash + Y.pay_point != 0
+			ORDER BY
+				 datetime,cstmrName,job_id ASC
+
+			</if>
+
+    </select>
+
+
+    <select id="getTotalShopSales" parameterType="saleHistSearchVo" resultType="salesVo">
+		SELECT
+				Y.sale_id
+				,Y.shopName
+				,sum(Y.pay_cash) payCash
+				,sum(Y.pay_card) payCard
+				,sum(Y.pay_point) payPoint
+				,Y.datetime
+				,sum(Y.pay_card + pay_cash + pay_point) total
+				,sum(Y.frame_prc0 + Y.new_frame_prc0 - Y.frame_prc2 - Y.new_frame_prc2) frame_prc
+				,sum(Y.sun_prc0 + Y.new_sun_prc0 -Y.acc_prc2 - Y.new_sun_prc2) sun_prc
+				,sum(Y.lens_prc0 + Y.new_lens_prc0 -Y.lens_prc2 - Y.new_lens_prc2) lens_prc
+				,sum(Y.clens_prc0 + Y.new_clens_prc0 - Y.clens_prc2 - Y.new_clens_prc2) clens_prc
+				,sum(Y.acc_prc0 + Y.new_dis_prc0 -Y.dis_prc2 - Y.new_dis_prc2) dis_prc
+				,sum(Y.acc_prc0 + Y.new_acc_prc0 -Y.acc_prc2 - Y.new_acc_prc2) acc_prc
+
+
+
+
+				,Y.cardCom
+		FROM
+				(SELECT
+						O.job_id
+						,O.sale_id
+						,O.datetime
+						,(select shop_name from shop S, sale_off F where S.shop_id = F.shop_id and F.sale_id = O.sale_id)shopName
+						,O.pay_cash
+						,O.pay_card
+						,O.pay_point
+						,(select card_com_name from card_com_info where card_com_id = O.card_ty)cardCom
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=1 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)frame_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=1 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)frame_prc2
+
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=5 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)sun_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=5 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)sun_prc2
+
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=2 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)lens_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=2 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)lens_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=3 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)clens_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=3 and (select cancel from sale_off where sale_id =O.sale_id) = 2) ,0)clens_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=6 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)dis_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=6 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)dis_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=4 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)acc_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from salePrdct_off where sale_id = O.sale_id and itemTy=4 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)acc_prc2
+
+
+
+
+
+
+
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=1 and (select cancel from sale_off where sale_id =O.sale_id) = 0 ),0)new_frame_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=1 and (select cancel from sale_off where sale_id =O.sale_id) = 2 ),0)new_frame_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=5 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)new_sun_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=5 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)new_sun_prc2
+
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=2 and (select cancel from sale_off where sale_id =O.sale_id) = 0 ),0)new_lens_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=2 and (select cancel from sale_off where sale_id =O.sale_id) = 2 ),0)new_lens_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=3 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)new_clens_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=3 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)new_clens_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=6 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)new_dis_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=6 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)new_dis_prc2
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=4 and (select cancel from sale_off where sale_id =O.sale_id) = 0),0)new_acc_prc0
+						,ifnull((select sum(prc * prdct_cnt * ((100-dscnt_prcnt)/100)) from new_prdct where sale_id = O.sale_id and item_ty=4 and (select cancel from sale_off where sale_id =O.sale_id) = 2),0)new_acc_prc2
+
+
+				FROM
+					sale_job_off O
+				WHERE
+					(select is_old from sale_off where sale_id = O.sale_id) = 0
+				AND
+					O.ty_cd = 01200004
+				AND
+					(select cancel from sale_off where sale_id =O.sale_id) != 1
+				AND
+					replace(datetime,".","") between #{startTime} and #{endTime}
+				)Y
+
+		WHERE
+			Y.pay_card + pay_cash + pay_point != 0
+		GROUP BY
+			shopName
+		ORDER BY
+			total DESC
+
+    	</select>
+    <select id="listPrdctSaleHist" parameterType="saleHistSearchVo" resultType="saleVo">
+    	SELECT
+    		A.sale_id
+    		,(select shop_name from shop where shop_id=A.shop_id) shop_name
+    		,(select prdct_name from prdct where prdct_id=B.prdct_id) prdct_name
+    		,prdct_cnt
+    		,datetime
+    		,result
+    		,B.prc price
+    	FROM sale A left outer join salePrdct B
+    	on A.sale_id=B.sale_id
+    	WHERE
+    		datetime between ${startTime} and ${endTime}
+
+    	order by datetime desc,regtime desc
+
+    </select>
+
+    <select id="listSalePrdct" parameterType="saleVo" resultType="salePrdctVo">
+    	SELECT
+    		datetime
+    		,sale_id
+    		,prdct_id
+    		,prdct_cnt
+    	FROM salePrdct
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+
+    <select id="mlistSale" resultType="saleVo">
+    	SELECT * from(
+			SELECT (
+				SELECT
+					count(*) from prdct where sale_id=A.sale_id and prdct_stat_ty_cd='00100003') cnt
+					,sale_id
+					,sale_name
+				FROM sale A
+			) B
+		WHERE cnt>0;
+    </select>
+    <update id="modifySale" parameterType="saleVo">
+        UPDATE sale SET
+        	result		= #{CJSResultCode}
+        	,result_msg = #{CJSResultMessage}
+        	,pay_id		= #{CJSPayID}
+        	,trade_id	= #{CJSTradeID}
+        	,pay_date	= #{CJSPaydate}
+        	,pgctrl		= #{Crd_pgctrl_Cd_p}
+        WHERE
+        	sale_id 			= #{saleId}
+    </update>
+    <select id="getSale" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    		,bigo
+    	FROM sale
+    	WHERE
+    		sale_id=#{saleId}
+    </select>
+    <select id="getSaleForResult" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		sale_id
+    	FROM sale
+    	WHERE
+    		sale_id=#{CJSShopOrderNo} and result is null
+    </select>
+
+    <select id="findShopName" parameterType="shopVo" resultType="salesVo">
+    	SELECT
+    		shop_name, shop_id
+
+    	FROM
+    		shop
+    	WHERE
+    		shop_stat_ty_cd = 00500001
+    	<if test="shopId != 777 and shopId != 778"  >
+		AND
+    		shop_id = #{shopId}
+    	</if>
+
+		   ORDER BY shop_name ASC
+    </select>
+
+    <select id="getShopId" parameterType="Integer" resultType="salesVo">
+    	Select *
+    	from adminMember
+    	where shop_id=#{shopId}
+    </select>
+
+    <select id="getCardInfo" parameterType="saleHistSearchVo" resultType="salesVo">
+			SELECT
+				(select card_com_name from card_com_info where card_com_id = O.card_ty) cardName
+				,sum(O.pay_card) payCard
+			FROM
+				sale_off S, sale_job_off O
+			WHERE
+					S.shop_id=${shopId}
+				AND
+					S.is_old !=1
+				AND
+					S.cancel = 0
+				AND
+					replace(O.datetime ,".","") between #{startTime} and #{endTime}
+				AND
+					substr(result,4,1)='1'
+				AND
+					S.pay_card!=0
+				AND
+					S.sale_id = O.sale_id
+				AND
+					O.card_ty!=12
+				AND
+					O.card_ty !=-1
+			group by cardName
+			order by payCard desc
+    </select>
+
+    <select id="listSalesHistDataByStaff" parameterType="SaleHistSearchVo" resultType="salesVo">
+
+			SELECT
+					if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'-',if(Y.cnt_pre = 0, (@CNT:=@CNT+1) ,'-') ) as cnt
+		 			,if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'취소',if(Y.cnt_pre = 0, if(Y.remained = 0, '완료','미수금') ,'미수입금') ) as cancel
+					,Y.sale_id
+					,Y.pay_cash
+					,Y.pay_card
+					,Y.pay_point
+					,Y.datetime
+					,Y.pay_card + pay_cash + pay_point total
+
+					,Y.frame_prc + Y.new_frame_prc frame_prc
+					,Y.lens_prc + Y.new_lens_prc lens_prc
+					,Y.clens_prc + Y.new_clens_prc clens_prc
+					,Y.acc_prc + Y.new_acc_prc acc_prc
+					,Y.sun_prc + Y.new_sun_prc sun_prc
+					,Y.dis_prc + Y.new_dis_prc dis_prc
+
+					,Y.cstmrName
+					,Y.cstmrCd
+					,Y.cardCom
+					,Y.phone
+					,if(Y.cnt_pre = 0 ,Y.dscnt_price,0) as dscnt_price
+					,if(Y.cnt_pre = 0 ,Y.etc_dscnt,0) as etc_dscnt
+					,if(Y.pay_card + Y.pay_cash + Y.pay_point &lt; 0 ,'0',if(Y.cnt_pre = 0, if(Y.remained = 0, '0', -(Y.pay_card + Y.pay_cash + Y.pay_point) ) ,(Y.pay_card + Y.pay_cash + Y.pay_point)) ) as pay_status
+
+			FROM
+				(SELECT
+					@CNT:=0
+					,O.cancel
+					,O.job_id
+					,O.sale_id
+					,O.datetime
+					,O.pay_cash
+					,O.pay_card
+					,O.pay_point
+					,SF.dscnt_price
+					,SF.etc_dscnt
+					,(select count(*) from sale_job_off where sale_id = O.sale_id and job_id &#60; O.job_id) as cnt_pre
+					,SF.dscnt_price - SF.etc_dscnt - (O.pay_card + O.pay_cash + O.pay_point) as remained
+
+					,(select card_com_name from card_com_info where card_com_id = O.card_ty)cardCom
+					,(select cstmr_name from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)cstmrName
+					,(select C.cstmr_cd from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)cstmrCd
+					,(select C.cellphone from cstmr C, sale_off F where C.cstmr_id = F.cstmr_id and F.sale_id = O.sale_id)phone
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=1),0)frame_prc
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=2),0)lens_prc
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=3),0)clens_prc
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=4),0)acc_prc
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=5),0)sun_prc
+					,ifnull((select sum(prc * prdct_cnt) from salePrdct_off where sale_id = O.sale_id and itemTy=6),0)dis_prc
+
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=1),0)new_frame_prc
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=2),0)new_lens_prc
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=3),0)new_clens_prc
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=4),0)new_acc_prc
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=5),0)new_sun_prc
+					,ifnull((select sum(prc * prdct_cnt) from new_prdct where sale_id = O.sale_id and item_ty=6),0)new_dis_prc
+
+				FROM
+					sale_job_off O
+				INNER JOIN
+					sale_off SF
+				ON
+					O.sale_id = SF.sale_id
+				WHERE
+					(select S.shop_id from shop S, sale_off F where S.shop_id = F.shop_id and F.sale_id = O.sale_id)=#{shopId}
+				AND
+					SF.is_old = 0
+				AND
+					O.ty_cd = 01200004
+				AND
+					(O.cancel != 1
+					OR
+					O.cancel is null)
+				AND
+					SF.cancel = 0
+				AND
+					replace(O.datetime,".","") between #{startTime} and #{endTime}
+				AND
+					staff_id = #{staffId}
+				)Y
+			WHERE
+				Y.pay_card + Y.pay_cash + Y.pay_point != 0
+			ORDER BY
+				 datetime,cstmrName ASC;
+
+    </select>
+
+    <select id="listSaleOff4Tax" parameterType="saleVo" resultType="saleVo">
+    	SELECT
+    		F.sale_id
+    		,J.job_id
+    		,F.cstmr_id
+    		,C.cstmr_name
+    		,C.cstmr_cd
+    		,J.ty_cd
+			,sum(if(J.card_ty=13,J.pay_card+J.pay_cash,J.pay_cash) )as pay_cash
+			,sum(if(J.card_ty=13,0,J.pay_card) )as pay_card
+    		,J.pay_point
+    		,J.card_ty
+    		,(select card_com_name from card_com_info where card_com_id = J.card_ty) as card_name
+    		,F.cancel
+        	,if(F.shop_id>70, F.shop_id,
+    		(select shop_num from shop where shop_num=F.shop_id)) as shop_id
+        	,if(F.shop_id>70, (select shop_name from shop where shop_id = F.shop_id),
+    		(select shop_name from shop where shop_num=F.shop_id)) as shop_name
+        	,ogn_price
+        	,dscnt_price
+        	,partner_dscnt
+        	,partner_id
+        	,etc_dscnt
+        	,etc_dscnt_memo
+			,result
+			,F.datetime
+			,hist_id
+			,earn_prcnt
+			,coupon_birth
+			,point_fmly_cd
+			,F.tax_bigo
+    	FROM
+    		sale_off F
+    	INNER JOIN
+    		cstmr C
+		INNER JOIN
+    		sale_job_off J
+    	ON
+    		C.cstmr_id = F.cstmr_id
+    		and F.sale_id = J.sale_id
+    	<where>
+    		<foreach collection="listCstmrCds" item="sale" separator="or">
+    			C.cstmr_cd =#{sale.cstmrCd}
+	    	</foreach>
+			and J.datetime &gt;= #{sDate}
+			and J.datetime &lt;= #{eDate}
+			and J.ty_cd = '01200004'
+			and F.cancel = 0
+			and (J.pay_card != 0 or J.pay_cash != 0 )
+		</where>
+		group by F.sale_id
+		order by F.sale_id ;
+    </select>
+
+
+    <update id="renewalTaxBigo" parameterType="saleVo">
+        UPDATE sale_off SET
+        	tax_bigo = #{taxBigo}
+        WHERE
+        	sale_id = #{saleId}
+    </update>
+</mapper>

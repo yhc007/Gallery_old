@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.company.CompanyMapper">
+    <insert id="addCompany" parameterType="companyVo">
+        INSERT INTO com_info
+        	(
+        	type
+        	,brand
+        	,email
+        	,e_name
+        	,c_name
+        	,c_memo
+        	,p_num1
+        	,p_num2
+        	,addr
+        	,no
+        	,id
+        	,pwd
+        	,c_state
+        	)
+        VALUES (
+        	#{type}
+        	,#{brand}
+        	,#{email}
+        	,#{eName}
+        	,#{cName}
+        	,#{cMemo}
+        	,#{pNum1}
+        	,#{pNum2}
+        	,#{addr}
+        	,#{no}
+        	,#{id}
+        	,#{pwd}
+        	,#{cState}
+        	)
+        	<selectKey keyProperty="iNum" resultType="String" order="AFTER">
+        		SELECT LAST_INSERT_ID();
+        	</selectKey>
+    </insert>
+
+    <delete id="delComTy" parameterType="companyVo">
+		DELETE
+		FROM
+			com_ty
+		WHERE
+			i_num = #{iNum}
+
+    </delete>
+    <insert id="addCompanyTy" parameterType="companyVo">
+    	INSERT INTO
+    		com_ty
+    	(i_num
+    	,ty)
+    	VALUES
+    	(#{iNum}
+    	,#{cType})
+    </insert>
+    <select id="chkComId" parameterType="companyVo" resultType="String">
+    	SELECT
+    		id
+    	FROM
+    		com_info
+    	WHERE
+    		id = #{id}
+    </select>
+    <select id="countCompany" parameterType="companyVo" resultType="Integer">
+    	SELECT COUNT(*)
+    	FROM com_info
+    	WHERE c_name=#{cName}
+    </select>
+    <select id="pagedListCompany" parameterType="companyVo" resultType="companyVo">
+    	SELECT *
+    	FROM(
+    		SELECT *,@rownum:=@rownum+1 as rownum
+    		FROM(
+		    	SELECT
+		    		i_num
+		    		,c_type
+		    		,c_name
+		    		,e_name
+		    		,p_num1
+		    		,p_num2
+		    		,c_memo
+		    		,c_state
+		    	FROM com_info
+		    	<where>
+		    		<if test="cName!=null">
+		    			<if test="!cName.equals('')">
+		    				and ( c_name like CONCAT('%', #{cName}, '%') )
+		    			</if>
+		    		</if>
+		    		<if test="cType!=null">
+		    			<if test="!cType.equals('all')">
+		    				and c_type=#{cType}
+		    			</if>
+		    		</if>
+		    	</where>
+	    	) A,(select @rownum:=0) R
+	    	ORDER BY c_name asc
+    	) B
+    	<where>
+    		rownum > (#{pageSize}*(#{currentPage}-1)) and (#{pageSize}*(#{currentPage})) >= rownum
+    	</where>
+    </select>
+    <select id="pagedListCompanyCount" parameterType="companyVo" resultType="Integer">
+    	SELECT
+    		COUNT(*)
+    	FROM com_info
+    	<where>
+    		<if test="cName!=null">
+    			<if test="!cName.equals('')">
+    				and ( c_name like CONCAT('%', #{cName}, '%') )
+    			</if>
+    		</if>
+    		<if test="cType!=null">
+		    				<if test="!cType.equals('all')">
+		    				and c_type=#{cType}
+		    			</if>
+			</if>
+    	</where>
+    </select>
+    <select id="companyList" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		i_num,
+    		c_name
+    	FROM com_info
+    </select>
+    <select id="listBrand" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    	FROM brand
+    	ORDER BY brand_name
+    </select>
+
+    <update id="modifyCompany" parameterType="companyVo">
+        UPDATE com_info C SET
+        	id = #{id},
+        	pwd = #{pwd},
+        	brand = #{brand},
+        	no = #{no},
+        	type = #{type},
+        	email = #{email},
+        	addr = #{addr},
+<!--         	(select ty from com_ty where i_num = C.iNum) = #{cType}, -->
+        	c_name		= #{cName},
+        	e_name		= #{eName},
+        	p_num1		= #{pNum1},
+        	p_num2		= #{pNum2},
+        	c_memo		= #{cMemo},
+        	c_state		= #{cState}
+        WHERE
+        	i_num 			= #{iNum}
+    </update>
+    <update id="modifyComTy" parameterType="companyVo">
+    	UPDATE
+    		com_ty
+    	SET
+    	ty = #{cType}
+    	WHERE
+    		i_num = #{iNum}
+    </update>
+    <select id="getCompany" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		i_num
+    		,c_type
+    		,c_name
+    		,e_name
+    		,p_num1
+    		,p_num2
+    		,c_memo
+    		,c_state
+    		,addr
+    		,email
+    		,type
+    		,brand
+    		,no
+    		,id
+    		,pwd
+    	FROM com_info C
+    	WHERE
+    		i_num=#{iNum}
+    </select>
+    <delete id="removeCompany" parameterType="companyVo">
+    	DELETE
+    	FROM com_info
+    	WHERE
+    		i_num 			= #{iNum}
+    </delete>
+
+    <select id="getListCom" parameterType="companyVo" resultType="companyVo">
+    	SELECT
+    		A.c_name comName
+    		,A.e_name comName2
+    		,A.p_num1 PNum1
+    		,A.p_num2 PNum2
+    		,B.ty
+    	FROM
+    		com_info A, com_ty B
+    	WHERE
+    		A.i_num = B.i_num
+    	<if test="comTy==1">
+    	AND
+    		B.ty='F'
+    	</if>
+    	<if test="comTy==2">
+    	AND
+    		B.ty='L'
+    	</if>
+    	<if test="comTy==3">
+    	AND
+    		B.ty='C'
+    	</if>
+    	<if test="comTy==4">
+    	AND
+    		B.ty='A'
+    	</if>
+    	ORDER BY comName ASC
+    </select>
+
+    <select id="getComTy" parameterType="companyVo" resultType="companyVo">
+		SELECT
+			ty cType
+		FROM
+			com_ty
+		WHERE
+			i_num = #{iNum}
+    </select>
+</mapper>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallery.coupon.CouponMapper">
+
+    <select id="listBirthCoupon"  parameterType="couponVo" resultType="couponVo">
+    	SELECT
+    		coupon_cd
+    		,cstmr_cd
+    		,cstmr_mail
+    		,shop_num
+    		,using_date
+    		,w_memo
+    		,if(B.shop_num>70, (select shop_name from shop where shop_id = B.shop_num),
+    		(select shop_name from shop where shop_num=B.shop_num)) as shop_name
+    	FROM
+    		coupon_birth B
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+    	ORDER BY coupon_cd DESC
+    	LIMIT 1;
+    </select>
+
+    <update id="modifyBirthCoupon" parameterType="couponVo">
+		UPDATE
+			coupon_birth
+		SET
+			shop_num=#{shopNum}
+			,using_date=#{usingDate}
+			,w_memo=#{wMemo}
+		WHERE
+			coupon_cd = #{couponCd};
+	</update>
+
+	<select id="usingCheckBirthCoupon" parameterType="couponVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		coupon_birth
+    	WHERE
+    		coupon_cd = #{couponCd}
+    		and shop_num=0;
+    </select>
+
+    <select id="checkBirthCoupon" parameterType="couponVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		coupon_birth
+    	WHERE cstmr_cd = #{cstmrCd};
+    </select>
+
+    <select id="existBirthCoupon" parameterType="couponVo" resultType="Integer">
+    	SELECT
+    		count(*)
+    	FROM
+    		coupon_birth
+    	WHERE coupon_cd = #{couponCd};
+    </select>
+
+	<select id="chkCoupon" parameterType="couponVo" resultType="String">
+		SELECT
+			coupon_cd
+		FROM
+			coupon_birth
+		WHERE
+			coupon_cd = #{couponCd}
+		AND
+			shop_num = 0
+	</select>
+	<select id="chkValBrithCoupon" parameterType="couponVo" resultType="couponVo">
+	SELECT
+			coupon_cd
+			,cstmr_name
+			,cstmr_cd
+			,cstmr_mail
+			,shop_num
+			,using_date
+			,w_memo
+			,if(B.shop_num>70, (select shop_name from shop where shop_id=B.shop_num),
+    		(select shop_name from shop where shop_num=B.shop_num)) as shop_name
+		FROM
+			coupon_birth B
+		WHERE
+			coupon_cd = #{couponCd};
+	</select>
+	 <select id="getCoupon" parameterType="String" resultType="String">
+    	SELECT
+    		coupon_cd
+    	FROM
+    		coupon_birth
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+    	AND
+    		(shop_num = 0
+    	OR
+    		shop_num is null)
+    	LIMIT 1
+    </select>
+
+    <update id="useCoupon" parameterType="cstmrVo">
+    	UPDATE
+    		coupon_birth
+    	SET
+    		shop_num = #{shopId}
+    		,using_date = now()
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+    </update>
+
+    <select id="getCstmrCd" parameterType="couponVo" resultType="String">
+    	SELECT
+    		cstmr_cd
+    	FROm
+    		coupon_birth
+    	WHERE
+    		coupon_cd = #{couponCd}
+    </select>
+    <update id="useOthrPrsnCpn" parameterType="couponVo">
+    	UPDATE
+    		coupon_birth
+    	SET
+    		shop_num = #{shopId}
+    		,using_date = now()
+    	WHERE
+    		cstmr_cd = #{cstmrCd}
+    </update>
+
+    <update id="updateSaleCoupon" parameterType="saleVo">
+    	UPDATE
+			sale_off
+		SET
+			coupon_birth=#{couponBirth}
+		WHERE
+			sale_id = #{saleId};
+    </update>
+
+    <update id="cancelBrithCoupon" parameterType="couponVo">
+	    UPDATE
+	    	sale_off
+		SET
+		    coupon_birth = NULL
+		WHERE
+			coupon_birth = #{couponCd};
+	</update>
+
+	<select id="getListCstmr4Coupon" parameterType="cstmrVo" resultType="couponVo">
+		SELECT
+    		cstmr_id
+			,C.cstmr_cd
+			,C.cstmr_name
+			,C.telephone
+			,C.cellphone
+			,C.addr
+			,C.birth_day
+			,(select coupon_cd from coupon_birth where cstmr_cd = C.cstmr_cd order by coupon_cd desc limit 1) as coupon_cd
+			,(select shop_num from coupon_birth where cstmr_cd = C.cstmr_cd order by coupon_cd desc limit 1) as shop_num
+			,(select shop_name from shop where shop_id = (select shop_num from coupon_birth where cstmr_cd = C.cstmr_cd order by coupon_cd desc limit 1)) as shop_name
+			,(select using_date from coupon_birth where cstmr_cd = C.cstmr_cd order by coupon_cd desc limit 1) as using_date
+			,(select w_memo from coupon_birth where cstmr_cd = C.cstmr_cd order by coupon_cd desc limit 1) as coupon_memo
+    	FROM
+    		cstmr C
+ 		<where>
+ 			<if test="cstmrName != null">
+		 	    <if test="!cstmrName.equals('')">
+				C.cstmr_name = #{cstmrName}
+				</if>
+			</if>
+			<if test="digit4 != null">
+		 	    <if test="!digit4.equals('')">
+				and (right(C.cellphone,4) = #{digit4} OR right(C.telephone,4) = #{digit4})
+				</if>
+			</if>
+			<if test="cstmrCd != null">
+		 	    <if test="!cstmrCd.equals('')">
+				or cstmr_cd = #{cstmrCd}
+				</if>
+			</if>
+		</where>
+		order by C.cstmr_cd;
+    </select>
+
+</mapper>

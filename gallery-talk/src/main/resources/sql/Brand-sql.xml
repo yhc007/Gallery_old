@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.gallerytalk.brand">
+    
+    <select id="countBrand" parameterType="brandVo" resultType="Integer">
+    	SELECT COUNT(*) 
+    	FROM brand
+    	WHERE brand_name=#{brandName}
+    </select>
+    
+    <select id="listBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    	FROM brand
+    	ORDER BY brand_name
+    </select>
+    
+    <select id="getBrand" parameterType="brandVo" resultType="brandVo">
+    	SELECT
+    		brand_id
+    		,brand_name
+    		,bigo
+    	FROM brand
+    	WHERE
+    		brand_id=#{brandId}
+    </select>
+    
+</mapper>
