@@ -1,27 +1,13 @@
 package com.gallerytalk;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.view.tiles3.TilesConfigurer;
-import org.springframework.web.servlet.view.tiles3.TilesView;
-import org.springframework.web.servlet.view.tiles3.TilesViewResolver;
 
+/**
+ * gallery-talk(모바일)은 Apache Tiles 레이아웃(layouts.xml)이 없으므로 TilesConfigurer 를
+ * 두지 않는다. 뷰는 application.yml 의 spring.mvc.view.prefix/suffix(/WEB-INF/views/*.jsp)
+ * 기본 InternalResourceViewResolver 로 해석된다.
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    @Bean
-    public TilesConfigurer tilesConfigurer() {
-        final var configurer = new TilesConfigurer();
-        configurer.setDefinitions("/WEB-INF/views/layout/layouts.xml");
-        return configurer;
-    }
-
-    @Bean
-    public TilesViewResolver tilesViewResolver() {
-        final var resolver = new TilesViewResolver();
-        resolver.setViewClass(TilesView.class);
-        resolver.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return resolver;
-    }
 }

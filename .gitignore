@@ -323,3 +323,6 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/java,linux,macos,maven,gradle,eclipse,windows,netbeans,intellij+iml,visualstudiocode,dotenv
 dataSources.xml
+
+# deploy secrets
+deploy/config.env

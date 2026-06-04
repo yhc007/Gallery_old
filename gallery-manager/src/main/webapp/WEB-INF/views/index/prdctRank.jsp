@@ -3,7 +3,7 @@
 	<c:choose>
 		<c:when test="${!empty prdctRank}">
 	   		<c:forEach var="prdct" items="${prdctRank}" varStatus="status">
-				${prdct.prdctName}|http://jaguar.s4gallery.com/media${prdct.img}|${prdct.prc}|${prdct.prdctCount }line
+				${prdct.prdctName}|https://jaguar.s4g.kr/media${prdct.img}|${prdct.prc}|${prdct.prdctCount }line
 			</c:forEach>
 										
 		</c:when>		

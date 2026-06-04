@@ -181,7 +181,7 @@
     var form = document.createElement("form");
 
     form.method = "post";
-    form.action = "http://jaguar.s4gallery.com/community/board/main.do";
+    form.action = "https://jaguar.s4g.kr/community/board/main.do";
 
     var input = document.createElement("input");
     input.type = "hidden";
@@ -204,13 +204,13 @@
 
   // 	function galleryManager(){
   // 		$.ajax({
-  // 			url : 'http://jaguar.s4gallery.com/Manager/admin/login.do',
+  // 			url : 'https://jaguar.s4g.kr/Manager/admin/login.do',
   // 			type : "post",
   // 			dataType : "text",
   // 			data : "id=" + gId + "&pwd=" + gShopPwd + "&shopTy="+"shop",
   // 			success : function(data){
   // 				if(data.trim()=="success"){
-  // 					location.href="http://jaguar.s4gallery.com/Manager/chart/chart.do";
+  // 					location.href="https://jaguar.s4g.kr/Manager/chart/chart.do";
   // 				}else if(data.trim()=="fail"){
   // 					alert("ID혹은 비밀번호를 확인해 주세요.");
   // 				}

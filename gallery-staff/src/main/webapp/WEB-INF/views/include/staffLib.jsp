@@ -34,7 +34,7 @@ function galleryManager(){
 	console.log('gId:'+gId);
 	console.log('gShopPwd:'+gShopPwd);
 		$.ajax({
-			/* url : 'http://jaguar.s4gallery.com/Manager/admin/login.do', */
+			/* url : 'https://jaguar.s4g.kr/Manager/admin/login.do', */
 			url : '${ctxDomain}/Manager/admin/login.do',
 			
 			type : "post",
@@ -42,7 +42,7 @@ function galleryManager(){
 			data : "id=" + gId + "&pwd=" + gShopPwd + "&shopTy="+"shop",
 			success : function(data){
 				if(data.trim()=="success"){
-					/* location.href="http://jaguar.s4gallery.com/Manager/chart/chart.do"; */
+					/* location.href="https://jaguar.s4g.kr/Manager/chart/chart.do"; */
 					location.href="${ctxDomain}/Manager/chart/chart.do";
 				}else if(data.trim()=="fail"){
 					alert("ID혹은 비밀번호를 확인해 주세요.");

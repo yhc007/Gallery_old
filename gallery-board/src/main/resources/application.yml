@@ -1,5 +1,7 @@
 spring:
   profiles.active: development
+  main:
+    allow-circular-references: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${env.DB_URL}
@@ -10,5 +12,13 @@ spring:
     view:
       prefix: /WEB-INF/views/
       suffix: .jsp
+  mail:
+    host: ${env.MAIL_HOST:localhost}
+    port: ${env.MAIL_PORT:25}
+    username: ${env.MAIL_USERNAME:}
+    password: ${env.MAIL_PASSWORD:}
 mybatis:
-  type-aliases-package: com.gallery
+  type-aliases-package: com.gallery.web,com.gallery.app
+  mapper-locations: classpath:sql/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

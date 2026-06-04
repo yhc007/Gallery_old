@@ -221,7 +221,7 @@
 	 						//CGM
 	 						
 	 						/* $.mobile.changePage("#orderDiv", {transition:"flow"}); */
-		 					//var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+		 					//var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 		 					var url = "http://106.240.234.114:8080/GalleryTalk/comm/sendMsg.do";
 							var msg = shopName + "에서 " + prdctName + "을(를) " +  cnt + "개 주문하였습니다.";
 							var param = "sendGid=S" + shopId + 
@@ -818,7 +818,7 @@
 						gcmToAdmin(devide);	
 					}
 					
-						var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+						var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 						var msg = shopName + "에서 " + prdctName + "을(를) " +  cnt + "개 주문하였습니다.";
 						var param = "sendGid=S" + shopId + 
 										"&sendName=" + shopName +
@@ -1277,7 +1277,7 @@
 	
 	
 	function gcmToAdmin(devide){
-		var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+		var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 		var msg = shopName + "에서  " + devide + "개월 할부 요청 하셨습니다.";
 		var param = "sendGid=S" + shopId + 
 						"&sendName=" + shopName +

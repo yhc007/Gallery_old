@@ -710,7 +710,7 @@
 	 }
 	 
 	 function goGalleryBoard(){
-		 location.href="http://s4gallery.com/community/board/main.do?shopTy=1&shopId=" + shopId;
+		 location.href="https://s4g.kr/community/board/main.do?shopTy=1&shopId=" + shopId;
 	 }
 </script>
 <style>

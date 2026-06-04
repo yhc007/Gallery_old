@@ -753,7 +753,7 @@
 	 	}
 
 	 	function gcm(cnt){
-	 		var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+	 		var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 			var msg = shopName + "에서 " + prdctName + "을(를) " +  cnt + "개 주문하였습니다.";
 			var param = "sendGid=S" + shopId +
 							"&sendName=" + shopName +

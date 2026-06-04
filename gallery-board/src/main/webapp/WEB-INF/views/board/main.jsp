@@ -322,7 +322,7 @@
 	
 	function notiToCom(iNum){
 		//노티
-		var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+		var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 		//var url = "http://106.240.234.114:8080/GalleryTalk/comm/sendMsg.do";
 		var msg = "커뮤니티에 공지사항이 등록되었습니다. 확인 바랍니다."
 		var param = "sendGid=S777" + 
@@ -342,7 +342,7 @@
 	
 	function notiToShop(iNum){
 		//노티
-		var url = "http://jaguar.s4gallery.com/GalleryTalk/comm/sendMsg.do";
+		var url = "https://jaguar.s4g.kr/GalleryTalk/comm/sendMsg.do";
 		//var url = "http://106.240.234.114:8080/GalleryTalk/comm/sendMsg.do";
 		var msg = "커뮤니티에 공지사항이 등록되었습니다. 확인 바랍니다."
 		var param = "sendGid=S777" + 
