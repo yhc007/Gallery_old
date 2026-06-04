@@ -228,6 +228,20 @@ public class CstmrController {
         logger.info("cstmrCd:" + cstmrCd);
         cstmrVo.setCstmrCd(cstmrCd);
         cstmrVo.setFmlyCd(cstmrCd);
+
+        // NOT NULL 컬럼(email 등) 대비: 미입력(null) 값을 빈 문자열로 보정해 가입 실패 방지
+        if (cstmrVo.getEmail() == null) cstmrVo.setEmail("");
+        if (cstmrVo.getAddr() == null) cstmrVo.setAddr("");
+        if (cstmrVo.getZipCd() == null) cstmrVo.setZipCd("");
+        if (cstmrVo.getBigo() == null) cstmrVo.setBigo("");
+        if (cstmrVo.getFacebook() == null) cstmrVo.setFacebook("");
+        if (cstmrVo.getTwitter() == null) cstmrVo.setTwitter("");
+        if (cstmrVo.getInstagram() == null) cstmrVo.setInstagram("");
+        if (cstmrVo.getBirthDayTyCd() == null) cstmrVo.setBirthDayTyCd("");
+        if (cstmrVo.getSexCd() == null) cstmrVo.setSexCd("");
+        if (cstmrVo.getCstmrLoginId() == null) cstmrVo.setCstmrLoginId("");
+        if (cstmrVo.getCstmrLoginPw() == null) cstmrVo.setCstmrLoginPw("");
+
         try {
             String result = cstmrService.addCstmr(cstmrVo);
             result = result.concat("," + cstmrVo.getCstmrCd() + "," + cstmrVo.getCstmrId() + "," + cstmrVo.getCstmrName());
