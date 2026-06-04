@@ -41,7 +41,10 @@ deploy_war Manager.war      Manager.war       # -> /Manager
 chown -R tomcat:tomcat "$WEBAPPS"
 ls -lh "$WEBAPPS"/*.war
 
-echo "### 5) nginx (모두 127.0.0.1:8080 단일 Tomcat) ###"
+echo "### 5) nginx (최초 1회만 생성 — 이미 있으면 certbot SSL 등 기존 설정 보존) ###"
+if [ -f /etc/nginx/sites-available/gallery ]; then
+  echo "nginx 설정 이미 존재 → 덮어쓰지 않음 (HTTPS/SSL 보존)"
+else
 cat > /etc/nginx/sites-available/gallery <<'NGINX'
 server {
     listen 80;
@@ -68,6 +71,7 @@ NGINX
 ln -sf /etc/nginx/sites-available/gallery /etc/nginx/sites-enabled/gallery
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
+fi
 
 echo "### 6) 기동 ###"
 systemctl start tomcat9
