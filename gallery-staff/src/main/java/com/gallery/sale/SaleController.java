@@ -43,7 +43,7 @@ public class SaleController {
         try {
             cstmrVo = cstmrService.getCstmrById(cstmrVo);
         } catch (Exception e1) {
-            e1.printStackTrace();
+            logger.error("indexSaleForm getCstmrById 실패 cstmrId:{}", cstmrId, e1);
         }
         session.setAttribute(CommonCode.ATTR_CSTMR, cstmrVo);
 
@@ -86,7 +86,7 @@ public class SaleController {
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("indexSaleForm 판매조회 실패 cstmrId:{} shopId:{}", cstmrId, saleVo.getShopId(), e);
         }
         String addr = "redirect:/cstmrHstry/indexCstmrHstryForm.do";
 

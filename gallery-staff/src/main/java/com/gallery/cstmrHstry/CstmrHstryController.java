@@ -58,14 +58,15 @@ public class CstmrHstryController {
     @RequestMapping(value = "indexCstmrHstryForm.do")
     public String indexCstmrHstryForm(ModelMap model, HttpServletRequest request, HttpSession session) {
         logger.info("run indexCstmrHstryForm");
-        try {
-            model.addAttribute("cstmrId", ((CstmrVo) session.getAttribute(CommonCode.ATTR_CSTMR)).getCstmrId());
-        } catch (NullPointerException e) {
-            model.addAttribute("cstmrId", -1);
-        }
 
-        model.addAttribute("histId", ((SaleVo) session.getAttribute(CommonCode.ATTR_SALE)).getHistId());
-        model.addAttribute("cstmrName", ((CstmrVo) session.getAttribute(CommonCode.ATTR_CSTMR)).getCstmrName());
+        // 세션에 고객/판매 정보가 없을 수 있어(예: indexSaleForm 내부 예외가 삼켜진 경우)
+        // null 가드 후 모델에 담는다. 무방비 접근 시 NPE→500→화면 "실패. 재시도 바랍니다" 발생.
+        CstmrVo cstmrVo = (CstmrVo) session.getAttribute(CommonCode.ATTR_CSTMR);
+        SaleVo saleVo = (SaleVo) session.getAttribute(CommonCode.ATTR_SALE);
+
+        model.addAttribute("cstmrId", cstmrVo != null ? cstmrVo.getCstmrId() : -1);
+        model.addAttribute("histId", saleVo != null ? saleVo.getHistId() : null);
+        model.addAttribute("cstmrName", cstmrVo != null ? cstmrVo.getCstmrName() : "");
 
         ShopVo shopVo = (ShopVo) session.getAttribute(CommonCode.ATTR_SHOP);
         StaffVo staffVo = (StaffVo) session.getAttribute(CommonCode.ATTR_STAFF);
@@ -75,8 +76,7 @@ public class CstmrHstryController {
         try {
             listStaff = staffService.listStaff(staffVo);
         } catch (Exception e) {
-
-            e.printStackTrace();
+            logger.error("indexCstmrHstryForm listStaff 실패 staffVo:{}", staffVo, e);
         }
         model.addAttribute("listStaff", listStaff);
         model.addAttribute("shopVo", shopVo);

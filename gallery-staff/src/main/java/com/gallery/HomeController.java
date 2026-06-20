@@ -1,7 +1,5 @@
 package com.gallery;
 
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 import lombok.RequiredArgsConstructor;
@@ -21,14 +19,8 @@ public class HomeController {
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
 		logger.info("Welcome home! The client locale is {}.", locale);
-
-		Date date = new Date();
-		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, locale);
-		String formattedDate = dateFormat.format(date);
-
-		model.addAttribute("serverTime", formattedDate );
-
-		return "home";
+		// 매장 단말 진입 편의: 루트(/GalleryStaff/) 접속 시 매장 로그인 화면으로 이동
+		return "redirect:/shop/indexShopForm.do";
 	}
 
 }

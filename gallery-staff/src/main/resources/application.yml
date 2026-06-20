@@ -1,3 +1,8 @@
+# nginx(TLS 종료) 뒤에서 X-Forwarded-Proto 를 신뢰해 리다이렉트 스킴을 https 로 교정.
+# (없으면 HTTPS 페이지에서 redirect Location 이 http:// 로 나가 Mixed Content 로 차단됨)
+server:
+  forward-headers-strategy: framework
+
 spring:
   profiles.active: development
   main:
