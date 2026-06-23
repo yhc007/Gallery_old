@@ -34,6 +34,10 @@ collation-server        = utf8_general_ci
 # 소스(10.1)의 느슨한 동작과 일치 — 제로 날짜(0000-00-00) 등 레거시 데이터 허용
 sql_mode                = NO_ENGINE_SUBSTITUTION
 innodb_file_per_table   = 1
+# 소스(10.1)는 innodb_strict_mode OFF 라 ROW_FORMAT=COMPACT 대형 행 테이블(예: lens_detail_copy,
+# varchar(255) 다수) 생성을 허용. 10.6 기본 ON 이면 복원 시 "Row size too large(>8126)" 에러.
+# → 소스와 동일하게 OFF 로 두어 덤프를 원형 그대로 복원(데이터 무손실, DDL 엄격성만 완화).
+innodb_strict_mode      = OFF
 CNF
 
 systemctl restart mariadb

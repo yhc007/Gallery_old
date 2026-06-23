@@ -63,4 +63,10 @@ eval "$LOC" -e "\"SELECT cstmr_id, cstmr_name FROM \\\`$DBNAME\\\`.cstmr ORDER B
 echo
 echo "### 요약 ###"
 echo " 모드=$MODE 덤프=$DUMP 테이블 $st/$lt 행수불일치=$mismatch"
-[ "$st" = "$lt" ] && [ "$mismatch" = 0 ] && echo " ✅ 검증 통과" || echo " ❌ 검증 실패 — 원인 확인(charset/엔진/권한)"
+if [ "$st" = "$lt" ] && [ "$mismatch" = 0 ]; then
+  echo " ✅ 검증 통과"
+else
+  # final 모드에서 비정상 종료(exit 1)해야 23-cutover 의 자동 롤백이 작동한다.
+  # 단, 컷오버는 Tomcat 정지 후라 드리프트가 없어 정상이면 통과해야 함.
+  echo " ❌ 검증 실패 — 원인 확인(charset/엔진/권한)"; exit 1
+fi
